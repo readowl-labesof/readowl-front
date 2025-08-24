@@ -56,10 +56,12 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
     * `public/` – Imagens, fontes e arquivos estáticos.
     * `src/` – Código-fonte da aplicação.
             * `assets/` – Arquivos de mídia e estilos globais.
-            * `components/` – Componentes React reutilizáveis.
-            * `pages/` – Componentes que representam as páginas da aplicação.
+            * `global/` – Componentes React reutilizáveis.
+            * `pages/` – Páginas da aplicação.
+                * `pages/components` – Componentes exclusivas da página da aplicação.
             * `hooks/` – Hooks personalizados.
             * `services/` – Lógica de comunicação com a API.
+            * `styles/` – CSS das páginas da aplicação.
             * `utils/` – Funções utilitárias.
 
 -----
@@ -91,6 +93,16 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
         ```
 
 5.  A aplicação estará disponível no endereço `http://localhost:5173` (ou outra porta indicada pelo Vite).
+
+6. Verifique se você tem o nvm instalado:
+```bash
+bashcommand -v nvm
+```
+
+Se este comando não retornar "nvm", você precisa instalá-lo:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
+```
 
 -----
 
