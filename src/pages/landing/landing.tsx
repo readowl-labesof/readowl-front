@@ -1,10 +1,10 @@
 import Header from './components/header';
-import Hero from './components/hero';
-import Purpose from './components/purpose';
-import HowItHelps from './components/howItHelps'; 
-import HowToPost from './components/howToPost';
-import Features from './components/features';
-import Testimonials from './components/testimonials';
+import Hero from './components/about/hero';
+import Purpose from './components/about/purpose';
+import HowItHelps from './components/about/howItHelps'; 
+import HowToPost from './components/about/howToPost';
+import Features from './components/about/features';
+import Testimonials from './components/about/testimonials';
 import Footer from '../../global/footer';
 
 function App() {
