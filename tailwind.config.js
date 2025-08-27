@@ -14,7 +14,7 @@ export default {
           extradark: '#23004B', // Roxo Extra Escuro
           extralight: '#F0EAFF' // Roxo Extra Claro
         },
-        'readowl-purple-medium': '#836DBE',
+        'readowl-purple-medium': '#836DBE', // Roxo Médio
       }
     },
   },
