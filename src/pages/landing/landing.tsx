@@ -1,16 +1,17 @@
-import Header from '../../components/header';
-import Hero from './about/hero';
-import Purpose from './about/purpose';
-import HowItHelps from './about/howItHelps'; 
-import HowToPost from './about/howToPost';
-import Features from './about/features';
-import Testimonials from './about/testimonials';
+import HeaderLanding from './components-landing/headerlLanding';
+import Hero from './components-landing/hero';
+import Purpose from './components-landing/purpose';
+import HowItHelps from './components-landing/howItHelps'; 
+import HowToPost from './components-landing/howToPost';
+import Features from './components-landing/features';
+import Testimonials from './components-landing/testimonials';
 import Footer from '../../components/footer';
+
 
 function App() {
   return (
     <div className="bg-white">
-      <Header />
+      <HeaderLanding />
       <main>
         <Hero />
         <Purpose />
