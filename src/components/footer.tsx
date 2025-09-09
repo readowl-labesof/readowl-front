@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from "react-router-dom";
 
 const GithubIcon = () => (
   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -18,11 +19,11 @@ const Footer: React.FC = () => {
     <footer className="bg-readowl-purple-medium text-readowl-purple-extralight py-10">
       <div className="container mx-auto px-6 text-center">
         <div className="flex justify-center space-x-6 mb-6">
-          <a href="#" className="hover:text-white">Sobre</a>
-          <a href="#" className="hover:text-white">Termos de uso</a>
-          <a href="#" className="hover:text-white">Política de Privacidade</a>
-          <a href="#" className="hover:text-white">Ajuda</a>
-          <a href="#" className="hover:text-white">Contato</a>
+          <Link to="/#sobre" className="hover:text-white">Sobre</Link>
+          <Link to="/termos-de-uso" className="hover:text-white">Termos de uso</Link>
+          <Link to="/politica-de-privacidade" className="hover:text-white">Política de Privacidade</Link>
+          <Link to="/#ajuda" className="hover:text-white">Ajuda</Link>
+          <Link to="/#contato" className="hover:text-white">Contato</Link>
         </div>
 
         <div className="flex justify-center mb-4">

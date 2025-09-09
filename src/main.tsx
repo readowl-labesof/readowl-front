@@ -4,8 +4,9 @@ import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./pages/landing/landing.tsx";
 import Login from "./pages/login/login.tsx";
-//import Teste from "./pages/teste/teste.tsx"; pasta Teste
 import Cadastrar from "./pages/Cadastrar/cadastrar.tsx";
+import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
+import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade/politicaDePrivacidade.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -14,6 +15,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/" element={<App />} />
         <Route path="/login" element={<Login />} />
         <Route path="/cadastrar" element={<Cadastrar />} />
+        <Route path="/termos-de-uso" element={<TermosDeUso />} />
+        <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
         {/* Rota do botao login <Route path="/teste" element={<Teste />} /> */}
       </Routes>
     </StrictMode>

@@ -14,11 +14,11 @@ function App() {
       <HeaderLanding />
       <main>
         <Hero />
-        <Purpose />
-        <HowItHelps />
-        <HowToPost />
-        <Features />
-        <Testimonials />
+       <div id="sobre"><Purpose /></div>
+        <div id="ajuda"><HowItHelps /></div>
+        <div id="postar"><HowToPost /></div>
+        <div id="recursos"><Features /></div>
+        <div id="depoimentos"><Testimonials /></div>
       </main>
       <Footer />
     </div>
