@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "teste@gmail.com",
+      "senha": "123456789"
+    },
+    {
+      "id": "34f1",
+      "nome": "teste",
+      "email": "teste@gmail.com",
+      "senha": "12345"
+    },
+    {
+      "id": "4643",
+      "nome": "Gabriel",
+      "email": "gl9736387@gmail.com",
+      "senha": "teste12345"
+    },
+    {
+      "id": "e3a1",
+      "nome": "Gabriel",
+      "email": "gl9736387@gmail.com",
+      "senha": "teste"
+    },
+    {
+      "id": "e70d",
+      "nome": "teste",
+      "email": "teste3@gmail.com",
+      "senha": "teste"
+    }
+  ]
+}
