@@ -5,7 +5,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary';
     iconUrl?: string;
     iconAlt?: string;
-    isRounded?: boolean; // Nova propriedade para controlar o arredondamento
 }
 
 const ButtonWithIcon: React.FC<ButtonProps> = ({
@@ -14,12 +13,9 @@ const ButtonWithIcon: React.FC<ButtonProps> = ({
     variant = 'primary',
     iconUrl,
     iconAlt = 'Ícone',
-    isRounded = false, // Valor padrão é false
     ...props
 }) => {
     const baseStyle = "font-yusei text-lg font-semibold py-2 px-6 border-2 transition-colors duration-300 flex items-center justify-between gap-2";
-
-    const roundedClass = isRounded ? 'rounded-full' : '';
 
     const styles = {
         primary: "bg-readowl-purple-light text-white border-readowl-purple hover:bg-readowl-purple-hover shadow-md",
@@ -27,7 +23,7 @@ const ButtonWithIcon: React.FC<ButtonProps> = ({
     } as const;
 
     return (
-        <button className={`${baseStyle} ${styles[variant]} ${roundedClass} ${className || ''}`} {...props}>
+        <button className={`${baseStyle} ${styles[variant]} ${className || ''}`} {...props}>
             {iconUrl && (
                 <img src={iconUrl} alt={iconAlt} width={20} height={20} className="w-5 h-5" />
             )}
