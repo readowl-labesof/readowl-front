@@ -1,25 +1,35 @@
-import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
+import React from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost';
-
-interface ButtonWithIconProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  iconUrl?: string;
-  variant?: Variant;
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    children: React.ReactNode;
+    variant?: 'primary' | 'secondary';
+    iconUrl?: string;
+    iconAlt?: string;
 }
 
-// Botão reutilizável com ícone opcional. Comentários explicativos em português.
-export default function ButtonWithIcon({ iconUrl, children, variant = 'primary', className = '', ...props }: PropsWithChildren<ButtonWithIconProps>) {
-  const base = 'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition disabled:opacity-60 disabled:cursor-not-allowed';
-  const styles: Record<Variant, string> = {
-    primary: 'bg-readowl-purple-light text-white hover:bg-readowl-purple',
-    secondary: 'bg-white text-readowl-purple border border-readowl-purple/30 hover:bg-readowl-purple-extralight',
-    ghost: 'bg-transparent text-white hover:bg-white/10',
-  };
+const ButtonWithIcon: React.FC<ButtonProps> = ({
+    children,
+    className,
+    variant = 'primary',
+    iconUrl,
+    iconAlt = 'Ícone',
+    ...props
+}) => {
+    const baseStyle = "font-yusei text-lg font-semibold py-2 px-6 border-2 transition-colors duration-300 flex items-center justify-between gap-2";
 
-  return (
-    <button className={`${base} ${styles[variant]} ${className}`} {...props}>
-      {iconUrl && <img src={iconUrl} alt="" className="w-4 h-4" aria-hidden />}
-      <span>{children}</span>
-    </button>
-  );
-}
+    const styles = {
+        primary: "bg-readowl-purple-light text-white border-readowl-purple hover:bg-readowl-purple-hover shadow-md",
+        secondary: "bg-readowl-purple-extralight text-readowl-purple border-readowl-purple hover:bg-white shadow-md"
+    } as const;
+
+    return (
+        <button className={`${baseStyle} ${styles[variant]} ${className || ''}`} {...props}>
+            {iconUrl && (
+                <img src={iconUrl} alt={iconAlt} width={20} height={20} className="w-5 h-5" />
+            )}
+            <span className="flex-1 text-left">{children}</span>
+        </button>
+    );
+};
+
+export default ButtonWithIcon;
