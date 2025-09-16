@@ -15,7 +15,7 @@ export default {
           extralight: '#F0EAFF' // Roxo Extra Claro
         },
         'readowl-purple-medium': '#836DBE', // Roxo Médio
-      }
+      },
     },
   },
   plugins: [],

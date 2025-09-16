@@ -29,7 +29,7 @@ function Login() {
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <main className="flex flex-1 items-center justify-center">
-        <div className="bg-[#836DBE] p-10 rounded-xl shadow-lg w-[480px] h-[600px] mt-8 flex flex-col items-center">
+        <div className="bg-[#836DBE] p-10 rounded-xl shadow-lg w-full max-w-[480px] h-auto mt-16 flex flex-col items-center">
           <img
             src="/img/mascot/logo.png"
             alt="Readowl"
@@ -99,7 +99,7 @@ function Login() {
           </form>
           <span className="flex justify-center items-center text-xs text-white mt-2">
             Quero criar uma conta&nbsp;.
-            <a href="/cadastrar" className="underline">
+            <a href="/register" className="underline">
               Cadastrar
             </a>
           </span>
