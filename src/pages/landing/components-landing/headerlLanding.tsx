@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import{ Link, useNavigate} from "react-router-dom";
 
 const Header: React.FC = () => {
-    const route = useNavigate();
+  const route = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="bg-readowl-purple-medium shadow-sm">
@@ -20,15 +21,29 @@ const Header: React.FC = () => {
           <Link to="/#ajuda" className="hover:text-white">Ajuda</Link>
           <Link to="/#contato" className="hover:text-white">Contato</Link>
         </div>
-        <div className="flex items-center space-x-4">
-            <button onClick={ () => route("/login")} className="bg-readowl-purple-light text-white font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple transition-colors duration-300">
+        <button
+          className="md:hidden text-readowl-purple-extralight"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+      </nav>
+      {isMenuOpen && (
+        <div className="md:hidden flex flex-col items-center space-y-4 mt-4 text-readowl-purple-extralight p-6">
+          <button onClick={() => route("/login")} className="bg-readowl-purple-light text-white font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple transition-colors duration-300">
             Logar
-            </button>
-          <button  onClick={ () => route("/register")}className="bg-readowl-purple-extralight text-readowl-purple font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple hover:text-white transition-colors duration-300">
+          </button>
+          <button onClick={() => route("/register")} className="bg-readowl-purple-extralight text-readowl-purple font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple hover:text-white transition-colors duration-300">
             Cadastrar
           </button>
+          <a href="#" className="hover:text-white">Sobre</a>
+          <a href="#" className="hover:text-white">Termos de uso</a>
+          <a href="#" className="hover:text-white">Política de Privacidade</a>
+          <a href="#" className="hover:text-white">Ajuda</a>
+          <a href="#" className="hover:text-white">Contato</a>
+
         </div>
-      </nav>
+      )}
     </header>
   );
 };
