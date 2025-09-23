@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
-import InputWithIcon from "../../components/ui/InputWithIcon";
+import InputWithIcon from "../../components/ui/inputWithIcon";
 import { useState } from "react";
 
 function Login() {
@@ -13,7 +13,7 @@ function Login() {
     e.preventDefault();
     // Requisição para o json-server
     const res = await fetch(
-      `http://localhost:5173/users?email=${email}&senha=${senha}`
+      `http://localhost:3000/users?email=${email}&senha=${senha}`
     );
     const data = await res.json();
     if (data.length > 0) {
