@@ -68,9 +68,11 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
 
 ## 📈 Status do Projeto
 
-> **Progresso atual**: Em fase de planejamento e desenvolvimento.
+> **Progressos realizados**: Landing Page, login e cadastro, criação de livro, navegação inicial.  Sprint 1 e 2.
 
-> **Próximos passos**: Implementar os épicos de "Estrutura Básica e Acesso" conforme o Product Backlog.
+> **Progresso atual**: Em fase de planejamento e desenvolvimento. Sprint 3
+
+> **Próximos passos**: Telas de configuração da conta do usuário e administrador, índice do livro, edição de livro, telas de erros.
 
 -----
 
