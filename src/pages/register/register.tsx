@@ -1,7 +1,11 @@
 import { useState } from "react";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
+<<<<<<< HEAD
 import InputWithIcon from "../../components/ui/inputWithIcon";
+=======
+import InputWithIcon from "../../components/ui/InputWithIcon";
+>>>>>>> 547d714 (fix(merge):)
 import { useNavigate } from "react-router-dom";
 
 function Cadastrar() {
@@ -18,7 +22,7 @@ function Cadastrar() {
       return;
     }
     // Cadastro no json-server
-    await fetch("http://localhost:3000/users", {
+    await fetch("http://localhost:5173/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nome, email, senha })

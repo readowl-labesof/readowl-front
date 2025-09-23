@@ -1,7 +1,3 @@
-// Componente convertido de Next.js para React + Vite
-// - Remove diretiva "use client"
-// - Troca next/image por <img /> nativo
-// - Ajusta import sem alias "@/"
 import React from 'react';
 import { BOOK_TITLE_MAX, BOOK_SYNOPSIS_MAX, BOOK_FREQ_MAX } from '../../types/book';
 
@@ -18,7 +14,6 @@ export const BasicFields: React.FC<BasicFieldsProps> = ({ title, synopsis, relea
     <div className="lg:col-span-2">
       <div>
         <label className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-          {/* Ícone estático servido de /public */}
           <img src="/img/svg/book/titlecase.svg" alt="Título" width={18} height={18} className="opacity-80" />
           Título
         </label>
@@ -29,7 +24,7 @@ export const BasicFields: React.FC<BasicFieldsProps> = ({ title, synopsis, relea
             maxLength={BOOK_TITLE_MAX}
             onChange={e => onTitle(e.target.value)}
             onBlur={onBlurTitle}
-            className={`w-full bg-white border-2 pl-4 pr-4 py-2 focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 transition ${errors.title && (touched.title || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
+            className={`w-full rounded-full bg-white border-2 pl-4 pr-4 py-2 focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 transition ${errors.title && (touched.title || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
             placeholder="Título da obra"
           />
         </div>
@@ -50,7 +45,7 @@ export const BasicFields: React.FC<BasicFieldsProps> = ({ title, synopsis, relea
             maxLength={BOOK_SYNOPSIS_MAX}
             onChange={e => onSynopsis(e.target.value)}
             onBlur={onBlurSynopsis}
-            className={`w-full bg-white border-2 pl-4 pr-4 py-3 h-80 resize-none focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 leading-relaxed transition ${errors.synopsis && (touched.synopsis || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
+            className={`w-full rounded-2xl bg-white border-2 pl-4 pr-4 py-3 h-80 resize-none focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 leading-relaxed transition ${errors.synopsis && (touched.synopsis || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
             placeholder="Descreva brevemente a história..."
           />
         </div>
@@ -72,7 +67,7 @@ export const BasicFields: React.FC<BasicFieldsProps> = ({ title, synopsis, relea
             maxLength={BOOK_FREQ_MAX}
             onChange={e => onFrequency(e.target.value)}
             onBlur={onBlurFrequency}
-            className={`w-full bg-white border-2 pl-4 pr-4 py-2 focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 transition ${errors.releaseFrequency && (touched.frequency || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
+            className={`w-full rounded-full bg-white border-2 pl-4 pr-4 py-2 focus:ring-2 focus:ring-readowl-purple-dark text-readowl-purple placeholder-readowl-purple/50 transition ${errors.releaseFrequency && (touched.frequency || attemptedSubmit) ? 'border-red-400' : 'border-white/60'}`}
             placeholder="Ex: 1 capítulo por semana."
           />
         </div>
