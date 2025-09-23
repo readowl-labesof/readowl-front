@@ -28,6 +28,12 @@
       "nome": "teste",
       "email": "teste3@gmail.com",
       "senha": "teste"
+    },
+    {
+      "id": "1f85",
+      "nome": "mauro",
+      "email": "mauro@iftm.edu.br",
+      "senha": "12345"
     }
   ]
 }

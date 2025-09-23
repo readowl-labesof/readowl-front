@@ -24,7 +24,7 @@ const Header: React.FC = () => {
             <button onClick={ () => route("/login")} className="bg-readowl-purple-light text-white font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple transition-colors duration-300">
             Logar
             </button>
-          <button  onClick={ () => route("/cadastrar")}className="bg-readowl-purple-extralight text-readowl-purple font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple hover:text-white transition-colors duration-300">
+          <button  onClick={ () => route("/register")}className="bg-readowl-purple-extralight text-readowl-purple font-semibold py-2 px-6 rounded-full border-4 border-readowl-purple hover:bg-readowl-purple hover:text-white transition-colors duration-300">
             Cadastrar
           </button>
         </div>
