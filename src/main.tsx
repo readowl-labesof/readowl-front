@@ -10,7 +10,7 @@ import Library from "./pages/myLibrary/library.tsx";
 import Register from "./pages/register/register.tsx";
 import CreateBookForm from './pages/create/createBookForm.tsx';
 import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
-import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade/politicaDePrivacidade.tsx";
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
