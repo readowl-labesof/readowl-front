@@ -1,11 +1,7 @@
 import { useState } from "react";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
-<<<<<<< HEAD
 import InputWithIcon from "../../components/ui/inputWithIcon";
-=======
-import InputWithIcon from "../../components/ui/InputWithIcon";
->>>>>>> 547d714 (fix(merge):)
 import { useNavigate } from "react-router-dom";
 
 function Cadastrar() {
