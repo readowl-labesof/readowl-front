@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavLibrary from './navLibrary';
 import Footer from '../../components/footer';
@@ -30,7 +30,21 @@ function Library() {
 
                 {/* Botão "Minha Autoria!" */}
                 <div className="w-full mt-10 flex justify-center">
-                    <button className="bg-readowl-purple-light text-white font-yusei py-3 px-6 rounded-full w-4/5 text-lg font-semibold flex items-center justify-start space-x-2 p-4">
+                    <button
+                        onClick={() => {
+                            console.log('Minha Autoria clicked', { at: new Date().toISOString() });
+                            try {
+                                const stored = localStorage.getItem('readowl-user');
+                                console.log('localStorage.readowl-user (raw):', stored);
+                                const parsed = stored ? JSON.parse(stored) : null;
+                                console.log('localStorage.readowl-user (parsed):', parsed);
+                                console.log('parsed.id (if exists):', parsed?.id ?? parsed?.ID ?? parsed?.userId ?? null);
+                            } catch (e) {
+                                console.error('Erro ao ler/parsear readowl-user:', e);
+                            }
+                        }}
+                        className="bg-readowl-purple-light text-white font-yusei py-3 px-6 rounded-full w-4/5 text-lg font-semibold flex items-center justify-start space-x-2 p-4"
+                    >
                         <img src={authorIcon} alt="Ícone de autor" className="h-6 w-6" />
                         <span>Minha Autoria!</span>
                     </button>
