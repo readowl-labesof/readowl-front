@@ -11,6 +11,11 @@ import Register from "./pages/register/register.tsx";
 import CreateBookForm from './pages/create/createBookForm.tsx';
 import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade/politicaDePrivacidade.tsx";
+import GenericErrorPage from "./pages/error/GenericErrorPage.tsx";
+import ForbiddenPage from "./pages/error/ForbiddenPage";
+import NotFoundPage from "./pages/error/NotFoundPage";
+import InternalServerErrorPage from "./pages/error/InternalServerErrorPage";
+
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -25,6 +30,10 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/create" element={<CreateBookForm />} />
         <Route path="/termos-de-uso" element={<TermosDeUso />} />
         <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+        <Route path="/error" element={<GenericErrorPage/>}/>
+        <Route path="/error403" element={<ForbiddenPage/>}/>
+        <Route path="/*" element={<NotFoundPage/>}/>
+        <Route path="/error500" element={<InternalServerErrorPage/>}/>
       </Routes>
     </StrictMode>
   </BrowserRouter>
