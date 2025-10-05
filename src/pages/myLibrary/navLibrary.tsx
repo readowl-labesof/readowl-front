@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { default as searchIcon } from '../../../public/img/svg/navbar/search.svg';
-import { default as accountBoxIcon } from '../../../public/img/svg/navbar/account-box.svg';
-import { default as logoutIcon } from '../../../public/img/svg/navbar/logout.svg';
+const searchIcon = '/img/svg/navbar/search.svg';
+const accountBoxIcon = '/img/svg/navbar/account-box.svg';
+const logoutIcon = '/img/svg/navbar/logout.svg';
 import InputWithIcon from '../../components/ui/inputWithIcon';
 
 const NavLibrary: React.FC = () => {

@@ -10,8 +10,9 @@ import Library from "./pages/myLibrary/library.tsx";
 import Register from "./pages/register/register.tsx";
 import CreateBookForm from './pages/create/createBookForm.tsx';
 import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
-import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx";
-
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
+// import Profile from "./pages/profile/profile.tsx"; // This line is commented out to avoid duplication
+import Profile from "./pages/profile/profile.tsx";
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <StrictMode>
@@ -25,6 +26,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/create" element={<CreateBookForm />} />
         <Route path="/termos-de-uso" element={<TermosDeUso />} />
         <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+        <Route path="/profile" element={<Profile />} />
+
       </Routes>
     </StrictMode>
   </BrowserRouter>

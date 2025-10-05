@@ -35,5 +35,15 @@
       "email": "mauro@iftm.edu.br",
       "senha": "12345"
     }
+  ],
+  "books": [
+    {
+      "id": "f8a0",
+      "title": "teste",
+      "synopsis": "teste",
+      "coverUrl": "https://illusia.com.br/wp-content/uploads/2025/09/capa-illusia-Project-Zenkoku-.webp",
+      "gender": "Adulto, Biografia, Ciência",
+      "userId": "4643"
+    }
   ]
 }

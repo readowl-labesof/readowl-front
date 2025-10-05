@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import NavLibrary from './navLibrary';
 import Footer from '../../components/footer';
 import ButtonWithIcon from '../../components/ui/buttonWithIcon';
-import { default as addPhotoIcon } from '../../../public/img/svg/generics/add-photo.svg';
-import { default as authorIcon } from '../../../public/img/svg/book/author.svg';
-import { default as personIcon } from '../../../public/img/svg/auth/person.svg';
+const addPhotoIcon = '/img/svg/generics/add-photo.svg';
+const authorIcon = '/img/svg/book/author.svg';
+const personIcon = '/img/svg/auth/person.svg';
 
 function Library() {
     return (
