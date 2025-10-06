@@ -10,12 +10,14 @@ import Library from "./pages/myLibrary/library.tsx";
 import Register from "./pages/register/register.tsx";
 import CreateBookForm from './pages/create/createBookForm.tsx';
 import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
-import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade/politicaDePrivacidade.tsx";
 import GenericErrorPage from "./pages/error/GenericErrorPage.tsx";
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
 import ForbiddenPage from "./pages/error/ForbiddenPage";
 import NotFoundPage from "./pages/error/NotFoundPage";
 import InternalServerErrorPage from "./pages/error/InternalServerErrorPage";
-
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
+import Profile from "./pages/profile/profile.tsx";
+import UserList from "./pages/userList/userList.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -34,6 +36,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/error403" element={<ForbiddenPage/>}/>
         <Route path="/*" element={<NotFoundPage/>}/>
         <Route path="/error500" element={<InternalServerErrorPage/>}/>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/userList" element={<UserList />} />
       </Routes>
     </StrictMode>
   </BrowserRouter>

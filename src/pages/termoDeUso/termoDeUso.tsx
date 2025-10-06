@@ -1,7 +1,6 @@
 import React from 'react';
 import Header from "../../pages/landing/components-landing/headerlLanding";
 import Footer from "../../components/footer";
-import { Link } from "react-router-dom";
 
 const TermosDeUso: React.FC = () => {
   return (
