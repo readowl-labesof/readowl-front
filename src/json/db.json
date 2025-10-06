@@ -3,37 +3,95 @@
     {
       "id": "1",
       "email": "teste@gmail.com",
-      "senha": "123456789"
+      "senha": "123456789",
+      "password": "123456789"
     },
     {
       "id": "34f1",
       "nome": "teste",
       "email": "teste@gmail.com",
-      "senha": "12345"
+      "senha": "12345",
+      "password": "12345"
     },
     {
       "id": "4643",
       "nome": "Gabriel",
       "email": "gl9736387@gmail.com",
-      "senha": "teste12345"
+      "senha": "teste12345",
+      "password": "teste12345"
     },
     {
       "id": "e3a1",
       "nome": "Gabriel",
       "email": "gl9736387@gmail.com",
-      "senha": "teste"
+      "senha": "teste",
+      "password": "teste"
     },
     {
       "id": "e70d",
       "nome": "teste",
       "email": "teste3@gmail.com",
-      "senha": "teste"
+      "senha": "teste",
+      "password": "teste"
     },
     {
       "id": "1f85",
       "nome": "mauro",
       "email": "mauro@iftm.edu.br",
-      "senha": "12345"
+      "senha": "12345",
+      "password": "12345"
+    }
+  ],
+  "books": [
+    {
+      "id": "book-1",
+      "title": "A Jornada da Coruja",
+      "synopsis": "Uma história de descobertas e noites em claro, onde uma coruja aprende sobre coragem e escrita.",
+      "releaseFrequency": "1 capítulo por semana",
+      "coverUrl": "https://i.imgur.com/6Y2KX0H.jpg",
+      "status": "ONGOING",
+      "authorId": "1",
+      "author": {
+        "id": "1",
+        "name": "Teste Autor",
+        "image": null,
+        "role": "AUTHOR"
+      },
+      "genres": [
+        {
+          "id": "g1",
+          "name": "Fantasia"
+        },
+        {
+          "id": "g2",
+          "name": "Aventura"
+        }
+      ]
+    },
+    {
+      "title": "Palmeira2",
+      "synopsis": "Sem problemas",
+      "coverUrl": "https://illusia.com.br/wp-content/uploads/2025/09/capa-illusia-Project-Zenkoku-.webp",
+      "gender": "Adulto, Ação",
+      "id": "ygO3hMQ",
+      "status": "ONGOING",
+      "genres": [
+        "Biografia",
+        "Autoajuda",
+        "Aventura",
+        "Seinen"
+      ]
+    },
+    {
+      "title": "Bora pra cima cambada",
+      "synopsis": "423421412421",
+      "coverUrl": "https://illusia.com.br/wp-content/uploads/2025/06/capa-illusia-o-lixo-da-familia-do-conde.webp-_600x800.png",
+      "gender": "Ação",
+      "id": "fcrXzmP",
+      "status": "ONGOING",
+      "genres": [
+        "Adulto"
+      ]
     }
   ]
 }

@@ -1,52 +1,96 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import NavLibrary from './navLibrary';
-import Footer from '../../components/footer';
-import ButtonWithIcon from '../../components/ui/buttonWithIcon';
-import { default as addPhotoIcon } from '../../../public/img/svg/generics/add-photo.svg';
-import { default as authorIcon } from '../../../public/img/svg/book/author.svg';
-import { default as personIcon } from '../../../public/img/svg/auth/person.svg';
+// React import not required in newer JSX runtimes
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import NavLibrary from "./navLibrary";
+import Footer from "../../components/footer";
+import ButtonWithIcon from "../../components/ui/buttonWithIcon";
+import BookCarousel from "../../components/ui/BookCarousel";
+const addPhotoIcon = "/img/svg/generics/add-photo.svg";
 
 function Library() {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <NavLibrary />
-            <main className="flex-grow container mx-auto p-6">
-            
-                {/* Botão de registar o livro" */}
-                <div className="mt-8 flex justify-center">
-                    <Link to="/create">
-                        <ButtonWithIcon
-                            iconUrl={addPhotoIcon}
-                            iconAlt="Adicionar"
-                            variant="primary"
-                            isRounded
-                            className="w-full text-center"
-                        >
-                            Registrar uma obra
-                        </ButtonWithIcon>
-                    </Link>
-                </div>
+  const [books, setBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-                {/* Botão "Minha Autoria!" */}
-                <div className="w-full mt-10 flex justify-center">
-                    <button className="bg-readowl-purple-light text-white font-yusei py-3 px-6 rounded-full w-4/5 text-lg font-semibold flex items-center justify-start space-x-2 p-4">
-                        <img src={authorIcon} alt="Ícone de autor" className="h-6 w-6" />
-                        <span>Minha Autoria!</span>
-                    </button>
-                </div>
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:3333/books");
+        if (!res.ok) throw new Error("Falha ao carregar livros");
+        const data = await res.json();
+        if (!cancelled) setBooks(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-                {/* Botão "Seguidos" */}
-                <div className="w-full mt-10 flex justify-center">
-                    <button className="bg-readowl-purple-light text-white font-yusei py-3 px-6 rounded-full w-4/5 text-lg font-semibold flex items-center justify-start space-x-2 p-4">
-                        <img src={personIcon} alt="Ícone de seguidos" className="h-6 w-6" />
-                        <span>Seguidos!</span>
-                    </button>
-                </div>
-            </main>
-            <Footer />
+  // slug generation moved to BookCarousel component
+
+  // determine current user from mock-login localStorage
+  const currentUserId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("readowl-user-id")
+      : null;
+
+  const authored = books.filter((b) => {
+    const aId = b?.authorId ?? b?.author?.id ?? null;
+    return String(aId) === String(currentUserId);
+  });
+  const followed = books.filter((b) => {
+    const aId = b?.authorId ?? b?.author?.id ?? null;
+    return String(aId) !== String(currentUserId);
+  });
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <NavLibrary />
+      <main className="flex-grow container mx-auto p-6">
+        <div className="mt-8 flex justify-center">
+          <Link to="/create">
+            <ButtonWithIcon
+              iconUrl={addPhotoIcon}
+              iconAlt="Adicionar"
+              variant="primary"
+              className="w-full text-center max-w-xs"
+            >
+              Registrar uma obra
+            </ButtonWithIcon>
+          </Link>
         </div>
-    );
+
+        <section className="mt-8">
+          {loading && <div>Carregando livros...</div>}
+          {error && <div className="text-red-500">{error}</div>}
+          {!loading && books.length === 0 && (
+            <div>Nenhum livro encontrado.</div>
+          )}
+
+          <div className="px-2">
+            <BookCarousel
+              books={authored.length ? authored : books.slice(0, 1)}
+              title="Minha autoria!"
+              iconSrc="/img/svg/book/author.svg"
+              itemsPerView={1}
+            />
+            <BookCarousel
+              books={followed.length ? followed : books}
+              title="Seguidos!"
+              iconSrc="/img/svg/book/book2.svg"
+              itemsPerView={5}
+            />
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
 export default Library;
