@@ -76,7 +76,10 @@ function Cadastrar() {
             className="h-10 w-auto"
           />
           <span className="mb-4 text-xl font-bold text-white">Readowl</span>
-          <form className="w-full flex flex-col flex-1 justify-between gap-y-0.5" onSubmit={handleSubmit}>
+          <form
+            className="w-full flex flex-col flex-1 justify-between gap-y-0.5"
+            onSubmit={handleSubmit}
+          >
             <div>
               <label
                 htmlFor="nome"
@@ -84,14 +87,14 @@ function Cadastrar() {
               >
                 Nome
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">person</span>}
                 type="text"
                 id="nome"
                 placeholder="Seu nome"
                 required
                 value={nome}
-                onChange={e => setNome(e.target.value)}
+                onChange={(e) => setNome(e.target.value)}
               />
             </div>
             <div>
@@ -101,14 +104,14 @@ function Cadastrar() {
               >
                 Email
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">mail</span>}
                 type="email"
                 id="email"
                 placeholder="readowl@gmail.com"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
@@ -118,13 +121,13 @@ function Cadastrar() {
               >
                 Senha
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">key</span>}
                 type="password"
                 id="password"
                 required
                 value={senha}
-                onChange={e => setSenha(e.target.value)}
+                onChange={(e) => setSenha(e.target.value)}
               />
             </div>
             <div>
@@ -134,13 +137,15 @@ function Cadastrar() {
               >
                 Confirmar senha
               </label>
-              <InputWithIcon 
-                icon={<span className="material-symbols-outlined">passkey</span>}
+              <InputWithIcon
+                icon={
+                  <span className="material-symbols-outlined">passkey</span>
+                }
                 type="password"
                 id="Check-password"
                 required
                 value={checkSenha}
-                onChange={e => setCheckSenha(e.target.value)}
+                onChange={(e) => setCheckSenha(e.target.value)}
               />
             </div>
             <hr className="w-full border-white my-4" />

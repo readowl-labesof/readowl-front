@@ -287,21 +287,41 @@ export default function CreateBookForm({
 
     try {
       setSubmitting(true);
-      // Monta o corpo do livro
+
+      // --- INÍCIO DAS ALTERAÇÕES ---
+
+      // 1. Obter o token de autenticação (exemplo: do localStorage)
+      // Em ambiente de desenvolvimento permitimos criar livros sem token;
+      // incluímos o header Authorization apenas se o token existir.
+      const token = localStorage.getItem("readowl-token");
+
+      // 2. Montar o corpo da requisição.
+      // O campo 'genres' no frontend é um array, mas no nosso backend é uma string simples.
+      // Vamos juntar os gêneros em uma string separada por vírgulas.
+      // O campo 'releaseFrequency' não existe no nosso backend, então o removeremos.
+      const currentUserId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("readowl-user-id")
+          : null;
       const bookData = {
         title: title.trim(),
         synopsis: synopsis.trim(),
         coverUrl: coverUrl.trim(),
-        gender: selectedGenres.join(", "),
-        userId: user.id
+        gender: selectedGenres.join(", "), // Ex: "Fantasia, Aventura"
+        authorId: currentUserId,
       };
-      // Envia para o json-server
-      const res = await fetch("http://localhost:3000/books", {
+
+      // 3. Fazer a requisição para o endpoint correto do nosso backend
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch("http://localhost:3333/books", {
+        // URL correta da API
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(bookData)
+        headers,
+        body: JSON.stringify(bookData), // Enviando os dados corretos
       });
       if (!res.ok) {
         const errorData = await res.json();

@@ -13,7 +13,7 @@ function Login() {
     e.preventDefault();
     // Requisição para o json-server
     const res = await fetch(
-      `http://localhost:3000/users?email=${email}&senha=${senha}`
+      `http://localhost:3333/users?email=${email}&senha=${senha}`
     );
     const data = await res.json();
     if (data.length > 0) {
@@ -73,7 +73,9 @@ function Login() {
                 Senha
               </label>
               <InputWithIcon
-                icon={<span className="material-symbols-outlined">passkey</span>}
+                icon={
+                  <span className="material-symbols-outlined">passkey</span>
+                }
                 type="password"
                 id="password"
                 placeholder="Senha"
@@ -121,5 +123,3 @@ function Login() {
 }
 
 export default Login;
-
-
