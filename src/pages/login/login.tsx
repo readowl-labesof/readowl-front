@@ -18,6 +18,10 @@ function Login() {
     const data = await res.json();
     if (data.length > 0) {
       // Login válido
+      // Salva todos os usuários encontrados (caso o filtro retorne mais de um)
+      localStorage.setItem("readowl-users", JSON.stringify(data));
+      // Salva o primeiro usuário como logado (caso queira usar individualmente)
+      localStorage.setItem("readowl-user", JSON.stringify(data[0]));
       alert("Login realizado com sucesso!");
       navigate("/home"); // ou para a página desejada
     } else {

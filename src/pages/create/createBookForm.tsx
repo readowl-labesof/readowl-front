@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import useUser from "../../hooks/useUser";
 import { CoverInput } from "./coverInput";
 import { BasicFields } from "./basicFields";
 import { GenreSelector } from "./genreSelector";
@@ -269,12 +270,20 @@ export default function CreateBookForm({
 
   // Dentro do seu componente CreateBookForm
 
+  // Usa o hook corretamente
+  const { user, isLogged } = useUser();
+
   const handleSubmit = async () => {
     setAttemptedSubmit(true);
     setConfirmSaveOpen(false);
     const v = validate();
     setErrors(v);
     if (Object.keys(v).length > 0) return;
+
+    if (!isLogged || !user?.id) {
+      setErrors((prev) => ({ ...prev, submit: "Você não está autenticado. Por favor, faça login novamente." }));
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -314,14 +323,10 @@ export default function CreateBookForm({
         headers,
         body: JSON.stringify(bookData), // Enviando os dados corretos
       });
-
-      // --- FIM DAS ALTERAÇÕES ---
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Falha ao criar livro");
       }
-
       setSuccessModal(true);
     } catch (e) {
       setErrors((prev) => ({ ...prev, submit: (e as Error).message }));

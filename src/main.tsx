@@ -11,8 +11,15 @@ import Register from "./pages/register/register.tsx";
 import CreateBookForm from "./pages/create/createBookForm.tsx";
 import EditBookPage from "./pages/myLibrary/edit/EditBookPage.tsx";
 import MockLogin from "./pages/mockLogin/mockLogin.tsx";
-import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx";
-import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx";
+import TermosDeUso from "./pages/termoDeUso/termoDeUso.tsx"
+import GenericErrorPage from "./pages/error/GenericErrorPage.tsx";
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
+import ForbiddenPage from "./pages/error/ForbiddenPage";
+import NotFoundPage from "./pages/error/NotFoundPage";
+import InternalServerErrorPage from "./pages/error/InternalServerErrorPage";
+import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
+import Profile from "./pages/profile/profile.tsx";
+import UserList from "./pages/userList/userList.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -28,10 +35,13 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/create" element={<CreateBookForm />} />
         <Route path="/mock-login" element={<MockLogin />} />
         <Route path="/termos-de-uso" element={<TermosDeUso />} />
-        <Route
-          path="/politica-de-privacidade"
-          element={<PoliticaDePrivacidade />}
-        />
+        <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+        <Route path="/error" element={<GenericErrorPage/>}/>
+        <Route path="/error403" element={<ForbiddenPage/>}/>
+        <Route path="/*" element={<NotFoundPage/>}/>
+        <Route path="/error500" element={<InternalServerErrorPage/>}/>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/userList" element={<UserList />} />
       </Routes>
     </StrictMode>
   </BrowserRouter>
