@@ -3,6 +3,7 @@ import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
 import { useNavigate } from "react-router-dom";
+import { createUser } from "../../services/users";
 
 function Cadastrar() {
   const [nome, setNome] = useState("");
@@ -13,25 +14,32 @@ function Cadastrar() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     if (senha !== checkSenha) {
       alert("As senhas não conferem!");
       return;
     }
-    // Cadastro no json-server
-    await fetch("http://localhost:5173/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, senha })
-    });
-    alert("Cadastro realizado!");
-    setNome("");
-    setEmail("");
-    setSenha("");
-    setCheckSenha("");
-    navigation("/home")
+
+    try {
+      // envia para o backend (POST /users)
+      await createUser({
+        name: nome,
+        email,
+        password: senha,
+      });
+
+      alert("Cadastro realizado com sucesso!");
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setCheckSenha("");
+      navigation("/home");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ?? "Erro ao cadastrar usuário.";
+      alert(msg);
+    }
   }
-
-
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
@@ -43,7 +51,11 @@ function Cadastrar() {
             className="h-10 w-auto"
           />
           <span className="mb-4 text-xl font-bold text-white">Readowl</span>
-          <form className="w-full flex flex-col flex-1 justify-between gap-y-0.5" onSubmit={handleSubmit}>
+
+          <form
+            className="w-full flex flex-col flex-1 justify-between gap-y-0.5"
+            onSubmit={handleSubmit}
+          >
             <div>
               <label
                 htmlFor="nome"
@@ -51,16 +63,17 @@ function Cadastrar() {
               >
                 Nome
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">person</span>}
                 type="text"
                 id="nome"
                 placeholder="Seu nome"
                 required
                 value={nome}
-                onChange={e => setNome(e.target.value)}
+                onChange={(e) => setNome(e.target.value)}
               />
             </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -68,16 +81,17 @@ function Cadastrar() {
               >
                 Email
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">mail</span>}
                 type="email"
                 id="email"
                 placeholder="readowl@gmail.com"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
             <div>
               <label
                 htmlFor="password"
@@ -85,38 +99,42 @@ function Cadastrar() {
               >
                 Senha
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">key</span>}
                 type="password"
                 id="password"
                 required
                 value={senha}
-                onChange={e => setSenha(e.target.value)}
+                onChange={(e) => setSenha(e.target.value)}
               />
             </div>
+
             <div>
               <label
-                htmlFor="Check-password"
+                htmlFor="check-password"
                 className="block mb-1 text-sm font-medium text-white"
               >
                 Confirmar senha
               </label>
-              <InputWithIcon 
+              <InputWithIcon
                 icon={<span className="material-symbols-outlined">passkey</span>}
                 type="password"
-                id="Check-password"
+                id="check-password"
                 required
                 value={checkSenha}
-                onChange={e => setCheckSenha(e.target.value)}
+                onChange={(e) => setCheckSenha(e.target.value)}
               />
             </div>
+
             <hr className="w-full border-white my-4" />
+
             <div className="flex justify-between items-center w-full mb-4 text-white text-sm">
               <div className="flex items-center">
                 <input id="remember" type="checkbox" className="w-4 h-4 mr-2" />
                 <label htmlFor="remember">Lembrar de mim</label>
               </div>
             </div>
+
             <Button className="w-40 bg-readowl-purple-extralight text-black font-semibold rounded-full text-base py-1 mb-2 transition mx-auto">
               Cadastrar
             </Button>
@@ -130,6 +148,7 @@ function Cadastrar() {
           </form>
         </div>
       </main>
+
       <Footer />
     </div>
   );
