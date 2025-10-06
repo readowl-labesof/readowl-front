@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import useUser from "../../hooks/useUser";
 import { CoverInput } from "./coverInput";
 import { BasicFields } from "./basicFields";
 import { GenreSelector } from "./genreSelector";
@@ -269,6 +270,9 @@ export default function CreateBookForm({
 
   // Dentro do seu componente CreateBookForm
 
+  // Usa o hook corretamente
+  const { user, isLogged } = useUser();
+
   const handleSubmit = async () => {
     setAttemptedSubmit(true);
     setConfirmSaveOpen(false);
@@ -276,49 +280,33 @@ export default function CreateBookForm({
     setErrors(v);
     if (Object.keys(v).length > 0) return;
 
+    if (!isLogged || !user?.id) {
+      setErrors((prev) => ({ ...prev, submit: "Você não está autenticado. Por favor, faça login novamente." }));
+      return;
+    }
+
     try {
       setSubmitting(true);
-
-      // --- INÍCIO DAS ALTERAÇÕES ---
-
-      // 1. Obter o token de autenticação (exemplo: do localStorage)
-      const token = localStorage.getItem("readowl-token"); // Use a chave que você definiu para salvar o token
-      if (!token) {
-        throw new Error(
-          "Você não está autenticado. Por favor, faça login novamente."
-        );
-      }
-
-      // 2. Montar o corpo da requisição.
-      // O campo 'genres' no frontend é um array, mas no nosso backend é uma string simples.
-      // Vamos juntar os gêneros em uma string separada por vírgulas.
-      // O campo 'releaseFrequency' não existe no nosso backend, então o removeremos.
+      // Monta o corpo do livro
       const bookData = {
         title: title.trim(),
         synopsis: synopsis.trim(),
         coverUrl: coverUrl.trim(),
-        gender: selectedGenres.join(", "), // Ex: "Fantasia, Aventura"
+        gender: selectedGenres.join(", "),
+        userId: user.id
       };
-
-      // 3. Fazer a requisição para o endpoint correto do nosso backend
-      const res = await fetch("http://localhost:3333/books", {
-        // URL correta da API
+      // Envia para o json-server
+      const res = await fetch("http://localhost:3000/books", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          // 4. Incluir o token no cabeçalho 'Authorization'
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(bookData), // Enviando os dados corretos
+        body: JSON.stringify(bookData)
       });
-
-      // --- FIM DAS ALTERAÇÕES ---
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Falha ao criar livro");
       }
-
       setSuccessModal(true);
     } catch (e) {
       setErrors((prev) => ({ ...prev, submit: (e as Error).message }));
