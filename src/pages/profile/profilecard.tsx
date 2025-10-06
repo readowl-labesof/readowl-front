@@ -4,14 +4,8 @@ type Props = {
 }
 
 function ProfileCard({ user }: Props) {
-    console.log('ProfileCard - prop user:', user);
-    try {
-        const userFromStorage = JSON.parse(localStorage.getItem('readowl-user') || 'null');
-        console.log('ProfileCard - localStorage readowl-user:', userFromStorage);
-    } catch (e) {
-        console.log('ProfileCard - erro ao parsear localStorage:', e);
-    }
-
+    console.log('ProfileCard - renderizando com user:', user);
+    
     const displayName = user?.nome || 'Nome não disponível';
     const displayEmail = user?.email || user?.mail || 'Email não disponível';
     const displayBio = user?.bio || user?.descricao || user?.descricaoPerfil || 'Descrição não disponível';
