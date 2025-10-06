@@ -1,16 +1,65 @@
 
+import { useState, useEffect } from "react";
+
 type Props = {
     user?: any | null;
 }
 
 function ProfileCard({ user }: Props) {
-    console.log('ProfileCard - renderizando com user:', user);
+    console.log('ProfileCard - renderização iniciada');
+    console.log('ProfileCard - prop user recebida:', user);
     
-    const displayName = user?.nome || 'Nome não disponível';
-    const displayEmail = user?.email || user?.mail || 'Email não disponível';
-    const displayBio = user?.bio || user?.descricao || user?.descricaoPerfil || 'Descrição não disponível';
-    const displayCreated = user?.createdAt || user?.criadoEm || user?.created_at || 'Data não disponível';
-    const avatar = user?.avatarUrl || user?.avatar || user?.foto || null;
+    // Sempre pegar os dados mais atuais do localStorage
+    const [currentUser, setCurrentUser] = useState(() => {
+        try {
+            const userFromStorage = JSON.parse(localStorage.getItem('readowl-user') || 'null');
+            console.log('ProfileCard - dados do localStorage:', userFromStorage);
+            return userFromStorage || user;
+        } catch (e) {
+            console.log('ProfileCard - erro ao parsear localStorage:', e);
+            return user;
+        }
+    });
+
+    // Atualizar quando a prop user mudar
+    useEffect(() => {
+        if (user) {
+            console.log('ProfileCard - atualizando currentUser com:', user);
+            setCurrentUser(user);
+        }
+    }, [user]);
+
+    // Listener para mudanças no localStorage
+    useEffect(() => {
+        const handleStorageChange = () => {
+            try {
+                const userFromStorage = JSON.parse(localStorage.getItem('readowl-user') || 'null');
+                console.log('ProfileCard - localStorage mudou:', userFromStorage);
+                if (userFromStorage) {
+                    setCurrentUser(userFromStorage);
+                }
+            } catch (e) {
+                console.log('ProfileCard - erro ao parsear localStorage:', e);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('userUpdated', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('userUpdated', handleStorageChange);
+        };
+    }, []);
+
+    const displayName = currentUser?.nome || 'Nome não disponível';
+    const displayEmail = currentUser?.email || currentUser?.mail || 'Email não disponível';
+    const displayBio = currentUser?.bio || currentUser?.descricao || currentUser?.descricaoPerfil || 'Descrição não disponível';
+    const displayCreated = currentUser?.createdAt || currentUser?.criadoEm || currentUser?.created_at || 'Data não disponível';
+    const avatar = currentUser?.avatarUrl || currentUser?.avatar || currentUser?.foto || null;
+    
+    console.log('ProfileCard - displayBio final:', displayBio);
+    console.log('ProfileCard - currentUser.descricao:', currentUser?.descricao);
 
     return (
         <div className="bg-readowl-purple-medium rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">

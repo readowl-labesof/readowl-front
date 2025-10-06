@@ -7,7 +7,6 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
     nome: "",
     email: "",
     senha: "",
-    confirmarSenha: "",
     descricao: "",
     avatarUrl: ""
   });
@@ -22,7 +21,6 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
       nome: user.nome || user.username || "",
       email: user.email || "",
       senha: "",
-      confirmarSenha: "",
       descricao: user.descricao || user.bio || "",
       avatarUrl: user.avatarUrl || user.foto || ""
     });
@@ -53,7 +51,7 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
   function validate() {
     if (!form.nome.trim()) return "Nome obrigatório.";
     if (!form.email.trim()) return "Email obrigatório.";
-    if (form.senha && form.senha !== form.confirmarSenha) return "Senhas não conferem.";
+    if (!form.senha.trim()) return "Senha obrigatória para confirmar as alterações.";
     return null;
   }
 
@@ -64,6 +62,12 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
     const v = validate();
     if (v) return setError(v);
     if (!user) return setError("Usuário não encontrado.");
+    
+    // Verificar se a senha informada está correta
+    if (form.senha !== user.senha) {
+      return setError("Senha atual incorreta. Digite sua senha atual para confirmar as alterações.");
+    }
+    
     setLoading(true);
     try {
       const payload = {
@@ -72,7 +76,7 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
         descricao: form.descricao,
         avatarUrl: form.avatarUrl,
         criadoEm,
-        ...(form.senha ? { senha: form.senha } : {})
+        senha: form.senha // Sempre incluir a senha
       };
       const res = await fetch(`http://localhost:3000/users/${user.id}`, {
         method: "PATCH",
@@ -82,10 +86,23 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
       if (!res.ok) throw new Error("Erro ao atualizar usuário");
       const updated = await res.json();
       console.log('EditProfileForm - dados atualizados do servidor:', updated);
-      saveUser(updated);
-      console.log('EditProfileForm - saveUser chamado');
+      
+      // Garantir que os dados estão completos
+      const completeUser = {
+        ...user,
+        ...updated,
+        // Garantir que a descrição atualizada seja preservada
+        descricao: payload.descricao
+      };
+      
+      console.log('EditProfileForm - dados completos para salvar:', completeUser);
+      saveUser(completeUser);
       setSuccess("Dados atualizados com sucesso!");
-      setTimeout(() => { onClose?.(); }, 800);
+      
+      // Aguardar um pouco para o usuário ver a mensagem de sucesso, depois fechar
+      setTimeout(() => { 
+        onClose?.(); 
+      }, 1000);
     } catch (err: any) {
       setError(err.message || "Erro desconhecido");
     } finally {
@@ -196,11 +213,24 @@ export default function EditProfileForm({ onClose, onChangePassword }: { onClose
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="senha">🔒</span>
-              <input name="senha" type="password" value={form.senha} onChange={handleChange} placeholder="Senha" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span role="img" aria-label="confirmar">✔️</span>
-              <input name="confirmarSenha" type="password" value={form.confirmarSenha} onChange={handleChange} placeholder="Confirmar senha" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
+              <input 
+                name="senha" 
+                type="password" 
+                value={form.senha} 
+                onChange={handleChange} 
+                placeholder="Digite sua senha atual para confirmar" 
+                required
+                style={{ 
+                  flex: 1, 
+                  borderRadius: 12, 
+                  border: 'none', 
+                  padding: '8px 16px', 
+                  background: '#ede7f6', 
+                  color: '#7c5cbf', 
+                  fontWeight: 500, 
+                  fontSize: 16 
+                }} 
+              />
             </label>
           </div>
         </div>
