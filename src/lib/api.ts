@@ -84,10 +84,33 @@ export const api = {
   // --- Livros ---
   listBooks: () => request<BookDTO[]>('/books'),
   getBook: (id: string) => request<BookDTO>(`/books/${id}`),
+  createBook: (data: Partial<BookDTO> & { title: string; synopsis?: string; coverUrl?: string; gender?: string }, token: string) =>
+    request<BookDTO>('/books', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  updateBook: (id: string, data: Partial<BookDTO>, token: string) =>
+    request<BookDTO>(`/books/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  deleteBook: (id: string, token: string) =>
+    request<{ message?: string }>(`/books/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
 
   // --- Volumes & Capítulos ---
   getVolumes: (bookId: string) => request<VolumeDTO[]>(`/books/${bookId}/volumes`),
   getChapters: (bookId: string) => request<ChapterDTO[]>(`/books/${bookId}/chapters`),
+  createVolume: (data: { bookId: string; title?: string; name?: string }, token: string) =>
+    request<VolumeDTO>('/volumes', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  updateVolume: (id: string, data: Partial<VolumeDTO>, token: string) =>
+    request<VolumeDTO>(`/volumes/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  reorderVolumes: (pairs: { id: string; order: number }[], token: string) =>
+    request<{ message?: string }>('/volumes/reorder', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ volumes: pairs }) }),
+  deleteVolume: (id: string, token: string) =>
+    request<{ message?: string }>(`/volumes/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
+
+  createChapter: (data: { bookId: string; title: string; volumeId?: string | null; content?: string }, token: string) =>
+    request<ChapterDTO>('/chapters', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  updateChapter: (id: string, data: Partial<{ title: string; content: string; volumeId: string | null }>, token: string) =>
+    request<ChapterDTO>(`/chapters/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  reorderChapters: (groups: { volumeId?: string | null; chapters: { id: string; order: number }[] }[], token: string) =>
+    request<{ message?: string }>('/chapters/reorder', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ groups }) }),
+  deleteChapter: (id: string, token: string) =>
+    request<{ message?: string }>(`/chapters/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
 
   // --- Follow ---
   followStatus: (bookId: string, token: string) => request<{ following: boolean }>(`/books/${bookId}/follow`, { headers: { Authorization: `Bearer ${token}` } }),
