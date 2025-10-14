@@ -19,7 +19,9 @@ export default {
         "readowl-purple-hover": "#A78CF0", //'#AD92F5'
       },
       fontFamily: {
-        yusei: ["var(--font-yusei-magic)", "system-ui", "sans-serif"],
+        display: ["'Yusei Magic'", 'system-ui', 'sans-serif'],
+        serif: ["'PT Serif'", 'Georgia', 'serif'],
+        yusei: ["'Yusei Magic'", 'system-ui', 'sans-serif'], // legado (uso existente)
       },
     },
   },
