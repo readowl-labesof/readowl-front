@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import type { ChapterDTO } from '../../lib/api'
 import { Icon } from '../../components/ui/Icon'
+import { Breadcrumb } from '../../components/ui/Breadcrumb'
 import { useAuth } from '../../hooks/useAuth'
 
 interface ChapterFull extends ChapterDTO {
@@ -50,20 +51,21 @@ export default function ChapterReaderPage() {
   return (
     <div className={`min-h-screen ${dark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'} transition-colors`}>      
       <div className="container mx-auto px-4 py-4 flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link to={`/books/${chapter.book?.id}`} className="text-readowl-purple hover:underline flex items-center gap-1">
-            <Icon name="BookOpen" size={16} /> {chapter.book?.title}
-          </Link>
-          <span className="opacity-50">/</span>
-          {chapter.volume && (
-            <span className="flex items-center gap-1"><Icon name="Folder" size={14} /> {chapter.volume.title || chapter.volume.name}</span>
-          )}
-          <span className="opacity-50">/</span>
-          <span className="font-medium">{chapter.title}</span>
+        <Breadcrumb
+          items={[
+            { label: chapter.book?.title || 'Livro', href: `/books/${chapter.book?.id}` },
+            ...(chapter.volume ? [{ label: chapter.volume.title || chapter.volume.name || 'Volume' }]: []),
+            { label: chapter.title }
+          ]}
+          showHome
+          homeHref="/home"
+          className="flex-1"
+        />
+        <div>
+          <button onClick={() => setDark(d => !d)} className="flex items-center gap-1 px-3 py-1 rounded-full border text-xs hover:bg-white/10">
+            <Icon name={dark ? 'Sun' : 'Moon'} size={14} /> {dark ? 'Claro' : 'Escuro'}
+          </button>
         </div>
-        <button onClick={() => setDark(d => !d)} className="flex items-center gap-1 px-3 py-1 rounded-full border text-xs hover:bg-white/10">
-          <Icon name={dark ? 'Sun' : 'Moon'} size={14} /> {dark ? 'Claro' : 'Escuro'}
-        </button>
       </div>
 
       <main className="container mx-auto px-4 pb-12 flex flex-col gap-8 max-w-4xl">

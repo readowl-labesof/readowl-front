@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { FollowButton } from '../../components/book/FollowButton'
 import { RatingSummary } from '../../components/book/RatingSummary'
 import { Icon } from '../../components/ui/Icon'
+import { Breadcrumb } from '../../components/ui/Breadcrumb'
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -28,6 +29,12 @@ export default function BookDetailPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-8">
+      <Breadcrumb
+        items={[{ label: book?.title || 'Livro' }]}
+        showHome
+        homeHref="/home"
+        className="mt-2"
+      />
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-56">
           {book?.coverUrl ? (
