@@ -24,14 +24,23 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
 
 *Tabela adaptada do documento "PP - LabESOF"*
 
-### 🎯 Funcionalidades Principais
+### 🎯 Funcionalidades Principais (fase atual)
 
-    * Cadastro e login de usuários com autenticação segura e recuperação de senha.
-    * Criação, visualização, edição e exclusão de livros, volumes e capítulos.
-    * Sistema de busca avançada e filtros por gênero, popularidade e data.
-    * Biblioteca pessoal para favoritar obras e receber notificações.
-    * Interação através de avaliações, curtidas e comentários em livros e capítulos.
-    * Painel de administração para gerenciamento de usuários e moderação de conteúdo.
+        * Autenticação: login, registro, remember-me, recuperação de senha.
+        * Login com Google (fluxo OAuth) – botão na tela de login.
+        * Visualização de detalhes de livro (sinopse sanitizada, volumes, capítulos avulsos).
+        * Leitura de capítulo (breadcrumb, navegação prev/next, tema claro/escuro).
+        * Seguir / deixar de seguir livros + exibir estado.
+        * Avaliação (rating) de livros + resumo (média e distribuição) com interação.
+        * Breadcrumb reutilizável (componente compartilhado) igualado ao estilo do projeto Next.
+        * Ícones unificados via lucide-react.
+        * Fontes personalizadas (Yusei Magic / PT Serif) integradas ao Tailwind.
+        * Estrutura preparada para CRUD avançado (edição rico-text) a ser implementado.
+
+Planejado / Próximo:
+        * Editor TipTap para criação/edição de capítulos.
+        * Reordenação interativa de volumes/capítulos.
+        * Páginas de gerenciamento de perfil avançado e administração.
 
 ### 🛠️ Tecnologias Utilizadas
 
@@ -68,11 +77,11 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
 
 ## 📈 Status do Projeto
 
-> **Progressos realizados**: Landing Page, login e cadastro, criação de livro, navegação inicial.  Sprint 1 e 2.
+> **Concluído recentemente**: Migração de ícones, auth com Google e reset de senha, componente Breadcrumb, página de detalhe de livro (follow + rating), leitor de capítulo com tema, remoção total de mocks (json-server).
 
-> **Progresso atual**: Em fase de planejamento e desenvolvimento. Sprint 3
+> **Em andamento**: Interfaces CRUD (editor TipTap) e testes.
 
-> **Próximos passos**: Telas de configuração da conta do usuário e administrador, índice do livro, edição de livro, telas de erros.
+> **Próximos passos**: Implementar criação/edição de capítulos, reordenação drag-and-drop, testes E2E leves e documentação final.
 
 -----
 
@@ -95,7 +104,16 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
         npm install
         ```
 
-4. Configure o arquivo `.env` com as variáveis de ambiente necessárias (exemplo: URL do backend).
+4. Configure o arquivo `.env` com as variáveis de ambiente necessárias.
+
+### 🔐 Variáveis de Ambiente (Frontend)
+```
+VITE_API_URL=http://localhost:3000
+VITE_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com # usado se houver fluxo direto no cliente no futuro
+```
+Observações:
+1. O frontend usa `VITE_API_URL` para montar requisições (fallback: http://localhost:3000).
+2. Tokens de sessão são armazenados em `localStorage` (ou sessionStorage para sessões sem remember-me).
 
 5. Na pasta raiz do projeto, execute:
 
@@ -106,6 +124,16 @@ A plataforma busca solucionar problemas comuns em outros sistemas, como a divulg
 6. A aplicação estará disponível em `http://localhost:5173` (ou outra porta informada pelo Vite).
 
 -----
+
+## 🔗 Integração com Backend
+
+Consumo principal via cliente em `src/lib/api.ts` (fetch + wrappers). Principais grupos:
+        * auth: login, register, me, forgot/reset, googleAuthUrl
+        * books: getBook, getChapters, getVolumes
+        * follow: followStatus, follow/unfollow
+        * rating: ratingSummary, rate
+
+Estrutura de dados tipada (DTOs) evita `any` e centraliza contratos. Atualizar esse arquivo ao adicionar novas rotas.
 
 ## 📓 Padrão de Commits
 
@@ -146,6 +174,46 @@ git commit -am "RO-12 fix(login-page):
 git commit -am "RO-47 feat(carrossel):
 > Implementa o carrossel na página inicial."
 ```
+
+-----
+## 🧭 Breadcrumb
+
+Componente reutilizável em `src/components/ui/Breadcrumb.tsx` inspirado na versão Next.js. Recursos:
+        * Suporte a prefixo "Início" e itens dinâmicos.
+        * Envelopado em `<nav aria-label="Breadcrumb">` com acessibilidade.
+        * Estilos responsivos com wrap de linha em telas menores.
+
+Uso exemplo:
+```tsx
+<Breadcrumb showHome items={[{ label: book.title }, { label: 'Editar', href: `/books/${book.id}/edit` }]} />
+```
+
+## ⭐ Rating e Follow
+
+Componentes:
+        * `FollowButton` (toggle otimista com invalidação de cache).
+        * `RatingSummary` (média, distribuição e interação de envio de nota).
+
+## 📚 Leitor de Capítulo
+
+Página `ChapterReader` com:
+        * Tema claro/escuro (toggle adiciona classe `dark` no `<html>`).
+        * Navegação prev/next calculada em memória após fetch da lista de capítulos.
+        * Conteúdo sanitizado previamente no backend.
+
+## 🔄 Próximas Implementações (CRUD Avançado)
+
+Planejamento para editor (TipTap):
+        * Componente `RichChapterEditor` (toolbar: bold, italic, heading, list, code, quote, link).
+        * Serialização HTML -> salva sanitized no backend.
+        * Preview modo leitura inline.
+
+## 🧪 Testes (Plano)
+
+Após finalizar CRUD:
+        * Smoke de rotas (frontend) com Playwright ou Cypress leve.
+        * Testes de hooks (useAuth) e componentes críticos (FollowButton, RatingSummary).
+        * Snapshot shallow de Breadcrumb.
 
 -----
 
