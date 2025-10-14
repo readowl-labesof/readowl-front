@@ -11,8 +11,6 @@
     "tailwind:init": "tailwindcss init -p",
     "build:tailwind": "npx tailwindcss -i ./src/main/resources/static/css/tailwind-input.css -o ./src/main/resources/static/css/tailwind.css --minify",
     "build:tailwind.vivo": "npx tailwindcss -i ./src/main/resources/static/css/tailwind-input.css -o ./src/main/resources/static/css/tailwind.css --watch",
-    "json:server": "json-server --watch src/json/db.json --port 3333",
-    "json:auth": "json-server-auth --watch src/json/db.json --port 3333",
     "check:path": "echo $PATH"
   },
   "dependencies": {
@@ -35,8 +33,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "json-server": "^0.17.3",
-    "json-server-auth": "^2.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "3.4.1",
     "typescript": "~5.8.3",

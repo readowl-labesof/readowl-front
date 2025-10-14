@@ -13,6 +13,28 @@ export interface UserDTO {
   role?: string
 }
 
+// Tipos mínimos para livros / volumes / capítulos (expandir conforme necessidade)
+export interface BookDTO {
+  id: string
+  title: string
+  synopsis?: string
+  coverUrl?: string
+  status?: string
+}
+export interface VolumeDTO {
+  id: string
+  name?: string
+  title?: string
+  order?: number
+}
+export interface ChapterDTO {
+  id: string
+  title: string
+  order?: number
+  volumeId?: string | null
+  bookId?: string
+}
+
 interface AuthResponse {
   token: string
   user: UserDTO
@@ -58,4 +80,21 @@ export const api = {
 
   // --- Google OAuth ---
   googleAuthUrl: () => request<{ url: string }>('/oauth/google/url'),
+
+  // --- Livros ---
+  listBooks: () => request<BookDTO[]>('/books'),
+  getBook: (id: string) => request<BookDTO>(`/books/${id}`),
+
+  // --- Volumes & Capítulos ---
+  getVolumes: (bookId: string) => request<VolumeDTO[]>(`/books/${bookId}/volumes`),
+  getChapters: (bookId: string) => request<ChapterDTO[]>(`/books/${bookId}/chapters`),
+
+  // --- Follow ---
+  followStatus: (bookId: string, token: string) => request<{ following: boolean }>(`/books/${bookId}/follow`, { headers: { Authorization: `Bearer ${token}` } }),
+  follow: (bookId: string, token: string) => request<{ message?: string }>(`/books/${bookId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }),
+  unfollow: (bookId: string, token: string) => request<{ message?: string }>(`/books/${bookId}/follow`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
+
+  // --- Ratings ---
+  ratingSummary: (bookId: string) => request<{ average: number; total: number; distribution: Record<string, number> }>(`/books/${bookId}/ratings/summary`),
+  rate: (bookId: string, value: number, token: string) => request<{ message?: string }>(`/books/${bookId}/ratings`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ value }) }),
 }
