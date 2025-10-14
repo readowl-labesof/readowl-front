@@ -3,14 +3,8 @@ import useUser from "../../hooks/useUser";
 import { CoverInput } from "./coverInput";
 import { BasicFields } from "./basicFields";
 import { GenreSelector } from "./genreSelector";
-import {
-  createBookSchema,
-  BOOK_GENRES_MASTER,
-  BOOK_COVER_MIN_WIDTH,
-  BOOK_COVER_MIN_HEIGHT,
-  BOOK_COVER_RATIO,
-  BOOK_COVER_RATIO_TOLERANCE,
-} from "../../types/book";
+import { createBookSchema, BOOK_GENRES_MASTER, BOOK_COVER_MIN_WIDTH, BOOK_COVER_MIN_HEIGHT, BOOK_COVER_RATIO, BOOK_COVER_RATIO_TOLERANCE } from "../../types/book";
+import { api } from '../../lib/api'
 
 // Implementação simples de Modal para Vite/React
 // Observação: estilização feita com Tailwind; fecha ao clicar no backdrop ou no botão Fechar
@@ -317,16 +311,9 @@ export default function CreateBookForm({
       };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch("http://localhost:3333/books", {
-        // URL correta da API
-        method: "POST",
-        headers,
-        body: JSON.stringify(bookData), // Enviando os dados corretos
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Falha ao criar livro");
-      }
+      const baseToken = token || (localStorage.getItem('readowl-token') || '')
+      if (!baseToken) throw new Error('Token ausente; faça login novamente.')
+      await api.createBook(bookData, baseToken)
       setSuccessModal(true);
     } catch (e) {
       setErrors((prev) => ({ ...prev, submit: (e as Error).message }));

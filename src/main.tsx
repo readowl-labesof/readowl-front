@@ -16,6 +16,8 @@ import GenericErrorPage from "./pages/error/GenericErrorPage.tsx";
 import PoliticaDePrivacidade from "./pages/privacyPolicy/privacyPolicy.tsx"
 import ChapterCreatePage from './pages/chapters/ChapterCreate'
 import ChapterEditPage from './pages/chapters/ChapterEdit'
+import BookDetailPage from './pages/books/BookDetail'
+import BookReorderPage from './pages/books/BookReorder'
 import ForbiddenPage from "./pages/error/ForbiddenPage";
 import NotFoundPage from "./pages/error/NotFoundPage";
 import InternalServerErrorPage from "./pages/error/InternalServerErrorPage";
@@ -45,6 +47,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/userList" element={<UserList />} />
         <Route path="/books/:id/chapters/new" element={<ChapterCreatePage />} />
         <Route path="/chapters/:id/edit" element={<ChapterEditPage />} />
+        <Route path="/books/:id" element={<BookDetailPage />} />
+        <Route path="/books/:id/reorder" element={<BookReorderPage />} />
       </Routes>
     </StrictMode>
   </BrowserRouter>

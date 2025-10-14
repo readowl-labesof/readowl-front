@@ -6,10 +6,13 @@ import { FollowButton } from '../../components/book/FollowButton'
 import { RatingSummary } from '../../components/book/RatingSummary'
 import { Icon } from '../../components/ui/Icon'
 import { Breadcrumb } from '../../components/ui/Breadcrumb'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { token } = useAuth()
+  const navigate = useNavigate()
 
   const bookQ = useQuery({ queryKey: ['book', id], queryFn: () => api.getBook(id!) , enabled: !!id })
   const volumesQ = useQuery({ queryKey: ['book', id, 'volumes'], queryFn: () => api.getVolumes(id!), enabled: !!id })
@@ -35,6 +38,13 @@ export default function BookDetailPage() {
         homeHref="/home"
         className="mt-2"
       />
+      {token && (
+        <div className="flex flex-wrap gap-3 items-center text-sm">
+          <Link to={`/books/${id}/chapters/new`} className="px-3 py-1 rounded bg-readowl-purple text-white hover:bg-readowl-purple-dark transition">Novo Capítulo</Link>
+          <Link to={`/books/${id}/reorder`} className="px-3 py-1 rounded border border-readowl-purple/40 hover:bg-readowl-purple-extralight transition">Reordenar</Link>
+          <button onClick={()=> navigate(`/library/${id}/edit`)} className="px-3 py-1 rounded border border-readowl-purple/40 hover:bg-readowl-purple-extralight transition">Editar Livro</button>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-56">
           {book?.coverUrl ? (
