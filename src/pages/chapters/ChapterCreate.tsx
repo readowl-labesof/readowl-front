@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
@@ -31,6 +31,21 @@ export default function ChapterCreatePage() {
   })
 
   const canSave = title.trim().length > 0
+
+  // Atalho Ctrl/Cmd+S para salvar
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        if (canSave && !createChapter.isPending) {
+          // chama a mutação atual evitando capturar referencia instável
+          createChapter.mutate()
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [canSave, createChapter])
 
   return (
     <div className="container mx-auto max-w-4xl py-6 px-4 flex flex-col gap-6">

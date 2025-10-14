@@ -55,6 +55,20 @@ export default function ChapterEditPage() {
     onError: (e: unknown) => setError(e instanceof Error? e.message : 'Erro ao excluir')
   })
 
+  // Atalho Ctrl/Cmd+S para salvar
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        if (canSave && !updateChapter.isPending) {
+          updateChapter.mutate()
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [canSave, updateChapter])
+
   if (chapterQ.isLoading) return <div className="p-8">Carregando...</div>
   if (chapterQ.error || !chapterQ.data) return <div className="p-8 text-red-500">Erro ao carregar capítulo.</div>
 
