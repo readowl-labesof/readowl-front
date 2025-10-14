@@ -2,6 +2,7 @@ import { useState } from "react";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
+import { Icon } from "../../components/ui/Icon";
 import { useNavigate } from "react-router-dom";
 import useUser from "../../hooks/useUser";
 
@@ -88,7 +89,7 @@ function Cadastrar() {
                 Nome
               </label>
               <InputWithIcon
-                icon={<span className="material-symbols-outlined">person</span>}
+                icon={<Icon name="User" size={30} className="text-gray-500" />}
                 type="text"
                 id="nome"
                 placeholder="Seu nome"
@@ -105,7 +106,7 @@ function Cadastrar() {
                 Email
               </label>
               <InputWithIcon
-                icon={<span className="material-symbols-outlined">mail</span>}
+                icon={<Icon name="Mail" size={30} className="text-gray-500" />}
                 type="email"
                 id="email"
                 placeholder="readowl@gmail.com"
@@ -122,7 +123,7 @@ function Cadastrar() {
                 Senha
               </label>
               <InputWithIcon
-                icon={<span className="material-symbols-outlined">key</span>}
+                icon={<Icon name="Key" size={30} className="text-gray-500" />}
                 type="password"
                 id="password"
                 required
@@ -138,9 +139,7 @@ function Cadastrar() {
                 Confirmar senha
               </label>
               <InputWithIcon
-                icon={
-                  <span className="material-symbols-outlined">passkey</span>
-                }
+                icon={<Icon name="KeyRound" size={30} className="text-gray-500" />}
                 type="password"
                 id="Check-password"
                 required

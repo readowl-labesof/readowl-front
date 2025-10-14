@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
+import { Icon } from "../../components/ui/Icon";
 import { useState } from "react";
 
 function Login() {
@@ -52,11 +53,7 @@ function Login() {
                 Email
               </label>
               <InputWithIcon
-                icon={
-                  <span className="material-symbols-outlined text-[27px] leading-none">
-                    person
-                  </span>
-                }
+                icon={<Icon name="User" size={27} className="leading-none text-gray-500" />}
                 type="email"
                 id="email"
                 placeholder="readowl@gmail.com"
@@ -73,9 +70,7 @@ function Login() {
                 Senha
               </label>
               <InputWithIcon
-                icon={
-                  <span className="material-symbols-outlined">passkey</span>
-                }
+                icon={<Icon name="KeyRound" size={30} className="text-gray-500" />}
                 type="password"
                 id="password"
                 placeholder="Senha"

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from "../../../components/ui/Icon";
 import { Link, useNavigate } from "react-router-dom";
 
 const Header: React.FC = () => {
@@ -50,7 +51,11 @@ const Header: React.FC = () => {
           aria-label="Abrir menu"
           onClick={() => setIsMenuOpen((v) => !v)}
         >
-          <span className="material-symbols-outlined">{isMenuOpen ? 'close' : 'menu'}</span>
+          {isMenuOpen ? (
+            <Icon name="X" size={28} className="" />
+          ) : (
+            <Icon name="Menu" size={28} className="" />
+          )}
         </button>
       </nav>
 

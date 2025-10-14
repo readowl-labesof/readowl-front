@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Icon } from "../../components/ui/Icon";
 
 type Props = {
     user?: any | null;
@@ -70,25 +71,25 @@ function ProfileCard({ user }: Props) {
                     {avatar ? (
                         <img src={avatar} alt="avatar" className="object-cover h-full w-full rounded" />
                     ) : (
-                        <span className="material-symbols-outlined text-6xl text-gray-400">person</span>
+                        <Icon name="User" size={72} className="text-gray-400" />
                     )}
                 </div>
                 {/* Informações */}
                 <div className="flex flex-col text-white">
                     <span className="flex items-center mb-2">
-                        <span className="material-symbols-outlined mr-2">person</span>
+                        <Icon name="User" size={20} className="mr-2" />
                         <span className="font-semibold text-lg">{displayName}</span>
                     </span>
                     <span className="flex items-center mb-2">
-                        <span className="material-symbols-outlined mr-2">mail</span>
+                        <Icon name="Mail" size={20} className="mr-2" />
                         <span>{displayEmail}</span>
                     </span>
                     <span className="flex items-center mb-2">
-                        <span className="material-symbols-outlined mr-2">description</span>
+                        <Icon name="FileText" size={20} className="mr-2" />
                         <span>{displayBio}</span>
                     </span>
                     <span className="flex items-center mb-2">
-                        <span className="material-symbols-outlined mr-2">calendar_month</span>
+                        <Icon name="Calendar" size={20} className="mr-2" />
                         <span>{displayCreated}</span>
                     </span>
                 </div>
