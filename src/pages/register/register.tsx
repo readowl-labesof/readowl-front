@@ -6,6 +6,7 @@ import { Icon } from "../../components/ui/Icon";
 import { useNavigate } from "react-router-dom";
 import useUser from "../../hooks/useUser";
 import { api } from "../../lib/api";
+import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
 
 function Cadastrar() {
   const [nome, setNome] = useState("");
@@ -124,9 +125,12 @@ function Cadastrar() {
                 <label htmlFor="remember">Lembrar de mim</label>
               </div>
             </div>
-            <Button className="w-40 bg-readowl-purple-extralight text-black font-semibold rounded-full text-base py-1 mb-2 transition mx-auto">
-              Cadastrar
-            </Button>
+            <div className="flex flex-col gap-3 items-center">
+              <Button className="w-40 bg-readowl-purple-extralight text-black font-semibold rounded-full text-base py-1 mb-2 transition mx-auto">
+                Cadastrar
+              </Button>
+              <GoogleLoginButton label="Cadastrar com Google" />
+            </div>
 
             <a
               href="/login"

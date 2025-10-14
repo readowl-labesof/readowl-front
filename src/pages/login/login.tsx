@@ -5,6 +5,7 @@ import InputWithIcon from "../../components/ui/inputWithIcon";
 import { Icon } from "../../components/ui/Icon";
 import { useState } from "react";
 import { api } from "../../lib/api";
+import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -86,13 +87,14 @@ function Login() {
                 Esqueci minha senha
               </a>
             </div>
-            <div className="flex justify-center mt-4">
+            <div className="flex flex-col gap-3 justify-center mt-4">
               <Button
                 onClick={loginon}
                 className="w-40 bg-readowl-purple-extralight text-black font-semibold rounded-full text-base py-1 mb-2 transition"
               >
                 Logar
               </Button>
+              <GoogleLoginButton />
             </div>
           </form>
           <span className="flex justify-center items-center text-xs text-white mt-2">
