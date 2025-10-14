@@ -5,6 +5,7 @@ import InputWithIcon from "../../components/ui/inputWithIcon";
 import { Icon } from "../../components/ui/Icon";
 import { useNavigate } from "react-router-dom";
 import useUser from "../../hooks/useUser";
+import { api } from "../../lib/api";
 
 function Cadastrar() {
   const [nome, setNome] = useState("");
@@ -20,50 +21,19 @@ function Cadastrar() {
       alert("As senhas não conferem!");
       return;
     }
-    
     try {
-      // Gerar ID único
-      const userId = Math.random().toString(36).substr(2, 4);
-      
-      const novoUsuario = {
-        id: userId,
-        nome, 
-        email, 
-        senha,
-        role: "user", // Sempre criar como usuário comum
-        criadoEm: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
-        descricao: "",
-        avatarUrl: ""
-      };
-
-      // Cadastro no json-server - CORRIGIR PORTA PARA 3001
-      const response = await fetch("http://localhost:3000/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoUsuario)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao criar usuário');
-      }
-      
-      const usuarioCriado = await response.json();
-      
-      // FAZER LOGIN AUTOMÁTICO com o novo usuário
-      saveUser(usuarioCriado);
-      
-      alert("Cadastro realizado!");
-      setNome("");
-      setEmail("");
-      setSenha("");
-      setCheckSenha("");
-      
-      // Redirecionar para home já logado
-      navigation("/home");
-      
-    } catch (error) {
-      console.error('Erro no cadastro:', error);
-      alert("Erro ao realizar cadastro. Verifique se o json-server está rodando na porta 3001.");
+      const { token, user } = await api.register({ nome, email, senha })
+      // lembrarme
+      const remember = (document.getElementById('remember') as HTMLInputElement)?.checked
+      const storage = remember ? localStorage : sessionStorage
+      storage.setItem('readowl-token', token)
+      storage.setItem('readowl-user', JSON.stringify(user))
+      saveUser(user)
+      alert('Cadastro realizado!')
+      navigation('/home')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao cadastrar'
+      alert(msg)
     }
   }
 

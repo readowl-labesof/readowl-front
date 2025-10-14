@@ -4,6 +4,7 @@ import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
 import { Icon } from "../../components/ui/Icon";
 import { useState } from "react";
+import { api } from "../../lib/api";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,22 +13,18 @@ function Login() {
 
   async function loginon(e: React.FormEvent) {
     e.preventDefault();
-    // Requisição para o json-server
-    const res = await fetch(
-      `http://localhost:3333/users?email=${email}&senha=${senha}`
-    );
-    const data = await res.json();
-    if (data.length > 0) {
-      // Login válido
-      // Salva todos os usuários encontrados (caso o filtro retorne mais de um)
-      localStorage.setItem("readowl-users", JSON.stringify(data));
-      // Salva o primeiro usuário como logado (caso queira usar individualmente)
-      localStorage.setItem("readowl-user", JSON.stringify(data[0]));
-      alert("Login realizado com sucesso!");
-      navigate("/home"); // ou para a página desejada
-    } else {
-      // Login inválido
-      alert("Email ou senha incorretos!");
+    const remember = (document.getElementById('remember') as HTMLInputElement)?.checked
+    try {
+      const { token, user } = await api.login(email, senha, remember)
+      // Persistir token conforme remember-me
+      const storage = remember ? localStorage : sessionStorage
+      storage.setItem('readowl-token', token)
+      storage.setItem('readowl-user', JSON.stringify(user))
+      alert('Login realizado com sucesso!')
+      navigate('/home')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Falha no login'
+      alert(msg)
     }
   }
 
@@ -85,7 +82,7 @@ function Login() {
                 <input id="remember" type="checkbox" className="w-4 h-4 mr-2" />
                 <label htmlFor="remember">Lembrar de mim</label>
               </div>
-              <a href="#" className="underline hover:text-gray-200 transition">
+              <a href="/forgot-password" className="underline hover:text-gray-200 transition">
                 Esqueci minha senha
               </a>
             </div>

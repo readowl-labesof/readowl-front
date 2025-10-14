@@ -1,0 +1,61 @@
+// src/lib/api.ts
+// Cliente API centralizado (NPM only). Ajuste a URL base via variável de ambiente VITE_API_URL.
+// Comentários PT-BR para clareza.
+
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+// Tipo mínimo de usuário (expandir conforme backend)
+export interface UserDTO {
+  id: string
+  name?: string
+  nome?: string
+  email: string
+  role?: string
+}
+
+interface AuthResponse {
+  token: string
+  user: UserDTO
+  remember?: boolean
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(API_BASE + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    },
+    ...options,
+  })
+  if (!res.ok) {
+    let msg = 'Erro na requisição'
+    try {
+      const data: unknown = await res.json()
+      if (typeof data === 'object' && data && 'message' in data) {
+        const maybeMsg = (data as { message?: string }).message
+        if (maybeMsg) msg = maybeMsg
+      }
+    } catch {
+      // Silencia erros de parse JSON (respostas vazias ou texto simples)
+    }
+    throw new Error(msg)
+  }
+  // Alguns endpoints podem não retornar JSON (ex.: 204). Tentar parse seguro.
+  try { return await res.json() as T } catch { return undefined as unknown as T }
+}
+
+export const api = {
+  // --- Autenticação ---
+  login: (email: string, senha: string, remember?: boolean) =>
+    request<AuthResponse>('/sessions', { method: 'POST', body: JSON.stringify({ email, password: senha, remember }) }),
+  register: (data: { nome: string; email: string; senha: string }) =>
+    request<AuthResponse>('/users', { method: 'POST', body: JSON.stringify({ name: data.nome, email: data.email, password: data.senha }) }),
+  me: (token: string) => request<UserDTO>('/me', { headers: { Authorization: `Bearer ${token}` } }), // endpoint ainda não existe; podemos criar ou adaptar.
+
+  // --- Password Reset ---
+  passwordForgot: (email: string) => request<{ message: string }>('/password/forgot', { method: 'POST', body: JSON.stringify({ email }) }),
+  passwordReset: (token: string, password: string) => request<{ message: string }>('/password/reset', { method: 'POST', body: JSON.stringify({ token, password }) }),
+
+  // --- Google OAuth ---
+  googleAuthUrl: () => request<{ url: string }>('/oauth/google/url'),
+}
