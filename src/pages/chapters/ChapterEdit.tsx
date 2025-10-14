@@ -5,6 +5,7 @@ import { api } from '../../lib/api'
 import { ChapterEditor } from '../../components/chapter/ChapterEditor'
 import { Breadcrumb } from '../../components/ui/Breadcrumb'
 import { useAuth } from '../../hooks/useAuth'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 
 interface ChapterFull { id: string; title: string; content?: string; volumeId?: string | null; bookId?: string }
 
@@ -47,6 +48,12 @@ export default function ChapterEditPage() {
   })
 
   const canSave = title.trim().length > 0
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const deleteChapter = useMutation({
+    mutationFn: async () => { if (!token) throw new Error('Sem autenticação'); return api.deleteChapter(id!, token) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['book', chapterQ.data?.bookId, 'chapters'] }); navigate(`/books/${chapterQ.data?.bookId}`) },
+    onError: (e: unknown) => setError(e instanceof Error? e.message : 'Erro ao excluir')
+  })
 
   if (chapterQ.isLoading) return <div className="p-8">Carregando...</div>
   if (chapterQ.error || !chapterQ.data) return <div className="p-8 text-red-500">Erro ao carregar capítulo.</div>
@@ -74,8 +81,19 @@ export default function ChapterEditPage() {
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded border hover:bg-readowl-purple-extralight">Cancelar</button>
           <button disabled={!canSave || updateChapter.isPending} className="px-4 py-2 text-sm rounded bg-readowl-purple text-white disabled:opacity-60">{updateChapter.isPending ? 'Salvando...' : 'Salvar alterações'}</button>
+          <button type="button" onClick={()=> setConfirmDelete(true)} disabled={deleteChapter.isPending} className="px-4 py-2 text-sm rounded bg-red-600 text-white disabled:opacity-60">{deleteChapter.isPending? '...' : 'Excluir'}</button>
         </div>
       </form>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Excluir Capítulo"
+        description={<p>Deseja realmente excluir este capítulo? Esta ação é irreversível.</p>}
+        confirmLabel="Excluir"
+        confirmType="danger"
+        loading={deleteChapter.isPending}
+        onClose={()=> !deleteChapter.isPending && setConfirmDelete(false)}
+        onConfirm={()=> deleteChapter.mutate()}
+      />
     </div>
   )
 }

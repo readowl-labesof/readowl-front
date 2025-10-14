@@ -7,11 +7,16 @@ import { RatingSummary } from '../../components/book/RatingSummary'
 import { Icon } from '../../components/ui/Icon'
 import { Breadcrumb } from '../../components/ui/Breadcrumb'
 import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { token } = useAuth()
   const navigate = useNavigate()
+  const [volumeToDelete, setVolumeToDelete] = useState<string|null>(null)
+  const [chapterToDelete, setChapterToDelete] = useState<string|null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const bookQ = useQuery({ queryKey: ['book', id], queryFn: () => api.getBook(id!) , enabled: !!id })
   const volumesQ = useQuery({ queryKey: ['book', id, 'volumes'], queryFn: () => api.getVolumes(id!), enabled: !!id })
@@ -81,7 +86,7 @@ export default function BookDetailPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="font-medium">{v.title || v.name || 'Volume'}</div>
                       {token && (
-                        <button onClick={async ()=> { try { await api.deleteVolume(v.id, token); volumesQ.refetch(); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-red-600 text-white transition">Excluir</button>
+                        <button onClick={()=> setVolumeToDelete(v.id)} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-red-600 text-white transition">Excluir</button>
                       )}
                     </div>
                     {vc.length === 0 && <div className="text-xs text-gray-500">Este volume ainda não possui capítulos.</div>}
@@ -91,7 +96,7 @@ export default function BookDetailPage() {
                           <Icon name="FileText" size={16} className="text-readowl-purple" />
                           <a className="hover:underline flex-1" href={`/chapters/${ch.id}`}>{ch.title}</a>
                           {token && (
-                            <button onClick={async ()=> { try { await api.deleteChapter(ch.id, token); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
+                            <button onClick={()=> setChapterToDelete(ch.id)} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
                           )}
                         </li>
                       ))}
@@ -113,7 +118,7 @@ export default function BookDetailPage() {
                   <Icon name="FileText" size={16} className="text-readowl-purple" />
                   <a className="hover:underline flex-1" href={`/chapters/${ch.id}`}>{ch.title}</a>
                   {token && (
-                    <button onClick={async ()=> { try { await api.deleteChapter(ch.id, token); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
+                    <button onClick={()=> setChapterToDelete(ch.id)} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
                   )}
                 </li>
               ))}
@@ -121,6 +126,34 @@ export default function BookDetailPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={!!volumeToDelete}
+        title="Excluir Volume"
+        description={<p>Tem certeza que deseja excluir este volume? Capítulos vinculados ficarão sem volume.</p>}
+        confirmLabel="Excluir"
+        confirmType="danger"
+        loading={deleting}
+        onClose={()=> !deleting && setVolumeToDelete(null)}
+        onConfirm={async ()=> {
+          if (!volumeToDelete || !token) return
+            setDeleting(true)
+            try { await api.deleteVolume(volumeToDelete, token); } finally { setDeleting(false); setVolumeToDelete(null); volumesQ.refetch(); chaptersQ.refetch(); }
+        }}
+      />
+      <ConfirmDialog
+        open={!!chapterToDelete}
+        title="Excluir Capítulo"
+        description={<p>Esta ação não pode ser desfeita. O capítulo será removido.</p>}
+        confirmLabel="Excluir"
+        confirmType="danger"
+        loading={deleting}
+        onClose={()=> !deleting && setChapterToDelete(null)}
+        onConfirm={async ()=> {
+          if (!chapterToDelete || !token) return
+            setDeleting(true)
+            try { await api.deleteChapter(chapterToDelete, token); } finally { setDeleting(false); setChapterToDelete(null); chaptersQ.refetch(); }
+        }}
+      />
     </div>
   )
 }
