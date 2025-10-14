@@ -6,7 +6,15 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist',
+    // Ignorar páginas legadas até refatoração
+    'src/pages/listUser/**',
+    'src/pages/userList/**',
+    'src/pages/mockLogin/**',
+    'src/pages/myLibrary/**',
+    'src/pages/profile/**',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

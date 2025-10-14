@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api } from '../../lib/api'
 import Button from '../../components/ui/button'
 import Footer from '../../components/footer'
+import { Breadcrumb } from '../../components/ui/Breadcrumb'
 
 // Página acessada via /reset-password?token=XYZ
 export default function ResetPasswordPage() {
@@ -31,6 +32,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
+      <Breadcrumb items={[{ label: 'Redefinir senha' }]} showHome homeHref="/home" className="px-4 pt-2" />
       <main className="flex flex-1 items-center justify-center">
         <div className="bg-readowl-purple-medium p-8 rounded-xl shadow-lg w-[480px] flex flex-col items-center text-white">
           <h1 className="text-2xl font-bold mb-4">Redefinir senha</h1>

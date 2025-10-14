@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
@@ -6,11 +7,29 @@ import { Icon } from "../../components/ui/Icon";
 import { useState } from "react";
 import { api } from "../../lib/api";
 import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
+import { Breadcrumb } from "../../components/ui/Breadcrumb";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Captura token de OAuth vindo via query e salva
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const tk = params.get('token')
+    if (tk) {
+      // por padrão lembrar no localStorage; poderia decidir por session
+      localStorage.setItem('readowl-token', tk)
+      // opcional: buscar /me e salvar user
+      api.me(tk).then(me => {
+        localStorage.setItem('readowl-user', JSON.stringify(me))
+      }).catch(() => {/* ignore */}).finally(() => {
+        navigate('/home', { replace: true })
+      })
+    }
+  }, [location.search, navigate])
 
   async function loginon(e: React.FormEvent) {
     e.preventDefault();
@@ -31,6 +50,7 @@ function Login() {
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
+      <Breadcrumb items={[{ label: 'Login' }]} showHome homeHref="/home" className="px-4 pt-2" />
       <main className="flex flex-1 items-center justify-center">
         <div className="bg-[#836DBE] p-10 rounded-xl shadow-lg w-full max-w-[480px] h-auto mt-16 flex flex-col items-center">
           <img

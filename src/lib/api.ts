@@ -2,7 +2,7 @@
 // Cliente API centralizado (NPM only). Ajuste a URL base via variável de ambiente VITE_API_URL.
 // Comentários PT-BR para clareza.
 
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3333'
 
 // Tipo mínimo de usuário (expandir conforme backend)
 export interface UserDTO {
@@ -69,10 +69,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   // --- Autenticação ---
   login: (email: string, senha: string, remember?: boolean) =>
-    request<AuthResponse>('/sessions', { method: 'POST', body: JSON.stringify({ email, password: senha, remember }) }),
+    request<AuthResponse>('/sessions', { method: 'POST', body: JSON.stringify({ email, password: senha, rememberMe: remember }) }),
   register: (data: { nome: string; email: string; senha: string }) =>
     request<AuthResponse>('/users', { method: 'POST', body: JSON.stringify({ name: data.nome, email: data.email, password: data.senha }) }),
-  me: (token: string) => request<UserDTO>('/me', { headers: { Authorization: `Bearer ${token}` } }), // endpoint ainda não existe; podemos criar ou adaptar.
+  me: (token: string) => request<UserDTO>('/me', { headers: { Authorization: `Bearer ${token}` } }),
 
   // --- Password Reset ---
   passwordForgot: (email: string) => request<{ message: string }>('/password/forgot', { method: 'POST', body: JSON.stringify({ email }) }),

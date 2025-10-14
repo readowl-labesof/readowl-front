@@ -1,4 +1,6 @@
 import * as Icons from 'lucide-react'
+import type { ComponentType } from 'react'
+import type { LucideProps } from 'lucide-react'
 
 // Componente de ícone unificado para facilitar troca futura e padronização de tamanho/cor
 export interface IconProps {
@@ -9,21 +11,7 @@ export interface IconProps {
 }
 
 export function Icon({ name, size = 20, className = '', strokeWidth = 2 }: IconProps) {
-  const LucideIcon = Icons[name]
-  if (!LucideIcon) return null
-  return <LucideIcon size={size} strokeWidth={strokeWidth} className={className} />
-}
-
-// Helper para mapear nomes antigos para novos, se necessário no futuro
-export const legacyIconMap: Record<string, keyof typeof Icons> = {
-  home: 'Home',
-  search: 'Search',
-  book: 'BookOpen',
-  user: 'User',
-  star: 'Star',
-  login: 'LogIn',
-  logout: 'LogOut',
-  edit: 'Pencil',
-  delete: 'Trash2',
-  plus: 'Plus',
+  const Comp = Icons[name] as unknown as ComponentType<LucideProps>
+  if (!Comp) return null
+  return <Comp size={size} strokeWidth={strokeWidth} className={className} />
 }

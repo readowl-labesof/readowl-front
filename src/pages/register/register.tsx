@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import useUser from "../../hooks/useUser";
 import { api } from "../../lib/api";
 import { GoogleLoginButton } from "../../components/auth/GoogleLoginButton";
+import { Breadcrumb } from "../../components/ui/Breadcrumb";
+import PasswordStrengthBar from "../../components/animation/PasswordStrengthBar";
 
 function Cadastrar() {
   const [nome, setNome] = useState("");
@@ -23,13 +25,14 @@ function Cadastrar() {
       return;
     }
     try {
-      const { token, user } = await api.register({ nome, email, senha })
+  const { token, user } = await api.register({ nome, email, senha })
       // lembrarme
       const remember = (document.getElementById('remember') as HTMLInputElement)?.checked
       const storage = remember ? localStorage : sessionStorage
       storage.setItem('readowl-token', token)
       storage.setItem('readowl-user', JSON.stringify(user))
-      saveUser(user)
+  // Mapear UserDTO -> LocalUser
+  saveUser({ id: user.id, name: user.name || user.nome, email: user.email, role: user.role, token })
       alert('Cadastro realizado!')
       navigation('/home')
     } catch (err) {
@@ -40,6 +43,7 @@ function Cadastrar() {
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
+      <Breadcrumb items={[{ label: 'Cadastro' }]} showHome homeHref="/home" className="px-4 pt-2" />
       <main className="flex flex-1 items-center justify-center">
         <div className="bg-[#836DBE] p-8 rounded-xl shadow-lg w-[500px] h-[650px] mt-8 flex flex-col items-center">
           <img
@@ -101,6 +105,7 @@ function Cadastrar() {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
               />
+              <PasswordStrengthBar password={senha} tipTextColor="text-white" />
             </div>
             <div>
               <label
