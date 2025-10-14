@@ -7,7 +7,6 @@ import { RatingSummary } from '../../components/book/RatingSummary'
 import { Icon } from '../../components/ui/Icon'
 import { Breadcrumb } from '../../components/ui/Breadcrumb'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -78,14 +77,22 @@ export default function BookDetailPage() {
               {volumesQ.data.sort((a,b)=> (a.order||0) - (b.order||0)).map(v => {
                 const vc = (chaptersQ.data||[]).filter(c => c.volumeId === v.id).sort((a,b)=>(a.order||0)-(b.order||0))
                 return (
-                  <div key={v.id} className="bg-white rounded-lg border p-4 flex flex-col gap-2">
-                    <div className="font-medium">{v.title || v.name || 'Volume'}</div>
+                  <div key={v.id} className="bg-white rounded-lg border p-4 flex flex-col gap-2 group">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium">{v.title || v.name || 'Volume'}</div>
+                      {token && (
+                        <button onClick={async ()=> { try { await api.deleteVolume(v.id, token); volumesQ.refetch(); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-red-600 text-white transition">Excluir</button>
+                      )}
+                    </div>
                     {vc.length === 0 && <div className="text-xs text-gray-500">Este volume ainda não possui capítulos.</div>}
                     <ul className="flex flex-col gap-1 text-sm">
                       {vc.map(ch => (
-                        <li key={ch.id} className="flex items-center gap-2">
+                        <li key={ch.id} className="flex items-center gap-2 group">
                           <Icon name="FileText" size={16} className="text-readowl-purple" />
-                          <a className="hover:underline" href={`/chapters/${ch.id}`}>{ch.title}</a>
+                          <a className="hover:underline flex-1" href={`/chapters/${ch.id}`}>{ch.title}</a>
+                          {token && (
+                            <button onClick={async ()=> { try { await api.deleteChapter(ch.id, token); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -102,9 +109,12 @@ export default function BookDetailPage() {
             <h2 className="text-xl font-semibold text-readowl-purple">Capítulos</h2>
             <ul className="flex flex-col gap-1 text-sm bg-white rounded-lg border p-4">
               {chaptersNoVolume.sort((a,b)=>(a.order||0)-(b.order||0)).map(ch => (
-                <li key={ch.id} className="flex items-center gap-2">
+                <li key={ch.id} className="flex items-center gap-2 group">
                   <Icon name="FileText" size={16} className="text-readowl-purple" />
-                  <a className="hover:underline" href={`/chapters/${ch.id}`}>{ch.title}</a>
+                  <a className="hover:underline flex-1" href={`/chapters/${ch.id}`}>{ch.title}</a>
+                  {token && (
+                    <button onClick={async ()=> { try { await api.deleteChapter(ch.id, token); chaptersQ.refetch() } catch(e){ console.error(e) } }} className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-0.5 rounded bg-red-600 text-white transition">Del</button>
+                  )}
                 </li>
               ))}
             </ul>
