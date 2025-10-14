@@ -2,11 +2,14 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/button";
 import Footer from "../../components/footer";
 import InputWithIcon from "../../components/ui/inputWithIcon";
+import Modal from "../../components/ui/modal";
 import { useState } from "react";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const navigate = useNavigate();
 
   async function loginon(e: React.FormEvent) {
@@ -72,15 +75,26 @@ function Login() {
               >
                 Senha
               </label>
-              <InputWithIcon
-                icon={<span className="material-symbols-outlined">passkey</span>}
-                type="password"
-                id="password"
-                placeholder="Senha"
-                required
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-              />
+              <div className="relative">
+                <InputWithIcon
+                  icon={<span className="material-symbols-outlined">passkey</span>}
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Senha"
+                  required
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
             </div>
             <hr className="w-full border-white my-2" />
             <div className="flex justify-between items-center w-full mb-4 text-white text-sm">
@@ -88,9 +102,13 @@ function Login() {
                 <input id="remember" type="checkbox" className="w-4 h-4 mr-2" />
                 <label htmlFor="remember">Lembrar de mim</label>
               </div>
-              <a href="#" className="underline hover:text-gray-200 transition">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="underline hover:text-gray-200 transition"
+              >
                 Esqueci minha senha
-              </a>
+              </button>
             </div>
             <div className="flex justify-center mt-4">
               <Button
@@ -116,6 +134,34 @@ function Login() {
         </div>
       </main>
       <Footer />
+
+      {/* Modal "Esqueci minha senha" */}
+      <Modal
+        open={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        title="Recuperar Senha"
+        widthClass="max-w-md"
+      >
+        <p className="text-sm text-gray-600 mb-4">
+          Digite seu email para receber as instruções de recuperação de senha.
+        </p>
+        <input
+          type="email"
+          placeholder="Digite seu email"
+          className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-readowl-purple"
+        />
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => setShowForgotModal(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+          >
+            Cancelar
+          </button>
+          <Button className="px-6 py-2 bg-readowl-purple text-white rounded-lg hover:bg-readowl-purple/90 transition">
+            Enviar
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

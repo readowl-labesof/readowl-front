@@ -10,8 +10,10 @@ function Cadastrar() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [checkSenha, setCheckSenha] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigate();
-  const { saveUser } = useUser(); // Adicionar hook para salvar usuário
+  const { saveUser } = useUser();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -118,14 +120,26 @@ function Cadastrar() {
               >
                 Senha
               </label>
-              <InputWithIcon 
-                icon={<span className="material-symbols-outlined">key</span>}
-                type="password"
-                id="password"
-                required
-                value={senha}
-                onChange={e => setSenha(e.target.value)}
-              />
+              <div className="relative">
+                <InputWithIcon 
+                  icon={<span className="material-symbols-outlined">key</span>}
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Senha"
+                  required
+                  value={senha}
+                  onChange={e => setSenha(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
             </div>
             <div>
               <label
@@ -134,14 +148,26 @@ function Cadastrar() {
               >
                 Confirmar senha
               </label>
-              <InputWithIcon 
-                icon={<span className="material-symbols-outlined">passkey</span>}
-                type="password"
-                id="Check-password"
-                required
-                value={checkSenha}
-                onChange={e => setCheckSenha(e.target.value)}
-              />
+              <div className="relative">
+                <InputWithIcon 
+                  icon={<span className="material-symbols-outlined">passkey</span>}
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="Check-password"
+                  placeholder="Confirmar senha"
+                  required
+                  value={checkSenha}
+                  onChange={e => setCheckSenha(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    {showConfirmPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
             </div>
             <hr className="w-full border-white my-4" />
             <div className="flex justify-between items-center w-full mb-4 text-white text-sm">
