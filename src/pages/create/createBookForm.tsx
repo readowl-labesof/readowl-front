@@ -293,17 +293,16 @@ export default function CreateBookForm({
       // O campo 'genres' no frontend é um array, mas no nosso backend é uma string simples.
       // Vamos juntar os gêneros em uma string separada por vírgulas.
       // O campo 'releaseFrequency' não existe no nosso backend, então o removeremos.
-      const currentUserId =
-        typeof window !== "undefined"
-          ? localStorage.getItem("readowl-user-id")
-          : null;
-      const bookData = {
+      // Monta o payload garantindo que coverUrl só vai se não estiver vazia
+      const bookData: { title: string; synopsis: string; gender: string; coverUrl?: string } = {
         title: title.trim(),
         synopsis: synopsis.trim(),
-        coverUrl: coverUrl.trim(),
         gender: selectedGenres.join(", "), // Ex: "Fantasia, Aventura"
-        authorId: currentUserId,
-      };
+      }
+      const coverTrim = coverUrl.trim()
+      if (coverTrim) {
+        bookData.coverUrl = coverTrim
+      }
 
       // 3. Fazer a requisição para o endpoint correto do nosso backend
       const headers: Record<string, string> = {
@@ -313,7 +312,7 @@ export default function CreateBookForm({
 
       const baseToken = token || (localStorage.getItem('readowl-token') || '')
       if (!baseToken) throw new Error('Token ausente; faça login novamente.')
-      await api.createBook(bookData, baseToken)
+  await api.createBook(bookData, baseToken)
       setSuccessModal(true);
     } catch (e) {
       setErrors((prev) => ({ ...prev, submit: (e as Error).message }));
