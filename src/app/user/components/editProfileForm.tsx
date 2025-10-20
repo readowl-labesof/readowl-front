@@ -12,7 +12,7 @@ interface EditProfileFormProps {
 }
 
 export default function EditProfileForm({ onClose, onChangePassword, currentUser }: EditProfileFormProps) {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
@@ -92,7 +92,8 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       }
 
       setSuccess("Dados atualizados com sucesso!");
-      
+      // Força o NextAuth a refazer o fetch da sessão para atualizar avatar/nome/email na navbar
+      try { await updateSession?.(); } catch {}
       setTimeout(() => { 
         onClose?.(); // O componente pai irá chamar router.refresh()
       }, 1000);
