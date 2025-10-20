@@ -1,130 +1,335 @@
-# 🦉 Readowl (Frontend)
+# 🦉 Readowl
 
------
-
-Projeto web de uma plataforma de publicação e leitura de livros, focado em fomentar a literatura amadora no Brasil e aproximar leitores de escritores iniciantes.  
-Desenvolvido utilizando **React**, **Vite** e **Tailwind CSS**.
+Uma plataforma web para publicação e leitura de livros, com foco em promover a literatura amadora no Brasil e conectar leitores a escritores iniciantes.
+Desenvolvida com **Next.js**, **TypeScript** e **Tailwind CSS**.
 
 -----
 
 ## 📋 Sobre o Projeto
 
-O **Readowl** nasce da necessidade de criar um espaço para acolher escritores iniciantes e fortalecer a cultura literária no Brasil.  
-A plataforma busca solucionar problemas comuns em outros sistemas, como a divulgação ineficiente e interfaces confusas, oferecendo um ambiente confiável para autores publicarem suas obras gratuitamente e receberem feedback.
+O **Readowl** foi criado para oferecer um espaço acolhedor a novos escritores e fortalecer a cultura literária no Brasil.
+A plataforma busca resolver problemas comuns encontrados em outros sistemas, como divulgação ineficiente e interfaces confusas, oferecendo um ambiente confiável para que autores publiquem suas obras gratuitamente e recebam feedback.
 
 ### 👥 Equipe do Projeto
 
 | Nome | Função |
 |---|---|
+| Luiz Alberto Cury Andalécio | Desenvolvedor |
 | Alexandre Monteiro Londe | Desenvolvedor |
 | Gabriel Lucas Silva Seabra | Desenvolvedor |
 | Jussie Lopes da Silva | Desenvolvedor |
-| Luiz Alberto Cury Andalécio | Desenvolvedor |
 | Vitor Gabriel Resende Lopes Oliveira | Desenvolvedor |
 
-*Tabela adaptada do documento "PP - LabESOF"*
 
-### 🎯 Funcionalidades Principais
+### 🎯 Principais Funcionalidades
 
-    * Cadastro e login de usuários com autenticação segura e recuperação de senha.
-    * Criação, visualização, edição e exclusão de livros, volumes e capítulos.
-    * Sistema de busca avançada e filtros por gênero, popularidade e data.
-    * Biblioteca pessoal para favoritar obras e receber notificações.
-    * Interação através de avaliações, curtidas e comentários em livros e capítulos.
-    * Painel de administração para gerenciamento de usuários e moderação de conteúdo.
+- Cadastro e login de usuários com autenticação segura e recuperação de senha.
+- Criar, ver, editar e excluir livros, volumes e capítulos.
+- Sistema de busca avançada com filtros por gênero, popularidade e data.
+- Biblioteca pessoal para favoritar obras e receber notificações.
+- Interação por meio de avaliações, curtidas e comentários em livros e capítulos.
+- Painel administrativo para gestão de usuários e moderação de conteúdo.
 
 ### 🛠️ Tecnologias Utilizadas
 
-    * **Interface e Estrutura**:
-            * React (com Vite)
-            * React Router DOM
-            * TypeScript
-    * **Estilização**:
-            * Tailwind CSS
-    * **Gerenciamento de Dados e Formulários**:
-            * TanStack Query
-            * React Hook Form
-    * **Editor de Texto**:
-            * TipTap
-    * **Ambiente**:
-            * Git
-            * npm
-            * VS Code
+#### Frontend
+- **Next.js**: Framework React para renderização no servidor (SSR), roteamento e rotas de API.
+- **Next Router**: Roteamento nativo para navegação (Home, Livro, Perfil etc.).
+- **Tailwind CSS**: Estilização rápida e responsiva seguindo a identidade visual.
+- **TanStack Query**: Comunicação com backend, cache e atualização de dados.
+- **React Hook Form**: Todos os formulários (login, cadastro, publicação).
+- **TipTap**: Editor de texto rico para autores escreverem capítulos.
 
-### 📁 Estrutura do Projeto (Sugestão)
+#### Backend
 
-    * `public/` – Imagens, fontes e arquivos estáticos.
-    * `src/` – Código-fonte da aplicação.
-            * `assets/` – Arquivos de mídia e estilos globais.
-            * `global/` – Componentes React reutilizáveis.
-            * `pages/` – Páginas da aplicação.
-                * `pages/components` – Componentes exclusivas da página da aplicação.
-            * `hooks/` – Hooks personalizados.
-            * `services/` – Lógica de comunicação com a API.
-            * `styles/` – CSS das páginas da aplicação.
-            * `utils/` – Funções utilitárias.
+- **Node.js (Rotas de API do Next.js)**: Lógica de servidor e endpoints.
+- **TypeScript**: Segurança de tipos e redução de bugs.
+- **Prisma**: ORM para integração com PostgreSQL.
+- **Zod**: Validação de dados unificada no frontend e no backend.
+- **JWT + Bcrypt.js**: Autenticação segura e hash de senhas.
+- **Gerenciamento de Sessão**: Suporte a "Lembrar de mim" com JWT e NextAuth, oferecendo sessões padrão de 8 horas ou 30 dias quando habilitado. O TTL da sessão é aplicado via middleware usando flags do token (`remember`, `stepUpAt`).
+- **Upload de Arquivos**: Multer e Cloudinary para armazenar capas de livros e imagens de perfil.
+- **Serviço de Email**: Nodemailer para recuperação de senha, com templates HTML e fallback em texto simples. O fluxo de redefinição usa tokens SHA-256 de uso único (expiração de 30 minutos) e invalidação de sessão via `credentialVersion`.
+- **Segurança**: Cooldown por usuário (120s) e rate limiting por IP (5 requisições/15min) em pedidos de recuperação de senha.
+- **Configuração de SMTP**: Defina `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `MAIL_FROM` no `.env`. Em desenvolvimento, se o SMTP não estiver configurado, os emails são logados no console.
+- **Redis (Opcional)**: Para rate limiting distribuído, configure `REDIS_URL` ou variáveis do Upstash; por padrão usa memória local se não definido.
+- **Melhorias de UX**: Página de sucesso após redefinição de senha e mensagens de feedback aprimoradas.
+- **Força da Senha**: `PasswordStrengthBar` usa heurística local e opcionalmente carrega `zxcvbn` para feedback avançado.
+- **Variáveis de Ambiente**: Consulte `.env.example` para as configurações necessárias.
 
------
+#### Banco de Dados
+- **PostgreSQL**: Armazenamento de dados.
 
-## 📈 Status do Projeto
+#### Ambiente
+- **Docker**: Containerização para desenvolvimento e deploy.
+- **Git**: Controle de versão.
+- **VS Code**: Editor recomendado.
 
-> **Progressos realizados**: Landing Page, login e cadastro, criação de livro, navegação inicial.  Sprint 1 e 2.
-
-> **Progresso atual**: Em fase de planejamento e desenvolvimento. Sprint 3
-
-> **Próximos passos**: Telas de configuração da conta do usuário e administrador, índice do livro, edição de livro, telas de erros.
+**Extensões VS Code:** Prisma, ESLint, Prettier - Code formatter, Tailwind CSS IntelliSense, EchoAPI
 
 -----
 
-## ⚙️ Como rodar localmente
+## 🚀 Começando (do zero)
 
-1. Clone o repositório do projeto.
+Este guia leva você do zero até rodar a aplicação localmente com um PostgreSQL via Docker dedicado a este projeto Next.js. Se você já usa o pgAdmin do projeto React (container: `readowl_pgadmin`), continue usando; não subiremos um segundo pgAdmin aqui. Também cobre login com Google OAuth e SMTP para recuperação de senha.
 
-2. Certifique-se de que o Node.js está instalado na versão **20 ou superior**. Recomenda-se utilizar o [nvm](https://github.com/nvm-sh/nvm) para gerenciar versões do Node:
+### 1) Pré-requisitos
+
+- Node.js 18+ e pnpm ou npm
+- Docker Desktop ou Docker Engine
+- Uma instância PostgreSQL (local/nativa ou em Docker). Se já tiver uma, você pode reutilizá-la.
+- Opcional: Projeto no Google Cloud para OAuth2 (fornecemos credenciais de exemplo para dev local)
+
+### 2) Clonar e instalar dependências
+
+```bash
+git clone <sua-url-do-repo>
+cd readowl-next
+npm install
+```
+
+### 3) Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha os valores. Para desenvolvimento local, um exemplo:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/readowl-next_db?schema=public"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="<um-segredo-aleatório-forte>"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="<google-client-id>"
+GOOGLE_CLIENT_SECRET="<google-client-secret>"
+
+# SMTP (Gmail)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="<seu-gmail>@gmail.com"
+SMTP_PASS="<app-password>"
+MAIL_FROM="Readowl <no-reply@readowl.dev>"
+```
+
+Observações:
+- Para SMTP do Gmail, use uma Senha de App (não sua senha normal). Ative a verificação em duas etapas e crie uma Senha de App.
+- O projeto inclui um template em `credentials/google-oauth.json`. A pasta `credentials/` é ignorada no Git para evitar vazamento de segredos.
+
+### 4) Banco de dados
+
+Fornecemos um serviço Postgres dedicado via Docker Compose. Ele expõe a porta `5433` no host, evitando conflito com outras instâncias.
+
+Suba o serviço:
+
+```bash
+docker compose up -d postgres
+```
+
+Detalhes:
+- Nome do container: `readowl_next_db`
+- Banco: `readowl`
+- Usuário/Senha: `readowl` / `readowl`
+- Porta no host: 5433 (container 5432)
+
+Seu `.env` deve apontar `DATABASE_URL` para `postgresql://readowl:readowl@localhost:5433/readowl?schema=public`.
+
+Se quiser gerenciar o DB por GUI, há duas opções:
+
+- Reutilizar o pgAdmin existente do projeto React (container `readowl_pgadmin`) em http://localhost:5050; ou
+- Usar o pgAdmin incluído neste projeto em http://localhost:5051.
+
+#### Usando o pgAdmin embutido (Opção 3)
+
+Incluímos um serviço `pgadmin` no `docker-compose.yml`. Para iniciá-lo junto ao Postgres:
+
+```bash
+docker compose up -d postgres pgadmin
+```
+
+Acesse http://localhost:5051 e autentique com as credenciais definidas no `.env`:
+
+```env
+PGADMIN_DEFAULT_EMAIL=admin@example.com
+PGADMIN_DEFAULT_PASSWORD=admin
+```
+
+Observações:
+- Essas variáveis são opcionais; se não definidas, os valores acima são usados.
+- No Linux, mapeamos `host.docker.internal` dentro do container para alcançar o Postgres exposto nas portas do host.
+
+Crie o servidor dentro do pgAdmin:
+1. Clique com o direito em “Servers” > Create > Server…
+2. Aba General: Name: `readowl-local`
+3. Aba Connection:
+        - Host: `host.docker.internal` (de dentro do container do pgAdmin)
+        - Port: `5433`
+        - Maintenance DB: `readowl`
+        - Username: `readowl`
+        - Password: `readowl`
+4. Salve
+
+#### Criar um servidor no pgAdmin (passos GUI)
+
+1. Abra http://localhost:5051 e faça login.
+2. Click direito em “Servers” > Create > Server…
+3. Aba General: Name: `readowl-local`
+4. Aba Connection:
+   - Host: Se o pgAdmin estiver em Docker e o Postgres no host, use o IP do host (Linux) ou `host.docker.internal` (Mac/Windows). Se ambos estiverem no Docker, `host.docker.internal` também funciona em muitos setups.
+   - Port: `5433`
+   - Maintenance DB: `readowl`
+   - Username: `readowl`
+   - Password: `readowl`
+   - Save
+5. Expanda o servidor > Databases. O DB padrão `readowl` deve existir. Se não existir, crie-o.
+
+### 5) Configuração do Prisma
+
+Gere e aplique o schema ao banco:
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+# Para o primeiro setup de dev (opcional) use:
+# npx prisma migrate dev
+```
+
+### 6) Configuração do Google OAuth
+
+No Google Cloud Console (APIs & Services > Credentials), crie um Client ID OAuth 2.0 para aplicação Web:
+- Authorized JavaScript origins: `http://localhost:3000`
+- Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+
+Copie o Client ID e o Secret para o `.env` (`GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`).
+
+### 7) SMTP (recuperação de senha)
+
+Se for usar Gmail:
+- Ative a verificação em duas etapas (2FA)
+- Crie uma Senha de App e defina em `.env` como `SMTP_PASS`
+- Mantenha `SMTP_HOST=smtp.gmail.com` e `SMTP_PORT=587`
+
+### 8) Rodar a aplicação
+
+```bash
+npm run dev
+```
+
+Abra http://localhost:3000
+
+### 9) Solução de Problemas
+
+- Verifique os valores do `.env` e a conectividade com o banco.
+- Se usar Postgres via Docker, confirme se o mapeamento de portas bate com sua `DATABASE_URL`.
+- Prisma não conecta: confira se o DB existe e as credenciais estão corretas.
+- Gmail EAUTH/535: use uma Senha de App, não a senha normal. Considere a porta 465 com `SMTP_PORT=465` para SSL.
+
+### 10) Reset completo (Docker + Prisma)
+
+Use estes passos se quiser zerar containers, volumes e o estado de migrações do Prisma apenas para este projeto Next.js.
+
+1. Pare e remova containers (pgAdmin e Postgres):
 
         ```bash
-        command -v nvm || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        source ~/.bashrc
-        nvm install 20
-        nvm use 20
+        docker rm -f readowl_next_pgadmin readowl_next_db 2>/dev/null || true
         ```
 
-3. Instale as dependências do projeto (os pacotes do `node_modules`):
+2. Remova volumes (apaga os dados):
 
         ```bash
-        npm install
+        docker volume rm -f readowl-next_readowl_next_pgdata 2>/dev/null || true
         ```
 
-4. Configure o arquivo `.env` com as variáveis de ambiente necessárias (exemplo: URL do backend).
-
-5. Na pasta raiz do projeto, execute:
+3. Limpe as migrações do Prisma (squash para um baseline novo):
 
         ```bash
-        npm run dev
+        rm -rf prisma/migrations/*
         ```
 
-6. A aplicação estará disponível em `http://localhost:5173` (ou outra porta informada pelo Vite).
+4. Suba o Postgres novamente e recrie migrações:
+
+        ```bash
+        docker compose up -d postgres
+        npx prisma generate
+        npx prisma migrate dev --name init
+        ```
+
+5. (Opcional) Suba o pgAdmin novamente:
+
+        ```bash
+        docker compose up -d pgadmin
+        ```
+
+6. Faça login no pgAdmin (http://localhost:5051) com as credenciais do `.env`:
+
+        ```env
+        PGADMIN_DEFAULT_EMAIL=admin@example.com
+        PGADMIN_DEFAULT_PASSWORD=admin
+        ```
+
+Se o login falhar com "incorrect password", remova o container existente do pgAdmin para permitir que as novas credenciais tenham efeito e inicie novamente (passo 1 e depois 5).
 
 -----
 
-## 📓 Padrão de Commits
+## 🧰 Notas de Desenvolvimento
 
-Este repositório adota uma variação do padrão [Conventional Commits](https://www.conventionalcommits.org/), adaptada para integração com o Jira. Essa abordagem facilita a rastreabilidade das tarefas, mantém o histórico de commits claro e organizado, e contribui para a automação de versões e geração de changelogs.
+- Stack: Next.js (App Router), TypeScript, Tailwind CSS, Prisma, NextAuth, Zod, Nodemailer.
+- Adicionamos uma entrada `docker-compose.yml` para pgAdmin e simplificar o gerenciamento do DB em desenvolvimento.
+
+### 📑 Telas: Concluídas & A Fazer
+
+| ✅ **Telas Concluídas** | Detalhes |
+|---|---|
+| 🏠 Landing Page | Header, termos e informações |
+| 🔐 Login & Cadastro | Login/cadastro simples com recuperação de senha e opção de login com Google |
+| 📖 Índice de Livro | Detalhes do livro, seguir, avaliação, volumes com lista de capítulos |
+| 📄 Índice de Capítulo | Conteúdo principal e botões de CRUD |
+| 📚 Biblioteca | Carrossel de livros criados |
+| 📝 CRUD de Livro | Criar, ver, editar, excluir |
+| 📦 CRUD de Volume & Capítulo | Criar, editar, excluir volumes e capítulos |
+| ⚠️ Páginas de Erro | 403, 404, 500 e erros genéricos |
+
+| 🚧 **Telas a Fazer** | Detalhes |
+|---|---|
+| 🏡 Home | Carrossel de banners, carrosséis de destaques, lista de capítulos recentes |
+| 🔎 Busca de Livros | Com filtros |
+| 📚 Carrossel de Seguidos | Na biblioteca |
+| 💬 Aba de Comentários | Na página do livro |
+| 📄 Índice de Capítulo | Avaliação por reações e comentários |
+| 🔔 Notificações | Para livros criados e seguidos |
+| 👤 Edição de Perfil | Tela de autoedição do usuário |
+| 🛠️ Edição de Usuário (Admin) | Gestão geral de usuários para admins |
+
+> 62% concluído
+
+### 📁 Estrutura de Projeto Sugerida
+
+- `docs/` – Documentação e diagramas do projeto.
+- `prisma/` – Schema do Prisma e migrações do banco.
+- `public/` – Assets estáticos servidos como estão (imagens, ícones, fontes, SVGs).
+- `src/` – Código-fonte da aplicação.
+        - `app/` – Next.js App Router: páginas, layouts e rotas de API em `app/api`.
+        - `components/` – Componentes reutilizáveis de UI e features (ex.: book, ui, sections).
+        - `lib/` – Bibliotecas e utilitários da aplicação (cliente Prisma, auth, mailer, rate limiters, helpers de slug).
+        - `types/` – Tipos globais do TypeScript e ampliações de módulos (ex.: NextAuth, zxcvbn).
+
+-----
+
+## 📓 Convenção de Commits
+
+Este repositório segue uma variação do padrão [Conventional Commits](https://www.conventionalcommits.org/). Essa abordagem ajuda a manter o histórico de commits claro e organizado, contribuindo para automação de versionamento e geração de changelog.
 
 ### ✔️ Formato
 
 ```bash
-<ID da task no Jira> <tipo>(escopo):<ENTER>
-<mensagem breve sobre o que o commit faz>
+<tipo>(escopo):<ENTER>
+<mensagem curta descrevendo o que o commit faz>
 ```
 
 ### 📍 O que é o "tipo"?
 
     * `feat`: Nova funcionalidade
-    * `fix`: Correção de bugs
-    * `docs`: Alterações na documentação
-    * `style`: Ajustes de estilização (css, cores, imagens, etc.)
-    * `refactor`: Refatoração de código sem mudança de comportamento
+    * `fix`: Correção de bug
+    * `docs`: Mudanças na documentação
+    * `style`: Ajustes de estilo (css, cores, imagens, etc.)
+    * `refactor`: Refatoração de código sem alteração de comportamento
     * `perf`: Melhorias de performance
     * `test`: Criação ou modificação de testes
     * `build`: Mudanças que afetam o build (dependências, scripts)
@@ -132,125 +337,108 @@ Este repositório adota uma variação do padrão [Conventional Commits](https:/
 
 ### 📍 O que é o "escopo"?
 
-Define o título do commit referente à parte do projeto afetada, como um módulo (`criptografia`), uma página (`login-page`), ou uma feature (`carrossel`).
+Define a parte do projeto afetada pelo commit, como um módulo (`encryption`), uma página (`login-page`) ou uma feature (`carousel`).
 
 ### 📝 Exemplo
 
 ```bash
-git commit -am "RO-25 refactor(criptografia):
-> Aprimora a indentação."
+git commit -am "refactor(encryption):
+> Melhora identação."
 
-git commit -am "RO-12 fix(login-page):
+git commit -am "fix(login-page):
 > Corrige bug de login nulo."
 
-git commit -am "RO-47 feat(carrossel):
-> Implementa o carrossel na página inicial."
+git commit -am "feat(carousel):
+> Implementa carrossel na página inicial."
 ```
 
 -----
 
-## 🪢 Padrão de Branches
+## 🪢 Convenção de Branches
 
-Este documento descreve o padrão de versionamento e a organização das branches do projeto Readowl, utilizando Git em conjunto com o Jira para um fluxo de trabalho mais organizado e rastreável.
+Este documento descreve o padrão de versionamento e organização de branches para o projeto Readowl, usando Git para um fluxo mais organizado e rastreável.
 
-## Índice
+### 1. Nomenclatura de Branch
 
-1.  [Integração com o Jira](https://www.google.com/search?q=%231-integra%C3%A7%C3%A3o-com-o-jira)
-2.  [Padrão para Nomenclatura de Branches](https://www.google.com/search?q=%232-padr%C3%A3o-para-nomenclatura-de-branches)
-3.  [Branches Locais vs. Remotas (Origin)](https://www.google.com/search?q=%233-branches-locais-vs-remotas-origin)
-4.  [Fluxo de Desenvolvimento](https://www.google.com/search?q=%234-fluxo-de-desenvolvimento)
-5.  [Padrão de Commits](https://www.google.com/search?q=%235-padr%C3%A3o-de-commits)
-6.  [Processo de Pull Request (PR)](https://www.google.com/search?q=%236-processo-de-pull-request-pr)
+Toda nova branch criada para desenvolvimento de tarefas deve seguir estritamente o padrão abaixo para garantir consistência e clareza sobre o propósito de cada branch.
 
------
+**Padrão:** `<descricao-curta-em-minusculas-com-hifens>`
 
-### 1. Integração com o Jira
-
-Para garantir que nosso trabalho no código-fonte esteja sempre conectado às tarefas planejadas no Jira, utilizamos um sistema de rastreamento simples. Cada tarefa no Jira possui um identificador único (ID), como `RO-17`, `RO-25`, etc.
-
-É **obrigatório** que cada branch e commit relacionado a uma tarefa comece com o ID correspondente, pois isso permite que o Jira identifique e vincule automaticamente as branches e os commits à tarefa, facilitando o acompanhamento do progresso e a revisão do trabalho realizado.
-
-### 2. Padrão para Nomenclatura de Branches
-
-Toda nova branch criada para o desenvolvimento de uma tarefa deve seguir estritamente o padrão abaixo para garantir consistência e clareza sobre o propósito de cada branch.
-
-**Padrão:** `<ID da task>-<nome descritivo em minusculo>`
-
-O nome descritivo deve ser curto e usar hífens para separar as palavras.
+A descrição deve ser curta e usar hífens para separar palavras.
 
 **Exemplos de nomes de branch:**
 
-- `RO-17-landing-page`
-- `RO-12-configuracao-de-backend`
-- `RO-25-formulario-de-login`
+- `landing-page`
+- `backend-configuration`
+- `login-form`
 
-**Comando para criar a branch:**
+**Comando para criar uma branch:**
 
-Para criar uma nova branch a partir da `dev` e já mudar para ela, utilize o comando:
+Para criar uma nova branch a partir de `dev` e mudar para ela:
 
 ```bash
-git checkout -b RO-17-landing-page
+git checkout -b landing-page
 ```
 
-### 3. Branches Locais vs. Remotas (Origin)
+### 2. Branches Locais vs. Remotas (Origin)
 
-É fundamental entender a diferença entre uma branch em sua máquina (local) e a branch no repositório remoto (origin).
+É importante entender a diferença entre uma branch na sua máquina (local) e a branch no repositório remoto (origin).
 
-- **Branch Local:** É uma versão do repositório que reside exclusivamente no seu computador. É nela que você trabalha, desenvolve o código, testa e faz commits.
-- **Branch Remota (origin):** É a versão da branch que está armazenada no servidor central (como GitHub, GitLab, etc.). Ela serve como um ponto de sincronização para todos os membros da equipe.
+- **Branch Local:** Versão do repositório que existe apenas no seu computador. Onde você trabalha, desenvolve, testa e faz commits.
+- **Branch Remota (origin):** Versão da branch armazenada no servidor central (GitHub, GitLab etc.). Serve como ponto de sincronização para o time.
 
-Embora a sua branch local e a branch remota correspondente tenham o **mesmo nome** (ex: `RO-17-landing-page`), elas são entidades diferentes. Você desenvolve na sua branch local, e quando deseja compartilhar seu progresso ou fazer um backup, você envia seus commits para a branch remota com o comando `git push`.
+Embora sua branch local e a remota correspondente tenham o **mesmo nome** (ex.: `landing-page`), elas são entidades diferentes. Você desenvolve na branch local e, quando quiser compartilhar o progresso ou fazer backup, faz push dos seus commits para a branch remota com `git push`.
 
 **Fluxo básico:**
 
-1. Você cria a branch `RO-17-landing-page` **localmente**.
-2. Você desenvolve e faz seus commits nessa branch local.
-3. Você envia suas alterações para o servidor remoto com `git push -u origin RO-17-landing-page`.
+1. Você cria a branch `landing-page` **localmente**.
+2. Você desenvolve e comita nessa branch local.
+3. Você envia seu trabalho ao repositório remoto com `git push`.
 
-> OBS: O parâmetro `-u` (ou `--set-upstream`) faz com que sua branch local seja vinculada à branch remota recém-criada, facilitando futuros comandos `git push` e `git pull` sem precisar especificar o nome da branch.
+> Observação: O parâmetro `-u` (ou `--set-upstream`) vincula sua branch local à branch remota recém-criada, facilitando futuros `git push` e `git pull`.
 
-### 4. Fluxo de Desenvolvimento
+### 3. Fluxo de Desenvolvimento
 
-1. **Sincronize sua branch `dev` local:**
+1. **Sincronize sua `dev` local:**
         ```bash
         git checkout dev
         git pull origin dev
         ```
 2. **Crie a branch da sua tarefa:**
-        Crie sua branch local a partir da `dev` atualizada, seguindo o padrão de nomenclatura.
+        Crie sua branch local a partir da `dev` atualizada, seguindo a convenção de nomes.
         ```bash
-        git checkout -b RO-25-formulario-de-login
+        git checkout -b login-form
         ```
 3. **Desenvolva e faça commits:**
-        Trabalhe no código e faça commits claros e concisos. Lembre-se de seguir o padrão de commits.
+        Trabalhe no código e faça commits claros e concisos. Lembre de seguir a convenção de commits.
         ```bash
         git add .
-        git commit -m "RO-25 feat(login-form):
+        git commit -m "feat(login-form):
         > Adiciona validação de campos"
         ```
-4. **Envie seu trabalho para o repositório remoto:**
-        Faça o push dos seus commits para a branch remota de mesmo nome.
+4. **Envie seu trabalho ao repositório remoto:**
+        Faça push dos seus commits para a branch remota com o mesmo nome.
         ```bash
-        git push origin -u RO-25-formulario-de-login
+        git push origin -u login-form
         ```
 
-### 5. Mantenha o Padrão de Commits
+### 4. Siga a Convenção de Commits
 
-[Consulte o padrão de commits detalhado acima](#padrão-de-commits) para garantir que suas mensagens estejam claras, rastreáveis e referenciem sempre o ID da task correspondente.
+[Veja a convenção detalhada acima](#-convenção-de-commits) para garantir que suas mensagens sejam claras, rastreáveis e sempre referenciem a parte relevante do projeto.
 
-### 6. Processo de Pull Request (PR)
+### 5. Processo de Pull Request (PR)
 
-O Pull Request (PR) é o mecanismo para revisar e integrar o código de uma branch em outra.
+Um Pull Request (PR) é o mecanismo para revisar e integrar código de uma branch em outra.
 
 - **Ao finalizar uma tarefa:**
-        Quando o desenvolvimento na branch da sua tarefa (ex: `RO-25-formulario-de-login`) estiver concluído e testado, você deve abrir um **Pull Request** da sua branch para a branch `dev`.
+        Quando o desenvolvimento na sua branch (ex.: `login-form`) estiver concluído e testado, você deve abrir um **Pull Request** da sua branch para a branch `dev`.
         Isso serve para:
-        1. Permitir a revisão do código (Code Review) por outros membros da equipe.
-        2. Manter um registro histórico de todas as alterações integradas.
-        3. Disponibilizar o código da tarefa na `dev` para que outros desenvolvedores possam acessá-lo, caso necessário.
+        1. Permitir revisão de código por outros membros do time.
+        2. Manter um histórico de todas as mudanças integradas.
+        3. Disponibilizar o código da tarefa em `dev` para outros desenvolvedores, se necessário.
 
-- **Ao final de uma Sprint:**
-        A branch `main` é a nossa branch de produção e deve conter apenas código estável e testado. Portanto, as atualizações na `main` ocorrem apenas no final de cada ciclo de desenvolvimento (Sprint).
-        Ao final da sprint, um **Pull Request** será aberto da branch `dev` para a branch `main`, contendo todas as funcionalidades e correções desenvolvidas durante o ciclo.
+- **Ao final de um Sprint:**
+        A branch `main` é a de produção e deve conter apenas código estável e testado. Atualizações em `main` ocorrem apenas ao final de cada ciclo de desenvolvimento (Sprint).
+        Ao final do sprint, será aberto um **Pull Request** da branch `dev` para a `main`, contendo todas as funcionalidades e correções desenvolvidas no período.
 
 -----
