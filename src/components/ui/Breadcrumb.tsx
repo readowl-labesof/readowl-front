@@ -21,7 +21,7 @@ type BreadcrumbProps = {
 };
 
 
-export function Breadcrumb({ items, className = "", anchor = "static", showHome = false, homeHref = "/home", tone = "dark" }: BreadcrumbProps) {
+export function Breadcrumb({ items, className = "", anchor = "static", showHome = false, homeHref = "/home", tone = "light" }: BreadcrumbProps) {
   const list: BreadcrumbItem[] = showHome ? [{ label: "Início", href: homeHref }, ...items] : items;
   const basePos =
     anchor === "top-left"
@@ -82,7 +82,7 @@ export function BreadcrumbAuto({
   labelMap = {},
   className = "",
   anchor = "static",
-  tone = "dark",
+  tone = "light",
 }: {
   base?: string;
   labelMap?: Record<string, string>;

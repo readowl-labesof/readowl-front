@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
+import { Bell, BookOpen, LogOut as LogOutIcon, Menu, Search as SearchIcon, X as XIcon } from 'lucide-react';
 import Modal from '../modal/Modal';
 
 interface NavLink { label: string; href: string; };
@@ -19,11 +20,33 @@ export default function FloatingNavbar() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [logoutOpen, setLogoutOpen] = useState(false); // confirm logout modal
     const ticking = useRef(false);
+    const [unreadCount, setUnreadCount] = useState<number>(0);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
 
     const links: NavLink[] = [
         { label: 'Biblioteca', href: '/library' },
         { label: 'Notificações', href: '/notifications' },
     ];
+
+    // TODO: Integrar com endpoint real de notificações quando disponível
+    // Ex.: GET /api/notifications/unread-count
+    // Por ora, mantemos 0 para não exibir badge indevidamente
+    useEffect(() => {
+        setUnreadCount((c) => c); // noop para indicar ponto de integração
+    }, []);
+
+    // Atalho de teclado para focar busca (Ctrl/Cmd + K)
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            if ((isMac ? e.metaKey : e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
 
     // Scroll hide / show logic
     useEffect(() => {
@@ -55,7 +78,7 @@ export default function FloatingNavbar() {
         router.push(href);
     }, [router]);
 
-    const activeClass = 'text-white after:absolute after:left-0 after:-bottom-1 after:h-[3px] after:w-full after:bg-white font-semibold';
+    // active underline class no longer used after redesign
 
     return (
         <>
@@ -69,22 +92,36 @@ export default function FloatingNavbar() {
                             <span className="hidden md:inline text-white font-yusei tracking-wide text-sm sm:text-base group-hover:opacity-90">Readowl</span>
                         </button>
 
-                        {/* Center nav (desktop) */}
-                        <nav className="hidden md:flex items-center gap-6 text-sm font-medium ml-4">
-                            {links.map(l => {
-                                const iconSrc = l.href.startsWith('/notifications') ? '/img/svg/navbar/notification.svg' : '/img/svg/navbar/book1.svg';
-                                return (
-                                    <button
-                                        key={l.href}
-                                        onClick={() => go(l.href)}
-                                        className={`relative flex items-center gap-1.5 px-1 text-readowl-purple-extralight/80 hover:text-white transition-colors after:transition-opacity after:duration-300 after:ease-out after:bg-white/70 after:h-[2px] after:w-full after:absolute after:left-0 after:-bottom-1 ${pathname?.startsWith(l.href) ? activeClass : 'after:opacity-0 hover:after:opacity-60'}`}
-                                    >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={iconSrc} alt="" className="w-4 h-4 opacity-90" />
-                                        <span>{l.label}</span>
-                                    </button>
-                                );
-                            })}
+                        {/* Center nav (desktop) - floating pill group */}
+                        <nav className="hidden md:flex items-center ml-4">
+                            <div className="flex items-center gap-1 rounded-full px-1 py-0.5 shadow-sm">
+                                {links.map(l => {
+                                    const isNotif = l.href.startsWith('/notifications');
+                                    const isActive = !!pathname?.startsWith(l.href);
+                                    return (
+                                        <button
+                                            key={l.href}
+                                            onClick={() => go(l.href)}
+                                            className={`relative flex items-center gap-2 px-3 py-1 rounded-full transition-all duration-200 ${isActive ? 'bg-white/15 text-white font-semibold' : 'text-readowl-purple-extralight/85 hover:bg-white/10 hover:text-white'}`}
+                                            aria-label={l.label}
+                                        >
+                                            {isNotif ? (
+                                                <span className="relative inline-flex">
+                                                    <Bell className="w-4 h-4" />
+                                                    {unreadCount > 0 && (
+                                                        <span aria-label={`${unreadCount} notificações não lidas`} className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-red-600 text-[10px] leading-4 text-white text-center ring-1 ring-white shadow">
+                                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            ) : (
+                                                <BookOpen className="w-4 h-4" />
+                                            )}
+                                            <span>{l.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </nav>
 
                         {/* Spacer */}
@@ -92,19 +129,28 @@ export default function FloatingNavbar() {
 
                         {/* Search (desktop) */}
                         <div className="hidden md:flex items-center">
-                            <form role="search" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); const q = (data.get('q') as string) || ''; if (q.trim()) router.push('/search?query=' + encodeURIComponent(q.trim())); }} className={`group flex items-center bg-white/95 focus-within:ring-2 ring-offset-0 ring-readowl-purple-light/60 overflow-hidden transition-all duration-300 ${searchOpen ? 'w-72' : 'w-40'} shadow-sm`}>
+                            <form
+                                role="search"
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const data = new FormData(e.currentTarget);
+                                    const q = (data.get('q') as string) || '';
+                                    if (q.trim()) router.push('/search?query=' + encodeURIComponent(q.trim()));
+                                }}
+                                className={`group flex items-center rounded-full bg-white shadow-sm ring-1 ring-readowl-purple-light/40 focus-within:ring-2 focus-within:ring-readowl-purple-light transition-all duration-300 ${searchOpen ? 'w-[22rem]' : 'w-[14rem]'}`}
+                            >
+                                <SearchIcon className="ml-3 w-5 h-5 text-readowl-purple-dark/70" />
                                 <input
+                                    type="search"
+                                    aria-label="Buscar"
+                                    ref={searchInputRef}
                                     name="q"
-                                    placeholder="Pesquisar..."
+                                    placeholder="Buscar livros, autores e gêneros..."
                                     onFocus={() => setSearchOpen(true)}
                                     onBlur={() => setSearchOpen(false)}
-                                    className="bg-transparent px-4 py-1.5 text-sm text-readowl-purple-dark placeholder:text-readowl-purple-dark/60 focus:outline-none w-full"
+                                    className="bg-transparent px-3 py-2 text-sm text-readowl-purple-dark placeholder:text-readowl-purple-dark/60 focus:outline-none w-full"
                                     defaultValue={''}
                                 />
-                                <button aria-label="Buscar" className="px-3 text-readowl-purple-dark/70 hover:text-readowl-purple-dark">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="/img/svg/navbar/search.svg" alt="" className="w-5 h-5" />
-                                </button>
                             </form>
                         </div>
 
@@ -113,24 +159,18 @@ export default function FloatingNavbar() {
                             {/* Avatar */}
                             <button onClick={() => go('/user')} className="relative ring-2 ring-transparent hover:ring-readowl-purple-light/60 focus:outline-none focus-visible:ring-readowl-purple-light/80 transition" aria-label="Perfil">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={session?.user?.image || '/img/svg/navbar/account-box.svg'} alt="Perfil" className="w-9 h-9 object-cover" />
+                                <img src={session?.user?.image || '/img/svg/navbar/account-box.svg'} alt="Perfil" className="w-9 h-9 object-cover rounded-full" />
                             </button>
                             {/* Logout */}
                             <button onClick={() => setLogoutOpen(true)} className="flex items-center gap-1.5 text-readowl-purple-extralight/80 hover:text-white text-sm font-medium transition-colors" aria-label="Sair">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="/img/svg/navbar/logout.svg" alt="" className="w-4 h-4" />
+                                <LogOutIcon className="w-4 h-4" />
                                 <span>Sair</span>
                             </button>
                         </div>
 
                         {/* Hamburger (mobile) */}
                         <button aria-label="Menu" onClick={() => setMenuOpen(o => !o)} className="md:hidden flex items-center justify-center w-9 h-9 text-white/90 hover:bg-white/10 active:scale-95 transition overflow-hidden ml-auto">
-                            <span className="sr-only">Abrir menu</span>
-                            <div className="flex flex-col gap-1.5">
-                                <span className={`block h-0.5 w-6 bg-current transition ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`}></span>
-                                <span className={`block h-0.5 w-6 bg-current transition ${menuOpen ? 'opacity-0' : ''}`}></span>
-                                <span className={`block h-0.5 w-6 bg-current transition ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`}></span>
-                            </div>
+                            {menuOpen ? <XIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>
@@ -138,32 +178,38 @@ export default function FloatingNavbar() {
                 {/* Mobile menu panel */}
                 <div className={`md:hidden transition-[max-height,opacity] duration-300 overflow-hidden bg-readowl-purple-medium/95 backdrop-blur w-full ${menuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                     <div className="px-4 pb-4 pt-1 flex flex-col gap-4">
-                        <form role="search" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); const q = (data.get('q') as string) || ''; setMenuOpen(false); if (q.trim()) router.push('/search?query=' + encodeURIComponent(q.trim())); }} className="flex items-center bg-white overflow-hidden shadow">
-                            <input name="q" placeholder="Pesquisar..." className="flex-1 px-4 py-2 text-sm text-readowl-purple-dark placeholder:text-readowl-purple-dark/60 focus:outline-none" />
-                            <button aria-label="Buscar" className="px-3 text-readowl-purple-dark/70">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="/img/svg/navbar/search.svg" alt="" className="w-5 h-5" />
-                            </button>
+                        <form role="search" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); const q = (data.get('q') as string) || ''; setMenuOpen(false); if (q.trim()) router.push('/search?query=' + encodeURIComponent(q.trim())); }} className="flex items-center rounded-full bg-white shadow-sm ring-1 ring-readowl-purple-light/40 focus-within:ring-2 focus-within:ring-readowl-purple-light">
+                            <SearchIcon className="ml-3 w-5 h-5 text-readowl-purple-dark/70" />
+                            <input type="search" name="q" placeholder="Buscar livros, autores e gêneros..." className="flex-1 px-3 py-2 text-sm text-readowl-purple-dark placeholder:text-readowl-purple-dark/60 focus:outline-none bg-transparent" />
                         </form>
                         <nav className="flex flex-col gap-1">
                             {links.map(l => {
-                                const iconSrc = l.href.startsWith('/notifications') ? '/img/svg/navbar/notification.svg' : '/img/svg/navbar/book1.svg';
+                                const isNotif = l.href.startsWith('/notifications');
                                 return (
-                                    <button key={l.href} onClick={() => go(l.href)} className={`flex items-center gap-2 text-left px-3 py-2 text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? 'bg-readowl-purple-dark/40 text-white' : 'text-readowl-purple-extralight/85 hover:bg-readowl-purple-light/20 hover:text-white'}`}>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={iconSrc} alt="" className="w-5 h-5" />
+                                    <button key={l.href} onClick={() => go(l.href)} className={`relative flex items-center gap-2 text-left px-3 py-2 text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? 'bg-readowl-purple-dark/40 text-white' : 'text-readowl-purple-extralight/85 hover:bg-readowl-purple-light/20 hover:text-white'}`}>
+                                        {isNotif ? (
+                                            <span className="relative inline-flex">
+                                                <Bell className="w-5 h-5" />
+                                                {unreadCount > 0 && (
+                                                    <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-red-600 text-[10px] leading-4 text-white text-center ring-1 ring-white shadow">
+                                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        ) : (
+                                            <BookOpen className="w-5 h-5" />
+                                        )}
                                         <span>{l.label}</span>
                                     </button>
                                 );
                             })}
                             <button onClick={() => go('/user')} className={`flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors ${pathname?.startsWith('/user') ? 'bg-readowl-purple-dark/40 text-white' : 'text-readowl-purple-extralight/85 hover:bg-readowl-purple-light/20 hover:text-white'}`}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={session?.user?.image || '/img/svg/navbar/account-box.svg'} alt="Avatar" className="w-8 h-8 object-cover" />
+                                <img src={session?.user?.image || '/img/svg/navbar/account-box.svg'} alt="Avatar" className="w-8 h-8 object-cover rounded-full" />
                                 <span>Perfil</span>
                             </button>
                             <button onClick={() => { setMenuOpen(false); setLogoutOpen(true); }} className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-readowl-purple-extralight/85 hover:bg-red-500/20 hover:text-white transition-colors">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="/img/svg/navbar/logout.svg" alt="" className="w-5 h-5" />
+                                <LogOutIcon className="w-5 h-5" />
                                 <span>Sair</span>
                             </button>
                         </nav>

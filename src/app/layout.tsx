@@ -42,7 +42,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icon.png" />
       </head>
-  <body className={`${geistSans.variable} ${geistMono.variable} ${yuseiMagic.variable} ${ptSerif.variable} antialiased`}>
+  <body className={`${geistSans.variable} ${geistMono.variable} ${yuseiMagic.variable} ${ptSerif.variable} antialiased bg-white text-readowl-purple-extradark`}>
         <Providers>
           <NavGate />
           {children}

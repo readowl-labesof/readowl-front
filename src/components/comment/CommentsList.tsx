@@ -139,7 +139,7 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
 
   return (
     <div>
-      <div className="mb-2 text-white">{total} comentário{total === 1 ? '' : 's'}.</div>
+      <div className="mb-2 text-readowl-purple-extradark">{total} comentário{total === 1 ? '' : 's'}.</div>
       <div>
         {(() => {
           // Group flat list by parentId and render: parents first, then all descendants directly below (one-level indent), preserving order.
