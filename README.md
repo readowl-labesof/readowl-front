@@ -28,6 +28,7 @@ A plataforma busca resolver problemas comuns encontrados em outros sistemas, com
 - Sistema de busca avançada com filtros por gênero, popularidade e data.
 - Biblioteca pessoal para favoritar obras e receber notificações.
 - Interação por meio de avaliações, curtidas e comentários em livros e capítulos.
+- Contagem de visualizações por capítulo com soma total por livro, com proteção contra bots e deduplicação (janela de 2 minutos). Requer usuário autenticado.
 - Painel administrativo para gestão de usuários e moderação de conteúdo.
 
 ### 🛠️ Tecnologias Utilizadas
@@ -53,12 +54,20 @@ A plataforma busca resolver problemas comuns encontrados em outros sistemas, com
 - **Segurança**: Cooldown por usuário (120s) e rate limiting por IP (5 requisições/15min) em pedidos de recuperação de senha.
 - **Configuração de SMTP**: Defina `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `MAIL_FROM` no `.env`. Em desenvolvimento, se o SMTP não estiver configurado, os emails são logados no console.
 - **Redis (Opcional)**: Para rate limiting distribuído, configure `REDIS_URL` ou variáveis do Upstash; por padrão usa memória local se não definido.
+- **Output File Tracing Root (Monorepo)**: Para evitar warnings de root em workspaces com múltiplos lockfiles, definimos `outputFileTracingRoot` no `next.config.ts` apontando para a raiz do workspace.
+- **Métricas de Visualizações (Views)**: Registro de visualizações por capítulo e total por livro com:
+        - Deduplicação por janela de 2 minutos por usuário autenticado.
+        - Exclusão de visualizações do próprio autor do livro.
+        - Filtro simples de bots com base no `User-Agent`.
+        - Rate limit leve e dedupe preferencial via Redis (SET NX PX) com fallback em memória local quando Redis não está configurado.
+        - Sem suporte a usuários anônimos: nenhuma lógica de IP é usada/armazenada.
 - **Melhorias de UX**: Página de sucesso após redefinição de senha e mensagens de feedback aprimoradas.
 - **Força da Senha**: `PasswordStrengthBar` usa heurística local e opcionalmente carrega `zxcvbn` para feedback avançado.
 - **Variáveis de Ambiente**: Consulte `.env.example` para as configurações necessárias.
 
 #### Banco de Dados
 - **PostgreSQL**: Armazenamento de dados.
+        - Nova tabela: `ChapterView` para registrar visualizações de capítulos, com campos: `id`, `chapterId`, `userId`, `createdAt`. Índices para consultas por `chapterId` e por intervalo de tempo.
 
 #### Ambiente
 - **Docker**: Containerização para desenvolvimento e deploy.
@@ -107,11 +116,19 @@ SMTP_PORT=587
 SMTP_USER="<seu-gmail>@gmail.com"
 SMTP_PASS="<app-password>"
 MAIL_FROM="Readowl <no-reply@readowl.dev>"
+
+# Redis (opcional para rate limit/dedupe distribuído)
+# Exemplo Redis local
+# REDIS_URL="redis://localhost:6379"
+# Exemplo Upstash (HTTP)
+# UPSTASH_REDIS_REST_URL="https://<id>.upstash.io"
+# UPSTASH_REDIS_REST_TOKEN="<seu-token>"
 ```
 
 Observações:
 - Para SMTP do Gmail, use uma Senha de App (não sua senha normal). Ative a verificação em duas etapas e crie uma Senha de App.
 - O projeto inclui um template em `credentials/google-oauth.json`. A pasta `credentials/` é ignorada no Git para evitar vazamento de segredos.
+- Redis é opcional, mas recomendado em produção para deduplicação/rate limit distribuídos. Sem Redis, a aplicação usa memória local (adequado para dev/single‑instance).
 
 ### 4) Banco de dados
 
@@ -272,6 +289,14 @@ Se o login falhar com "incorrect password", remova o container existente do pgAd
 
 - Stack: Next.js (App Router), TypeScript, Tailwind CSS, Prisma, NextAuth, Zod, Nodemailer.
 - Adicionamos uma entrada `docker-compose.yml` para pgAdmin e simplificar o gerenciamento do DB em desenvolvimento.
+
+### ✅ Validações rápidas de runtime (Views)
+
+Para inspecionar o comportamento das rotas de views:
+- Usuário não autor: ao abrir um capítulo, a contagem do capítulo deve aumentar no máximo 1 vez dentro de 2 minutos.
+- Autor do livro: ao abrir seu próprio capítulo, o POST de view deve ser ignorado (não incrementa).
+- Bot User-Agent: requisições com user-agents de bots devem ser filtradas/ignoradas.
+- Rate limit: headers de rate limit aparecem nas respostas quando aplicável.
 
 ### 📑 Telas: Concluídas & A Fazer
 
