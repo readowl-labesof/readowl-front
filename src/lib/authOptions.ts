@@ -62,6 +62,18 @@ export const authOptions: NextAuthOptions = {
 			if (session.user && token.sub) {
 				session.user.id = token.sub;
 				if (t.role) session.user.role = t.role;
+				// Carregar dados mais recentes do usuário para refletir mudanças de avatar/nome/email imediatamente
+				try {
+					const dbUser = await prisma.user.findUnique({
+						where: { id: token.sub },
+						select: { name: true, email: true, image: true },
+					});
+					if (dbUser) {
+						session.user.name = dbUser.name;
+						session.user.email = dbUser.email;
+						session.user.image = dbUser.image ?? session.user.image ?? null;
+					}
+				} catch {}
 			}
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).authProvider = t.authProvider;
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).stepUpAt = t.stepUpAt;

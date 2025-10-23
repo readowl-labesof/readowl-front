@@ -62,6 +62,9 @@ model User {
 
   // Credential version: incremented when credentials change (forces JWT re-login)
   credentialVersion Int @default(0)
+
+  // Chapter views created by this user
+  chapterViews ChapterView[]
 }
 
 // Literary genre model
@@ -215,6 +218,9 @@ model Chapter {
   // Comments on this chapter
   comments Comment[]
 
+  // Views on this chapter
+  views ChapterView[]
+
   @@index([bookId])
   @@index([volumeId])
 }
@@ -261,4 +267,19 @@ model CommentLike {
 
   @@id([userId, commentId])
   @@index([commentId])
+}
+
+// Track chapter views: authenticated-only, each view tied to a userId
+model ChapterView {
+  id        String   @id @default(cuid())
+  chapterId String
+  userId    String   // authenticated-only: every view is tied to a user
+  createdAt DateTime @default(now())
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([chapterId])
+  @@index([chapterId, createdAt])
+  @@index([chapterId, userId, createdAt])
 }
