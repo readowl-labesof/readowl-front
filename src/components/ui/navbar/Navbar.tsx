@@ -137,7 +137,7 @@ export default function FloatingNavbar() {
                                     const q = (data.get('q') as string) || '';
                                     if (q.trim()) router.push('/search?query=' + encodeURIComponent(q.trim()));
                                 }}
-                                className={`group flex items-center rounded-full bg-white shadow-sm ring-1 ring-readowl-purple-light/40 focus-within:ring-2 focus-within:ring-readowl-purple-light transition-all duration-300 ${searchOpen ? 'w-[22rem]' : 'w-[14rem]'}`}
+                                className={`group flex items-center bg-white shadow-sm ring-1 ring-readowl-purple-light/40 focus-within:ring-2 focus-within:ring-readowl-purple-light transition-all duration-300 ${searchOpen ? 'w-[22rem]' : 'w-[14rem]'}`}
                             >
                                 <SearchIcon className="ml-3 w-5 h-5 text-readowl-purple-dark/70" />
                                 <input

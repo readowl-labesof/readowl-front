@@ -26,6 +26,7 @@ Observação: o README já cobre como subir o projeto. Aqui focamos em arquitetu
 - [Guia amigável para estudantes (com referências ao código)](#guia-amigavel-para-estudantes-com-referencias-ao-codigo)
 - [O que é Rate Limiting (explicação simples, com referências)](#o-que-e-rate-limiting-explicacao-simples-com-referencias)
 - [Comparativo: Next.js (App Router) x React puro (front + back separados)](#comparativo-nextjs-app-router-x-react-puro-front--back-separados)
+- [Contagem de Visualizações (Views)](#contagem-de-visualizacoes-views)
 
 ---
 
@@ -282,6 +283,48 @@ Padrão: cada arquivo `route.ts` exporta métodos HTTP.
 
 - `_dev/test-mail/route.ts`, `_debug/token/route.ts`
   - Rotas auxiliares para testar envio de e-mails e inspecionar token/sessão em dev.
+
+---
+
+## Contagem de Visualizações (Views)
+
+Objetivo: registrar visualizações de capítulos (apenas usuários autenticados), reduzir fraudes (bots/spam) e exibir tanto a contagem por capítulo quanto a soma total por livro.
+
+Regras de Contagem
+- Janela de deduplicação: 2 minutos por capítulo e por usuário (`userId`).
+- Pula visualizações do próprio autor do livro (não contam).
+- Filtro básico de bots por `User-Agent` (listas de padrões comuns).
+- Rate limit leve para a rota de registro de view.
+- Dedupe/cache: preferencialmente em Redis (SET NX PX); fallback para memória local em dev/single instance.
+
+Modelo de Dados
+- Tabela `ChapterView` (Prisma):
+  - `id` (string/uuid), `chapterId` (FK), `userId` (FK), `createdAt` (timestamp).
+  - Índices: por `chapterId` e por (`chapterId`, `createdAt`) para agregações por capítulo/livro; índice por (`chapterId`, `userId`, `createdAt`) auxilia a dedupe.
+
+Rotas de API
+-- POST `/api/books/:slug/chapters/:chapterId/view`
+  - Finalidade: registrar uma visualização do capítulo.
+  - Auth: necessário.
+  - Regras aplicadas: filtro de bot, pular autor, rate limit, dedupe 2 min baseado em `userId`.
+  - Possíveis respostas:
+    - 204 No Content (registrado ou já contado na janela)
+    - 400/404 (parâmetros inválidos/capítulo fora do livro)
+    - 429 (rate limit)
+    - 500 (erro inesperado)
+
+- GET `/api/books/:slug/chapters/:chapterId/views`
+  - Finalidade: retornar a contagem total de views do capítulo.
+  - Resposta 200: `{ count: number }`
+
+- GET `/api/books/:slug/views`
+  - Finalidade: retornar a soma das views de todos os capítulos do livro.
+  - Resposta 200: `{ count: number }`
+
+Observações de Implementação
+- As rotas fazem verificação de pertencimento: o `chapterId` precisa estar associado ao livro `:slug` informado.
+- A janela de dedupe (2 min) é verificada primeiro em cache (Redis/memória) e também via consulta no banco pelo intervalo recente.
+- Em caso de indisponibilidade do cliente Prisma numa implantação recém-migrada, há fallbacks com SQL simples para contagem/insert, reduzindo 500s em transições.
 
 ---
 

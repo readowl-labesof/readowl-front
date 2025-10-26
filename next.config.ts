@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Silence monorepo root warning by explicitly setting the tracing root to the workspace root
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats
+  outputFileTracingRoot: path.resolve(__dirname, "../../.."),
   // Permitir pacotes externos no server (Next 15+)
   serverExternalPackages: ["bcrypt"],
   // Cabeçalhos padrão (não relacionados a 431)
