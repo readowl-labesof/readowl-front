@@ -1,6 +1,7 @@
 "use client";
 import { User } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import type { SafeUser } from "@/types/user";
 
 interface ProfileCardProps {
@@ -8,6 +9,14 @@ interface ProfileCardProps {
 }
 
 export default function ProfileCard({ user }: ProfileCardProps) {
+  const [imageSrc, setImageSrc] = useState(user?.image);
+
+  useEffect(() => {
+    if (user?.image) {
+      setImageSrc(`${user.image}?t=${Date.now()}`);
+    }
+  }, [user?.image]);
+
   if (!user) {
     return (
       <div className="bg-readowl-purple-medium rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
@@ -21,7 +30,6 @@ export default function ProfileCard({ user }: ProfileCardProps) {
   const displayEmail = user.email || 'Email não disponível';
   const displayBio = user.description || 'Descrição não disponível';
   const displayCreated = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível';
-  const avatar = user.image || null;
 
   return (
     <div className="bg-readowl-purple-medium rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
@@ -29,15 +37,15 @@ export default function ProfileCard({ user }: ProfileCardProps) {
       <div className="flex flex-row items-center w-full">
         {/* Avatar - Padrão fixo 160x160px */}
         <div className="bg-white rounded-lg p-4 mr-8 flex items-center justify-center w-40 h-40 flex-shrink-0">
-          {avatar ? (
+          {imageSrc ? (
             <Image 
-              src={avatar} 
+              src={imageSrc} 
               alt="avatar" 
               width={128}
               height={128}
               className="w-32 h-32 object-cover rounded-lg"
               style={{ aspectRatio: '1/1' }}
-              unoptimized={avatar.startsWith('data:')}
+              unoptimized={imageSrc.startsWith('data:')}
             />
           ) : (
             <User className="text-gray-400" size={64} />

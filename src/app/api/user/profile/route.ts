@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, unstable_getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
 import { compare, hash } from "bcrypt";
@@ -9,19 +9,27 @@ const updateProfileSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.string().optional(), // <-- adicionar image
   currentPassword: z.string().min(1, "Senha atual é obrigatória"),
 });
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await unstable_getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const body = await request.json();
-    const validatedData = updateProfileSchema.parse(body);
+    const { name, email, description, image, currentPassword } = body;
+
+    const validatedData = updateProfileSchema.parse({
+      name,
+      email,
+      description,
+      image, // <-- incluir image
+      currentPassword,
+    });
 
     // Buscar usuário atual
     const currentUser = await prisma.user.findUnique({
@@ -50,14 +58,14 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Atualizar usuário
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
+        
         name: validatedData.name,
         email: validatedData.email,
         description: validatedData.description,
-        image: validatedData.image,
+        ...(validatedData.image && { image: validatedData.image }), // <-- atualizar image se enviado
       },
       select: {
         id: true,
@@ -70,6 +78,7 @@ export async function PATCH(request: NextRequest) {
         updatedAt: true,
       },
     });
+
 
     return NextResponse.json(updatedUser);
   } catch (error) {
@@ -89,7 +98,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await unstable_getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }

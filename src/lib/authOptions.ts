@@ -58,27 +58,60 @@ export const authOptions: NextAuthOptions = {
 		// },
 	callbacks: {
 		async session({ session, token }) {
+
+			
 			const t = token as JWT & { role?: AppRole; authProvider?: string; stepUpAt?: number; remember?: boolean; credentialVersion?: number };
 			if (session.user && token.sub) {
 				session.user.id = token.sub;
 				if (t.role) session.user.role = t.role;
-				// Carregar dados mais recentes do usuário para refletir mudanças de avatar/nome/email imediatamente
+				
 				try {
+					
+					// Buscar dados atualizados do usuário com imagem
 					const dbUser = await prisma.user.findUnique({
 						where: { id: token.sub },
-						select: { name: true, email: true, image: true },
+						select: { 
+							name: true, 
+							email: true,
+							description: true,
+							image: true, // Campo image existente (URL do Google)
+							profileImage: {
+								select: { id: true }
+							}
+						},
 					});
+					
 					if (dbUser) {
 						session.user.name = dbUser.name;
 						session.user.email = dbUser.email;
-						session.user.image = dbUser.image ?? session.user.image ?? null;
+						session.user.description = dbUser.description;
+						
+						// SOLUÇÃO DO ERRO 431: Priorizar imagem do banco, senão usar do Google
+						const finalImage = dbUser.profileImage 
+							? `/api/images/profile/${dbUser.profileImage.id}`
+							: dbUser.image; // URL do Google se não tiver imagem personalizada
+						
+						
+						session.user.image = finalImage;
 					}
-				} catch {}
+				} catch (error) {
+					console.error('❌ ERRO ao buscar dados do usuário:', error);
+				}
 			}
+			
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).authProvider = t.authProvider;
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).stepUpAt = t.stepUpAt;
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).remember = t.remember;
 			(session.user as Session["user"] & { credentialVersion?: number }).credentialVersion = t.credentialVersion ?? 0;
+			
+			// Log do tamanho total da sessão
+			const sessionJson = JSON.stringify(session);
+
+
+			
+			// ALERTA se sessão ainda estiver grande
+			
+			
 			return session;
 		},
 		async jwt({ token, user, account }) {

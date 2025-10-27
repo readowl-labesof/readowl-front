@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { SafeUser } from "@/types/user";
+import ProfileImageUpload from "./ProfileImageUpload";
 
 interface EditProfileFormProps {
   onClose?: () => void; 
@@ -12,7 +13,7 @@ interface EditProfileFormProps {
 }
 
 export default function EditProfileForm({ onClose, onChangePassword, currentUser }: EditProfileFormProps) {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
@@ -44,16 +45,30 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     setForm((s) => ({ ...s, [name]: value }));
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setForm((s) => ({ ...s, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }
+  // async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   if (!file.type.startsWith('image/')) {
+  //     setError("Selecione uma imagem válida");
+  //     return;
+  //   }
+  //   if (file.size > 1 * 1024 * 1024) {
+  //     setError("Imagem muito grande (máximo 1MB)");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     const imageUrl = await uploadProfileImage(file);
+  //     if (imageUrl) {
+  //       setForm((s) => ({ ...s, image: imageUrl }));
+  //       setSuccess("Imagem atualizada!");
+  //     }
+  //   } catch (err: any) {
+  //     setError(err?.toString() || "Erro ao atualizar imagem");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
   function validate() {
     if (!form.name.trim()) return "Nome obrigatório.";
@@ -92,8 +107,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       }
 
       setSuccess("Dados atualizados com sucesso!");
-      // Força o NextAuth a refazer o fetch da sessão para atualizar avatar/nome/email na navbar
-      try { await updateSession?.(); } catch {}
+      router.refresh(); // Atualiza a página com os dados mais recentes
       setTimeout(() => { 
         onClose?.(); // O componente pai irá chamar router.refresh()
       }, 1000);
@@ -178,7 +192,8 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
 
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Image 
+          <ProfileImageUpload />
+            {/* <Image 
               src={form.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
               alt="avatar" 
               width={128}
@@ -196,7 +211,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
             <label style={{ fontSize: 12, color: '#7c5cbf', background: '#fff', borderRadius: 8, padding: '4px 12px', marginTop: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 1px 4px #0001' }}>
               <span role="img" aria-label="foto">📷</span> Inserir nova foto
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-            </label>
+            </label> */}
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -230,6 +245,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
             </label>
           </div>
         </div>
+
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <textarea name="description" value={form.description} onChange={handleChange} rows={3} placeholder="Descrição..." style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16, resize: 'none' }} />
@@ -316,4 +332,30 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       </form>
     </>
   );
+}
+
+async function uploadProfileImage(file: File): Promise<string | null> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const response = await fetch("/api/user/profile-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageData: base64 }),
+        });
+        const data = await response.json();
+        if (response.ok && data.imageUrl) {
+          resolve(data.imageUrl); // URL da imagem salva no backend
+        } else {
+          reject(data.error || "Erro ao salvar imagem");
+        }
+      } catch (err) {
+        reject("Erro ao enviar imagem");
+      }
+    };
+    reader.onerror = () => reject("Erro ao ler arquivo");
+    reader.readAsDataURL(file);
+  });
 }

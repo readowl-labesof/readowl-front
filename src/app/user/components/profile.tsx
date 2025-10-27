@@ -23,8 +23,7 @@ export default function Profile({ currentUser, userBooks = [] }: ProfileProps) {
 
   const handleProfileUpdate = () => {
     setOpen(false);
-    // Recarregar a página para buscar dados atualizados do servidor
-    router.refresh();
+    router.refresh(); // Recarregar dados do servidor para atualizar imagem no card
   };
 
   const handlePasswordChange = () => {
