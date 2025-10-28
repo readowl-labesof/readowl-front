@@ -155,7 +155,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
         gap: '16px',
         boxShadow: '0 2px 8px #0002',
         color: '#fff',
-        maxWidth: '500px',
+        maxWidth: '620px',
         margin: '0 auto',
         position: 'relative',
       }}>
@@ -193,25 +193,6 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ProfileImageUpload />
-            {/* <Image 
-              src={form.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-              alt="avatar" 
-              width={128}
-              height={128}
-              style={{ 
-                borderRadius: '16px', 
-                background: '#fff', 
-                border: '4px solid #fff', 
-                marginBottom: 8,
-                objectFit: 'cover',
-                aspectRatio: '1/1'
-              }}
-              unoptimized={form.image?.startsWith('data:')}
-            />
-            <label style={{ fontSize: 12, color: '#7c5cbf', background: '#fff', borderRadius: 8, padding: '4px 12px', marginTop: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 1px 4px #0001' }}>
-              <span role="img" aria-label="foto">📷</span> Inserir nova foto
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-            </label> */}
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

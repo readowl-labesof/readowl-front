@@ -77,21 +77,20 @@ export default function ProfileImageUpload() {
   const displayImage = preview || (session?.user?.image ? `${session.user.image}?t=${Date.now()}` : null);
 
   return (
-    <div className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+    <div className="flex flex-col items-center gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
       {/* Imagem de perfil */}
-      <div className="relative w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden border-2 border-gray-200">
+      <div className="relative w-32 h-32 bg-white rounded-lg flex items-center justify-center overflow-hidden border-2 border-gray-200 mb-2">
         {displayImage ? (
           <Image
             src={displayImage}
             alt="Foto de perfil"
             fill
             className="object-cover"
-            sizes="64px"
+            sizes="128px"
           />
         ) : (
           <User className="text-gray-400" size={32} />
         )}
-        
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -102,26 +101,20 @@ export default function ProfileImageUpload() {
           </div>
         )}
       </div>
-
-      {/* Informações e botão */}
-      <div className="flex-1">
-        <div className="mb-2">
-          <label className="inline-block bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm cursor-pointer hover:bg-blue-700 transition-colors">
-            {isLoading ? 'Enviando...' : 'Alterar Foto'}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              disabled={isLoading}
-              className="hidden"
-            />
-          </label>
-        </div>
-        
-        <div className="text-xs text-gray-500">
-          <p>• Máximo 1MB</p>
-          <p>• JPG, PNG, WebP</p>
-        </div>
+      {/* Botão e informações abaixo da imagem */}
+      <label className="inline-block bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm cursor-pointer hover:bg-blue-700 transition-colors mb-1">
+        {isLoading ? 'Enviando...' : 'Alterar Foto'}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          disabled={isLoading}
+          className="hidden"
+        />
+      </label>
+      <div className="text-xs text-gray-500 text-center">
+        <p>• Máximo 1MB</p>
+        <p>• JPG, PNG, WebP</p>
       </div>
     </div>
   );
