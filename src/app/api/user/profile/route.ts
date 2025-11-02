@@ -9,8 +9,8 @@ const updateProfileSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
   description: z.string().optional(),
-  image: z.string().optional(), // <-- adicionar image
-  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+  image: z.string().optional(),
+  currentPassword: z.string().optional(), // Campo opcional sem validação de tamanho mínimo
 });
 
 export async function PATCH(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function PATCH(request: NextRequest) {
       name,
       email,
       description,
-      image, // <-- incluir image
+      image,
       currentPassword,
     });
 
@@ -40,8 +40,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
-    // Verificar senha atual
-    if (currentUser.password) {
+    // Verificar se é usuário do Google (não tem senha)
+    const isGoogleUser = !currentUser.password;
+    
+    // Verificar senha atual apenas para usuários que não são do Google
+    if (currentUser.password && !isGoogleUser) {
+      if (!validatedData.currentPassword) {
+        return NextResponse.json({ error: "Senha atual é obrigatória" }, { status: 400 });
+      }
       const isValidPassword = await compare(validatedData.currentPassword, currentUser.password);
       if (!isValidPassword) {
         return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
@@ -61,11 +67,10 @@ export async function PATCH(request: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        
         name: validatedData.name,
         email: validatedData.email,
         description: validatedData.description,
-        ...(validatedData.image && { image: validatedData.image }), // <-- atualizar image se enviado
+        ...(validatedData.image && { image: validatedData.image }),
       },
       select: {
         id: true,
@@ -78,7 +83,6 @@ export async function PATCH(request: NextRequest) {
         updatedAt: true,
       },
     });
-
 
     return NextResponse.json(updatedUser);
   } catch (error) {
@@ -96,7 +100,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await unstable_getServerSession(authOptions);
     if (!session?.user?.id) {

@@ -30,7 +30,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     // Usar dados do servidor se disponíveis, senão usar da sessão
     const userData = currentUser || session?.user;
     if (!userData) return;
-    
+
     setForm({
       name: userData.name || "",
       email: userData.email || "",
@@ -39,6 +39,8 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       currentPassword: "" // Sempre vazio por segurança
     });
   }, [currentUser, session]);
+
+  const isGoogleUser = session?.authProvider === "google"; // Verifica se o usuário está logado com o Google
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -73,7 +75,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
   function validate() {
     if (!form.name.trim()) return "Nome obrigatório.";
     if (!form.email.trim()) return "Email obrigatório.";
-    if (!form.currentPassword.trim()) return "Senha atual obrigatória para confirmar as alterações.";
+    if (!isGoogleUser && !form.currentPassword.trim()) return "Senha atual obrigatória para confirmar as alterações.";
     return null;
   }
 
@@ -83,7 +85,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     setSuccess(null);
     const v = validate();
     if (v) return setError(v);
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -91,7 +93,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
         email: form.email,
         description: form.description,
         image: form.image,
-        currentPassword: form.currentPassword
+        currentPassword: isGoogleUser ? "" : form.currentPassword // Envia string vazia para usuários do Google
       };
 
       const res = await fetch("/api/user/profile", {
@@ -108,7 +110,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
 
       setSuccess("Dados atualizados com sucesso!");
       router.refresh(); // Atualiza a página com os dados mais recentes
-      setTimeout(() => { 
+      setTimeout(() => {
         onClose?.(); // O componente pai irá chamar router.refresh()
       }, 1000);
     } catch (error: unknown) {
@@ -197,11 +199,43 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="user">👤</span>
-              <input name="name" value={form.name} onChange={handleChange} placeholder="Nome" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Nome"
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: 'none',
+                  padding: '8px 16px',
+                  background: '#ede7f6',
+                  color: '#7c5cbf',
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+                readOnly={isGoogleUser} // Torna o campo visível, mas inativo se o usuário estiver logado com o Google
+              />
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="email">📧</span>
-              <input name="email" value={form.email} onChange={handleChange} placeholder="Email" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Email"
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: 'none',
+                  padding: '8px 16px',
+                  background: '#ede7f6',
+                  color: '#7c5cbf',
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+                readOnly={isGoogleUser} // Torna o campo visível, mas inativo se o usuário estiver logado com o Google
+              />
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="senha">🔒</span>
@@ -210,8 +244,9 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
                 type="password" 
                 value={form.currentPassword} 
                 onChange={handleChange} 
-                placeholder="Digite sua senha atual para confirmar" 
-                required
+                placeholder={isGoogleUser ? "Senha não necessária (Google)" : "Digite sua senha atual para confirmar"}
+                required={!isGoogleUser}
+                disabled={isGoogleUser}
                 style={{ 
                   flex: 1, 
                   borderRadius: 12, 
@@ -220,7 +255,9 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
                   background: '#ede7f6', 
                   color: '#7c5cbf', 
                   fontWeight: 500, 
-                  fontSize: 16 
+                  fontSize: 16,
+                  cursor: isGoogleUser ? 'not-allowed' : 'text',
+                  opacity: isGoogleUser ? 0.6 : 1,
                 }} 
               />
             </label>
@@ -283,17 +320,25 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
 
         {/* Botões secundários: Alterar senha e Deletar */}
         <div style={{ display: 'flex', gap: 16, marginTop: 8, justifyContent: 'space-between' }}>
-          <button type="button" onClick={handleChangePassword} style={{
-            background: '#ffe600',
-            color: '#222',
-            borderRadius: 8,
-            padding: '8px 24px',
-            fontWeight: 700,
-            fontSize: 16,
-            border: 'none',
-            boxShadow: '0 1px 4px #0002',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
+          <button 
+            type="button" 
+            onClick={isGoogleUser ? undefined : handleChangePassword}
+            disabled={isGoogleUser}
+            style={{
+              background: isGoogleUser ? '#ccc' : '#ffe600',
+              color: isGoogleUser ? '#888' : '#222',
+              borderRadius: 8,
+              padding: '8px 24px',
+              fontWeight: 700,
+              fontSize: 16,
+              border: 'none',
+              boxShadow: '0 1px 4px #0002',
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8,
+              cursor: isGoogleUser ? 'not-allowed' : 'pointer',
+              opacity: isGoogleUser ? 0.6 : 1,
+            }}>
             🟡 Alterar senha
           </button>
           <button type="button" onClick={handleDelete} style={{
@@ -313,30 +358,4 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       </form>
     </>
   );
-}
-
-async function uploadProfileImage(file: File): Promise<string | null> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      try {
-        const response = await fetch("/api/user/profile-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageData: base64 }),
-        });
-        const data = await response.json();
-        if (response.ok && data.imageUrl) {
-          resolve(data.imageUrl); // URL da imagem salva no backend
-        } else {
-          reject(data.error || "Erro ao salvar imagem");
-        }
-      } catch (err) {
-        reject("Erro ao enviar imagem");
-      }
-    };
-    reader.onerror = () => reject("Erro ao ler arquivo");
-    reader.readAsDataURL(file);
-  });
 }
