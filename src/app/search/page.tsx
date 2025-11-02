@@ -1,13 +1,20 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { redirect } from "next/navigation";
+"use client";
 import Navbar from "@/components/ui/navbar/Navbar";
-import { BreadcrumbAuto } from "@/components/ui/Breadcrumb";
+import { BreadcrumbAuto } from "@/components/ui/navbar/Breadcrumb";
+import SearchResults from './ui/SearchResults';
+import { Suspense, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
+export default function Search() {
+    const { status } = useSession();
+    const router = useRouter();
 
-export default async function Search() {
-    const session = await getServerSession(authOptions);
-    if (!session) redirect("/login?callbackUrl=/home");
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.replace('/login?callbackUrl=/home');
+        }
+    }, [status, router]);
 
     return (
         <>
@@ -17,6 +24,9 @@ export default async function Search() {
                 <BreadcrumbAuto anchor="static" base="/home" labelMap={{ search: "Busca" }} />
             </div>
             <main className="min-h-screen flex flex-col">
+                <Suspense fallback={<div className="text-white/70 px-3 sm:px-6 mt-6">Carregando…</div>}>
+                    <SearchResults />
+                </Suspense>
             </main>
         </>
     );

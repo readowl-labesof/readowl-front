@@ -10,7 +10,7 @@ import BookTabs from '../../../../components/book/BookTabs';
 import CoverZoom from '@/components/book/CoverZoom';
 import type { BookWithAuthorAndGenres } from '@/types/book';
 import { sanitizeSynopsisHtml } from '@/lib/sanitize';
-import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
 
 interface PageProps { params: Promise<{ slug: string }> }
 
