@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import { Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,7 +11,7 @@ import CommentInput from '@/components/comment/CommentInput';
 import CommentsList, { type CommentDto } from '@/components/comment/CommentsList';
 
 type Payload = {
-  book: { id: string; title: string };
+  book: { id: string; title: string; authorName: string };
   chapter: { id: string; title: string; content: string; createdAt: string | Date };
   prevSlug: string | null;
   nextSlug: string | null;
@@ -22,6 +23,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
   const { data: session } = useSession();
   const userId = session?.user?.id || '';
   const [dark, setDark] = React.useState(true); // default to dark to match app background
+  const [views, setViews] = React.useState<number | null>(null);
 
   // Read preference from namespaced key (per user) or anon fallback; default is dark
   React.useEffect(() => {
@@ -68,6 +70,25 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [prevHref, nextHref, router]);
+
+  // Register a view and fetch current count (dedup handled server-side)
+  React.useEffect(() => {
+    let ignore = false;
+    async function run() {
+      try {
+        // Fire and forget view registration
+        fetch(`/api/books/${slug}/chapters/${payload.chapter.id}/view`, { method: 'POST' }).catch(() => {});
+      } catch {}
+      try {
+        const r = await fetch(`/api/books/${slug}/chapters/${payload.chapter.id}/views`, { cache: 'no-store' });
+        if (!r.ok) return;
+        const data = await r.json();
+        if (!ignore) setViews(Number(data?.views || 0));
+      } catch {}
+    }
+    run();
+    return () => { ignore = true; };
+  }, [slug, payload.chapter.id]);
 
   // Typography: force pt-serif for text content; invert color in dark mode
   const containerClass = dark
@@ -208,6 +229,10 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
                 {payload.book.title}
               </Link>
             </h2>
+            {/* Author centered, smaller than title (below the book title) */}
+            <div className="mt-1 text-center font-ptserif font-bold text-base md:text-lg">
+              por {payload.book.authorName}
+            </div>
             <div className="mx-auto max-w-4xl">
               {payload.volumeTitle ? (
                 <div className="mt-10 font-bold">
@@ -217,6 +242,11 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
               <h1 className="mt-1 text-3xl md:text-4xl font-ptserif text-left">
                 {payload.chapter.title}
               </h1>
+              {/* Views with eye icon */}
+              <div className="mt-1 text-sm opacity-90 flex items-center gap-1">
+                <Eye size={16} aria-hidden="true" />
+                {typeof views === 'number' ? views.toLocaleString('pt-BR') : '0'}
+              </div>
             </div>
           </header>
 

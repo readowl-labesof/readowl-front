@@ -1,4 +1,7 @@
+"use client";
 import Image from 'next/image';
+import React from 'react';
+import { Eye } from 'lucide-react';
 import { BookWithAuthorAndGenres, BookStatus } from '@/types/book';
 import FollowersCountClient from './FollowersCountClient';
 import RatingSummaryClient from './RatingSummaryClient';
@@ -35,6 +38,21 @@ const statusLabelMap: Record<BookStatus, string> = {
 export default function BookHeader({ book, mode, followersCount, ratingAvg, ratingCount }: Props) {
     const isTitleGenres = !mode || mode === 'title-genres';
     const slug = slugify(book.title);
+    const [totalViews, setTotalViews] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        let ignore = false;
+        async function load() {
+            try {
+                const r = await fetch(`/api/books/${slug}/views`, { cache: 'no-store' });
+                if (!r.ok) return;
+                const data = await r.json();
+                if (!ignore) setTotalViews(Number(data?.totalViews || 0));
+            } catch {}
+        }
+        load();
+        return () => { ignore = true; };
+    }, [slug]);
 
     return (
         <header className="text-white px-3">
@@ -70,17 +88,19 @@ export default function BookHeader({ book, mode, followersCount, ratingAvg, rati
                             <dd>{book.author?.name || 'Autor desconhecido'}</dd>
                         </div>
                         <div className="flex items-center">
-                            {icon('/img/svg/book/view.svg', 'Views')}
                             <dt className="sr-only">Visualizações</dt>
-                            <dd>{book.views.toLocaleString('pt-BR')}</dd>
+                            <dd className="flex items-center gap-1">
+                                <Eye size={18} aria-hidden="true" />
+                                {typeof totalViews === 'number' ? totalViews.toLocaleString('pt-BR') : '0'}
+                            </dd>
                         </div>
                         <div className="flex items-center">
                             {icon('/img/svg/book/bookmark.svg', 'Salvos')}
                             <dt className="sr-only">Salvos</dt>
                                                         <dd>
-                                                                {typeof followersCount === 'number'
-                                                                    ? <FollowersCountClient slug={slug} initialCount={followersCount} />
-                                                                    : '—'}
+                                                            {typeof followersCount === 'number'
+                                                                ? <FollowersCountClient slug={slug} initialCount={followersCount} />
+                                                                : '0'}
                                                         </dd>
                         </div>
                         <div className="flex items-center">
