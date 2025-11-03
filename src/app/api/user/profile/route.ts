@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, unstable_getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
 import { compare, hash } from "bcrypt";
@@ -10,18 +10,26 @@ const updateProfileSchema = z.object({
   email: z.string().email("Email inválido"),
   description: z.string().optional(),
   image: z.string().optional(),
-  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+  currentPassword: z.string().optional(), // Campo opcional sem validação de tamanho mínimo
 });
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await unstable_getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const body = await request.json();
-    const validatedData = updateProfileSchema.parse(body);
+    const { name, email, description, image, currentPassword } = body;
+
+    const validatedData = updateProfileSchema.parse({
+      name,
+      email,
+      description,
+      image,
+      currentPassword,
+    });
 
     // Buscar usuário atual
     const currentUser = await prisma.user.findUnique({
@@ -32,8 +40,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
-    // Verificar senha atual
-    if (currentUser.password) {
+    // Verificar se é usuário do Google (não tem senha)
+    const isGoogleUser = !currentUser.password;
+    
+    // Verificar senha atual apenas para usuários que não são do Google
+    if (currentUser.password && !isGoogleUser) {
+      if (!validatedData.currentPassword) {
+        return NextResponse.json({ error: "Senha atual é obrigatória" }, { status: 400 });
+      }
       const isValidPassword = await compare(validatedData.currentPassword, currentUser.password);
       if (!isValidPassword) {
         return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
@@ -50,14 +64,13 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Atualizar usuário
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         name: validatedData.name,
         email: validatedData.email,
         description: validatedData.description,
-        image: validatedData.image,
+        ...(validatedData.image && { image: validatedData.image }),
       },
       select: {
         id: true,
@@ -87,9 +100,9 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await unstable_getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }

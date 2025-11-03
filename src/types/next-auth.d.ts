@@ -5,11 +5,13 @@ declare module "next-auth" {
     interface Session {
         user: {
             id: string;
-            role: AppRole;
+            role?: AppRole;
+            description?: string | null;
+            credentialVersion?: number;
         } & DefaultSession["user"];
-    authProvider?: string;
-    stepUpAt?: number; // epoch ms of last (re)authentication
-    remember?: boolean; // whether the user opted into long-lived session
+        authProvider?: string;
+        stepUpAt?: number; // epoch ms of last (re)authentication
+        remember?: boolean; // whether the user opted into long-lived session
     }
     interface User extends NextAuthUser {
         id: string;
@@ -20,10 +22,10 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
     interface JWT {
-    role: AppRole;
-    authProvider?: string;
-    stepUpAt?: number; // epoch ms of last (re)authentication
-    remember?: boolean; // whether the user opted into long-lived session
-    credentialVersion?: number;
+        role: AppRole;
+        authProvider?: string;
+        stepUpAt?: number; // epoch ms of last (re)authentication
+        remember?: boolean; // whether the user opted into long-lived session
+        credentialVersion?: number;
     }
 }

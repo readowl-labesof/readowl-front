@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { SafeUser } from "@/types/user";
+import ProfileImageUpload from "./ProfileImageUpload";
 
 interface EditProfileFormProps {
   onClose?: () => void; 
@@ -12,7 +13,7 @@ interface EditProfileFormProps {
 }
 
 export default function EditProfileForm({ onClose, onChangePassword, currentUser }: EditProfileFormProps) {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
@@ -29,7 +30,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     // Usar dados do servidor se disponíveis, senão usar da sessão
     const userData = currentUser || session?.user;
     if (!userData) return;
-    
+
     setForm({
       name: userData.name || "",
       email: userData.email || "",
@@ -39,26 +40,42 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     });
   }, [currentUser, session]);
 
+  const isGoogleUser = session?.authProvider === "google"; // Verifica se o usuário está logado com o Google
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setForm((s) => ({ ...s, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }
+  // async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   if (!file.type.startsWith('image/')) {
+  //     setError("Selecione uma imagem válida");
+  //     return;
+  //   }
+  //   if (file.size > 1 * 1024 * 1024) {
+  //     setError("Imagem muito grande (máximo 1MB)");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     const imageUrl = await uploadProfileImage(file);
+  //     if (imageUrl) {
+  //       setForm((s) => ({ ...s, image: imageUrl }));
+  //       setSuccess("Imagem atualizada!");
+  //     }
+  //   } catch (err: any) {
+  //     setError(err?.toString() || "Erro ao atualizar imagem");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
   function validate() {
     if (!form.name.trim()) return "Nome obrigatório.";
     if (!form.email.trim()) return "Email obrigatório.";
-    if (!form.currentPassword.trim()) return "Senha atual obrigatória para confirmar as alterações.";
+    if (!isGoogleUser && !form.currentPassword.trim()) return "Senha atual obrigatória para confirmar as alterações.";
     return null;
   }
 
@@ -68,7 +85,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
     setSuccess(null);
     const v = validate();
     if (v) return setError(v);
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -76,7 +93,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
         email: form.email,
         description: form.description,
         image: form.image,
-        currentPassword: form.currentPassword
+        currentPassword: isGoogleUser ? "" : form.currentPassword // Envia string vazia para usuários do Google
       };
 
       const res = await fetch("/api/user/profile", {
@@ -92,9 +109,8 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
       }
 
       setSuccess("Dados atualizados com sucesso!");
-      // Força o NextAuth a refazer o fetch da sessão para atualizar avatar/nome/email na navbar
-      try { await updateSession?.(); } catch {}
-      setTimeout(() => { 
+      router.refresh(); // Atualiza a página com os dados mais recentes
+      setTimeout(() => {
         onClose?.(); // O componente pai irá chamar router.refresh()
       }, 1000);
     } catch (error: unknown) {
@@ -141,7 +157,7 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
         gap: '16px',
         boxShadow: '0 2px 8px #0002',
         color: '#fff',
-        maxWidth: '500px',
+        maxWidth: '620px',
         margin: '0 auto',
         position: 'relative',
       }}>
@@ -178,34 +194,48 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
 
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Image 
-              src={form.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-              alt="avatar" 
-              width={128}
-              height={128}
-              style={{ 
-                borderRadius: '16px', 
-                background: '#fff', 
-                border: '4px solid #fff', 
-                marginBottom: 8,
-                objectFit: 'cover',
-                aspectRatio: '1/1'
-              }}
-              unoptimized={form.image?.startsWith('data:')}
-            />
-            <label style={{ fontSize: 12, color: '#7c5cbf', background: '#fff', borderRadius: 8, padding: '4px 12px', marginTop: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 1px 4px #0001' }}>
-              <span role="img" aria-label="foto">📷</span> Inserir nova foto
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-            </label>
+          <ProfileImageUpload />
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="user">👤</span>
-              <input name="name" value={form.name} onChange={handleChange} placeholder="Nome" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Nome"
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: 'none',
+                  padding: '8px 16px',
+                  background: '#ede7f6',
+                  color: '#7c5cbf',
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+                readOnly={isGoogleUser} // Torna o campo visível, mas inativo se o usuário estiver logado com o Google
+              />
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="email">📧</span>
-              <input name="email" value={form.email} onChange={handleChange} placeholder="Email" style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16 }} />
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Email"
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: 'none',
+                  padding: '8px 16px',
+                  background: '#ede7f6',
+                  color: '#7c5cbf',
+                  fontWeight: 500,
+                  fontSize: 16,
+                }}
+                readOnly={isGoogleUser} // Torna o campo visível, mas inativo se o usuário estiver logado com o Google
+              />
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span role="img" aria-label="senha">🔒</span>
@@ -214,8 +244,9 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
                 type="password" 
                 value={form.currentPassword} 
                 onChange={handleChange} 
-                placeholder="Digite sua senha atual para confirmar" 
-                required
+                placeholder={isGoogleUser ? "Senha não necessária (Google)" : "Digite sua senha atual para confirmar"}
+                required={!isGoogleUser}
+                disabled={isGoogleUser}
                 style={{ 
                   flex: 1, 
                   borderRadius: 12, 
@@ -224,12 +255,15 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
                   background: '#ede7f6', 
                   color: '#7c5cbf', 
                   fontWeight: 500, 
-                  fontSize: 16 
+                  fontSize: 16,
+                  cursor: isGoogleUser ? 'not-allowed' : 'text',
+                  opacity: isGoogleUser ? 0.6 : 1,
                 }} 
               />
             </label>
           </div>
         </div>
+
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <textarea name="description" value={form.description} onChange={handleChange} rows={3} placeholder="Descrição..." style={{ flex: 1, borderRadius: 12, border: 'none', padding: '8px 16px', background: '#ede7f6', color: '#7c5cbf', fontWeight: 500, fontSize: 16, resize: 'none' }} />
@@ -286,17 +320,25 @@ export default function EditProfileForm({ onClose, onChangePassword, currentUser
 
         {/* Botões secundários: Alterar senha e Deletar */}
         <div style={{ display: 'flex', gap: 16, marginTop: 8, justifyContent: 'space-between' }}>
-          <button type="button" onClick={handleChangePassword} style={{
-            background: '#ffe600',
-            color: '#222',
-            borderRadius: 8,
-            padding: '8px 24px',
-            fontWeight: 700,
-            fontSize: 16,
-            border: 'none',
-            boxShadow: '0 1px 4px #0002',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
+          <button 
+            type="button" 
+            onClick={isGoogleUser ? undefined : handleChangePassword}
+            disabled={isGoogleUser}
+            style={{
+              background: isGoogleUser ? '#ccc' : '#ffe600',
+              color: isGoogleUser ? '#888' : '#222',
+              borderRadius: 8,
+              padding: '8px 24px',
+              fontWeight: 700,
+              fontSize: 16,
+              border: 'none',
+              boxShadow: '0 1px 4px #0002',
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8,
+              cursor: isGoogleUser ? 'not-allowed' : 'pointer',
+              opacity: isGoogleUser ? 0.6 : 1,
+            }}>
             🟡 Alterar senha
           </button>
           <button type="button" onClick={handleDelete} style={{
