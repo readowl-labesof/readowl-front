@@ -1,36 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from "@/lib/prisma";
+import prisma from '@/lib/prisma';
 
-export async function GET(
-  _req: NextRequest, 
-  { params }: { params: Promise<{ imageId: string }> }
-) {
-  try {
-    const { imageId } = await params;
-    
-    const image = await prisma.profileImage.findUnique({
-      where: { id: imageId },
-      select: { imageData: true, mimeType: true }
-    });
+export const dynamic = 'force-dynamic';
 
-    if (!image) {
-      return NextResponse.json({ error: 'Imagem não encontrada' }, { status: 404 });
-    }
+export async function GET(_req: Request, { params }: { params: Promise<{ imageId?: string }> }) {
+  const { imageId } = await params;
+  if (!imageId) return new Response('Not found', { status: 404 });
 
-    const base64Data = image.imageData.split(',')[1];
-    const buffer = Buffer.from(base64Data, 'base64');
-    
-    
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': image.mimeType || 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400',
-        'Content-Length': buffer.length.toString(),
-      },
-    });
-    
-  } catch (error) {
-    console.error('❌ ERRO CRÍTICO AO SERVIR IMAGEM:', error);
-    return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
-  }
+  const rec = await prisma.profileImage.findUnique({ where: { id: imageId }, select: { imageData: true, mimeType: true, updatedAt: true } });
+  if (!rec) return new Response('Not found', { status: 404 });
+
+  const bytes = Buffer.from(rec.imageData, 'base64');
+  return new Response(bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': rec.mimeType || 'image/jpeg',
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+      'Content-Length': String(bytes.length),
+      'Last-Modified': rec.updatedAt.toUTCString(),
+    },
+  });
 }

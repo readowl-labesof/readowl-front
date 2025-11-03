@@ -4,83 +4,51 @@ import { authOptions } from '@/lib/authOptions';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/slug';
 import { isLikelyBot } from '@/lib/bot';
-import { rateLimit } from '@/lib/rateLimitRedis';
 import { acquireOnce } from '@/lib/dedupeCache';
+import { rateLimit, rateLimitHeaders } from '@/lib/rateLimitRedis';
 
-async function findBookBySlug(slug: string) {
-  const all = await prisma.book.findMany({ select: { id: true, title: true, authorId: true } });
-  return all.find((b) => slugify(b.title) === slug) || null;
+async function findBookAndChapter(slug: string, chapterSlug: string) {
+  const book = await prisma.book.findUnique({ where: { slug }, select: { id: true, authorId: true } });
+  if (!book) return { book: null, chapter: null } as const;
+  const chapters = await prisma.chapter.findMany({ where: { bookId: book.id }, select: { id: true, title: true, bookId: true } });
+  const chapter = chapters.find((c) => slugify(c.title) === chapterSlug) || null;
+  return { book, chapter } as const;
 }
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string; chapterId: string }> }) {
   const { slug, chapterId } = await ctx.params;
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ?? null;
-  if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-  // Bot/User-Agent filter
-  const userAgent = req.headers.get('user-agent') || undefined;
-  if (isLikelyBot(userAgent)) return NextResponse.json({ skipped: true, reason: 'bot' }, { status: 202 });
+  // Rate limit (soft)
+  const rl = await rateLimit(req, 'chapter-view', 10, 20);
+  if (!rl.allowed) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: rateLimitHeaders(rl) });
 
-  // Rate limit per IP/session to protect endpoint (10 req / 30s)
-  const rate = await rateLimit(req, 'views', 30, 10);
-  if (!rate.allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: new Headers({ 'X-RateLimit-Reset': String(Math.floor(rate.resetAt / 1000)) }) });
-
-  const book = await findBookBySlug(slug);
-  if (!book) return NextResponse.json({ error: 'Livro não encontrado' }, { status: 404 });
-
-  // Skip counting author's own views
-  if (userId && userId === book.authorId) return NextResponse.json({ skipped: true, reason: 'author' }, { status: 202 });
-
-  // Ensure chapter belongs to book
-  const chapter = await prisma.chapter.findFirst({ where: { id: chapterId, bookId: book.id }, select: { id: true } });
-  if (!chapter) return NextResponse.json({ error: 'Capítulo não encontrado' }, { status: 404 });
-
-  // Dedupe check: by user for the same chapter within 2 minutes
-  try {
-    // Double-check in DB for safety (in case cache missed)
-    const since = new Date(Date.now() - 2 * 60 * 1000);
-    try {
-      const existing = await prisma.chapterView.findFirst({
-        where: { chapterId, createdAt: { gte: since }, userId },
-        select: { id: true },
-      });
-      if (existing) return NextResponse.json({ skipped: true, reason: 'duplicate-db' }, { status: 202 });
-  } catch {
-      // Fallback using raw SQL if delegate is missing for any reason
-      const res = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM "ChapterView"
-        WHERE "chapterId" = ${chapterId}
-          AND "createdAt" >= ${since}
-          AND "userId" = ${userId}
-        LIMIT 1
-      `;
-      if (res.length > 0) return NextResponse.json({ skipped: true, reason: 'duplicate-db' }, { status: 202 });
-    }
-
-    // Acquire dedupe key for the 2-minute window before inserting to avoid races
-    const dedupeKey = `chview:${chapterId}:${userId}`;
-    const acquired = await acquireOnce(dedupeKey, 2 * 60 * 1000);
-    if (!acquired) return NextResponse.json({ skipped: true, reason: 'duplicate-window' }, { status: 202 });
-
-    try {
-      await prisma.chapterView.create({
-        data: {
-          chapterId,
-          userId,
-        },
-      });
-  } catch {
-      const rid = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
-      await prisma.$executeRaw`
-        INSERT INTO "ChapterView" ("id","chapterId","userId","createdAt")
-        VALUES (${rid}, ${chapterId}, ${userId}, NOW())
-      `;
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error('Chapter view error:', e);
-    return NextResponse.json({ error: 'Erro ao registrar visualização' }, { status: 500 });
+  // Bot filter
+  if (isLikelyBot(req.headers.get('user-agent'))) {
+    return NextResponse.json({ skipped: 'bot' }, { status: 202 });
   }
+
+  // Validate context (note: chapterId param is actually the chapter slug in this project)
+  const { book, chapter } = await findBookAndChapter(slug, chapterId);
+  if (!book || !chapter) return NextResponse.json({ error: 'Livro/capítulo não encontrado' }, { status: 404 });
+
+  // Skip author's own view
+  if (book.authorId === session.user.id) {
+    return NextResponse.json({ skipped: 'author' }, { status: 202 });
+  }
+
+  // Deduplicate within 2 minutes per (chapterId, userId)
+  const key = `view:${chapter.id}:${session.user.id}`;
+  const ok = await acquireOnce(key, 2 * 60 * 1000);
+  if (!ok) return NextResponse.json({ skipped: 'dedupe' }, { status: 202 });
+
+  // Insert view
+  await prisma.$transaction(async (tx) => {
+    await tx.chapterView.create({ data: { chapterId: chapter.id, userId: session.user.id } });
+    // Increment aggregates on chapter and book
+    await tx.chapter.update({ where: { id: chapter.id }, data: { totalViews: { increment: 1 } } });
+    await tx.book.update({ where: { id: chapter.bookId }, data: { totalViews: { increment: 1 } } });
+  });
+  return NextResponse.json({ ok: true, aggregated: true });
 }

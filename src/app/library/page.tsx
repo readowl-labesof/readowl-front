@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Navbar from "@/components/ui/navbar/Navbar";
 import ButtonWithIcon from "@/components/ui/button/ButtonWithIcon";
 import BookCarousel from "@/components/book/BookCarousel";
+import { BookUser, BookMarked, BookPlus } from 'lucide-react';
 import { prisma } from "@/lib/prisma";
 import Link from 'next/link';
 import { BreadcrumbAuto } from "@/components/ui/navbar/Breadcrumb";
@@ -13,18 +14,20 @@ export default async function Library() {
     if (!session?.user) redirect("/login?callbackUrl=/library");
 
     // Load books authored by current user
-    const myBooks = await prisma.book.findMany({
+    const myBooksRaw = await prisma.book.findMany({
         where: { authorId: session.user.id },
         orderBy: { createdAt: 'asc' }, // oldest first per requirement
-        select: { id: true, title: true, coverUrl: true }
+        select: { id: true, slug: true, title: true, coverUrl: true }
     });
+    const myBooks = myBooksRaw.map(b => ({ ...b, slug: b.slug ?? undefined }));
 
     // Load books followed by current user
-    const followed = await prisma.book.findMany({
+    const followedRaw = await prisma.book.findMany({
         where: { followers: { some: { userId: session.user.id } } },
         orderBy: { updatedAt: 'desc' },
-        select: { id: true, title: true, coverUrl: true },
+        select: { id: true, slug: true, title: true, coverUrl: true },
     });
+    const followed = followedRaw.map(b => ({ ...b, slug: b.slug ?? undefined }));
 
     return (
         <>
@@ -37,8 +40,7 @@ export default async function Library() {
                     <Link href="/library/create">
                         <ButtonWithIcon
                             variant="primary"
-                            iconUrl="/img/svg/book/checkbook.svg"
-                            iconAlt="Livro"
+                            icon={<BookPlus size={20} />}
                         >
                             Criar uma obra
                         </ButtonWithIcon>
@@ -48,13 +50,13 @@ export default async function Library() {
                     <BookCarousel
                         books={myBooks}
                         title="Minha Autoria!"
-                        iconSrc="/img/svg/book/author.svg"
+                        icon={<BookUser size={20} />}
                         itemsPerView={5}
                     />
                     <BookCarousel
                         books={followed}
                         title="Seguidos!"
-                        iconSrc="/img/svg/generics/white/owl.svg"
+                        icon={<BookMarked size={20} />}
                         itemsPerView={5}
                         emptyMessage="Nenhuma obra seguida."
                     />

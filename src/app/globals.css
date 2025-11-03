@@ -7,9 +7,7 @@ body {
 	width: 100%; 
 	max-width: 100vw; 
 	overflow-x: hidden; 
-	/* Set global light background and default text color */
-	background: #ffffff;
-	color: #23004B; /* readowl-purple.extradark */
+	background: linear-gradient(135deg, #23004B 0%, #2F0959 100%);
 }
 
 @keyframes shake {

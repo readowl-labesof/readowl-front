@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { slugify } from '@/lib/slug';
 
 async function findBookBySlug(slug: string) {
-  // Since we don't have a slug column, fetch all titles and match
-  const all = await prisma.book.findMany();
-  return all.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug } });
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {

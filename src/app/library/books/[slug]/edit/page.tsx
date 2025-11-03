@@ -1,6 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import { slugify } from '@/lib/slug';
 import EditBookForm from './ui/EditBookForm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -9,8 +8,7 @@ import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
 interface PageProps { params: Promise<{ slug: string }> }
 
 async function getBookBySlug(slug: string) {
-  const books = await prisma.book.findMany({ include: { author: true, genres: true } });
-  return books.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug }, include: { author: true, genres: true } });
 }
 
 export default async function EditBookPage({ params }: PageProps) {

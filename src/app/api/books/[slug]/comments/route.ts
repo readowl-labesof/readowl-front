@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { slugify } from '@/lib/slug';
-
 async function findBookBySlug(slug: string) {
-  const all = await prisma.book.findMany({ select: { id: true, title: true } });
-  return all.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug }, select: { id: true, title: true, authorId: true, coverUrl: true } });
 }
 
 // List book-level comments (chapterId null) with counts and author
@@ -61,5 +58,22 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
   }
 
   const created = await prisma.comment.create({ data: { userId: session.user.id, bookId: book.id, content, parentId } });
+
+  // Notificar o autor do livro (exceto se o próprio autor comentou)
+  if (book.id && session.user.id !== book.authorId) {
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: book.authorId,
+          type: "BOOK_COMMENT",
+          bookId: book.id,
+          bookTitle: book.title,
+          bookCoverUrl: book.coverUrl || undefined,
+          commenterName: session.user.name,
+          commentContent: content,
+        }
+      });
+    } catch {}
+  }
   return NextResponse.json({ comment: created }, { status: 201 });
 }

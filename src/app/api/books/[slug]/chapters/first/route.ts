@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/slug';
 
 async function findBookBySlug(slug: string) {
-  const all = await prisma.book.findMany();
-  return all.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug } });
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {

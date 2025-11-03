@@ -2,15 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { slugify } from '@/lib/slug';
 import { compare } from 'bcrypt';
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
   const session = await getServerSession(authOptions);
-  // Since we don't have a slug column, fetch all titles and match
-  const all = await prisma.book.findMany({ include: { author: true, genres: true } });
-  const match = all.find((b) => slugify(b.title) === slug);
+  const match = await prisma.book.findUnique({ where: { slug }, include: { author: true, genres: true } });
   if (!match) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   // Access control: owner or admin only
@@ -32,8 +29,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ slug: st
   } catch {
     // allow no body, but we'll enforce later
   }
-  const all = await prisma.book.findMany();
-  const match = all.find((b) => slugify(b.title) === slug);
+  const match = await prisma.book.findUnique({ where: { slug } });
   if (!match) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const isOwner = session.user.id === match.authorId;
   const isAdmin = session.user.role === 'ADMIN';
