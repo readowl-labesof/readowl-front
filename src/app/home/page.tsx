@@ -1,6 +1,8 @@
-import prisma from "@/lib/prisma";
-import { slugify } from "@/lib/slug";
-import LatestReleasesTable, { ReleaseItem } from "@/components/home/LatestReleasesTable";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { redirect } from "next/navigation";
+import Navbar from "@/components/ui/navbar/Navbar";
+import { Breadcrumb } from "@/components/ui/navbar/Breadcrumb";
 
 /**
  * Busca os capítulos mais recentes no banco de dados.

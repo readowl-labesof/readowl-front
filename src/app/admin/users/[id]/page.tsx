@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect, notFound } from "next/navigation";
 import Navbar from "@/components/ui/navbar/Navbar";
-import { BreadcrumbAuto } from "@/components/ui/Breadcrumb";
+import { BreadcrumbAuto } from "@/components/ui/navbar/Breadcrumb";
 import AdminEditProfile from "./components/AdminEditProfile";
 import prisma from "@/lib/prisma";
 

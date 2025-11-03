@@ -1,4 +1,4 @@
-import { BreadcrumbAuto } from "@/components/ui/Breadcrumb";
+import { BreadcrumbAuto } from "@/components/ui/navbar/Breadcrumb";
 import UserList from "./components/UserList";
 import prisma from "@/lib/prisma";
 

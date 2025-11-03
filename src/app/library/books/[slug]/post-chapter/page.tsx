@@ -7,7 +7,7 @@ import ChapterEditor from '@/components/chapter/ChapterEditor';
 import VolumeCreateInput from '@/components/chapter/VolumeCreateInput';
 import VolumeDropdown from '@/components/chapter/VolumeDropdown';
 import type { Volume } from '@/types/volume';
-import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
 import { slugify } from '@/lib/slug';
 import { getPlainTextLength } from '@/lib/sanitize';
 

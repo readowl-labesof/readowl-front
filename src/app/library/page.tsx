@@ -6,7 +6,7 @@ import ButtonWithIcon from "@/components/ui/button/ButtonWithIcon";
 import BookCarousel from "@/components/book/BookCarousel";
 import { prisma } from "@/lib/prisma";
 import Link from 'next/link';
-import { BreadcrumbAuto } from "@/components/ui/Breadcrumb";
+import { BreadcrumbAuto } from "@/components/ui/navbar/Breadcrumb";
 
 export default async function Library() {
     const session = await getServerSession(authOptions);
