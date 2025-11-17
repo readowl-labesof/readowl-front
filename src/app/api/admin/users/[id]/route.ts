@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// Next.js App Router route handlers receive a plain params object; avoid wrapping in Promise.
+export async function PATCH(request: Request) {
   try {
-    const { id } = await params;
+    const { pathname } = new URL(request.url);
+    const segments = pathname.split("/").filter(Boolean);
+    const id = segments[segments.length - 1];
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
@@ -28,9 +31,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request) {
   try {
-    const { id } = await params;
+    const { pathname } = new URL(request.url);
+    const segments = pathname.split("/").filter(Boolean);
+    const id = segments[segments.length - 1];
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
