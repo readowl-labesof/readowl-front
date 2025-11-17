@@ -1,3 +1,44 @@
+// Notificações do sistema
+enum NotificationType {
+  BOOK_COMMENT
+  CHAPTER_COMMENT
+  COMMENT_REPLY
+  NEW_CHAPTER
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  userId        String
+  type          NotificationType
+  bookId        String?
+  chapterId     String?
+  commentId     String?
+  replyId       String?
+  createdAt     DateTime         @default(now())
+  checked       Boolean          @default(false)
+  // Dados para renderização rápida
+  bookTitle     String?
+  bookCoverUrl  String?
+  chapterTitle  String?
+  authorName    String?
+  commenterName String?
+  commentContent String?
+  replyContent  String?
+  originalComment String?
+  chapterSnippet String?
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book          Book?            @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapter       Chapter?         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  comment       Comment?         @relation("NotificationComment", fields: [commentId], references: [id], onDelete: Cascade)
+  reply         Comment?         @relation("NotificationReply", fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([chapterId])
+  @@index([commentId])
+  @@index([replyId])
+}
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,6 +60,19 @@ enum Status {
   COMPLETED  // Completed
   HIATUS     // Hiatus
   PAUSED     // Paused
+}
+
+// Enum for report types on comments (denúncias)
+enum ReportType {
+  INCONVENIENT_CONTENT          // Conteúdo inconveniente
+  THREAT_OR_INTIMIDATION        // Ameaça, intimidação ou abordagem imprópria
+  RISK_TO_INTEGRITY             // Risco à integridade física ou emocional
+  INAPPROPRIATE_SEXUAL_CONTENT  // Material sexual inadequado
+  OFFENSIVE_OR_DISCRIMINATORY   // Discurso ofensivo ou discriminatório
+  VIOLENCE_OR_EXPLOITATION      // Ato violento ou exploração de vulneráveis
+  PROHIBITED_ITEMS              // Divulgação de itens proibidos
+  FRAUD_OR_SUSPICIOUS_ACTIVITY  // Tentativa de engano ou atividade suspeita
+  MISLEADING_INFORMATION        // Informação duvidosa ou enganosa
 }
 
 // User model
@@ -64,10 +118,13 @@ model User {
   // Credential version: incremented when credentials change (forces JWT re-login)
   credentialVersion Int @default(0)
 
-  // Chapter views created by this user
+  // Chapter views by this user
   chapterViews ChapterView[]
 
-// Profile image relationship 
+  // Notificações recebidas
+  notifications Notification[]
+
+  // Profile image (stored as base64 in separate table)
   profileImage ProfileImage?
 }
 
@@ -83,12 +140,18 @@ model Genre {
 // Book model
 model Book {
   id              String    @id @default(cuid())
+  slug            String?   @unique @db.VarChar(220)
   title           String    @db.VarChar(200)
   synopsis        String    @db.VarChar(2000)
   releaseFrequency String?  @db.VarChar(50)
   coverUrl        String?
   status          Status    @default(ONGOING)
   views           Int       @default(0)
+  // Aggregates for performance
+  totalViews      Int       @default(0)
+  ratingSum       Int       @default(0)   // sum of scores (1..5)
+  ratingCount     Int       @default(0)   // number of ratings
+  ratingAvg       Float     @default(0)   // denormalized average for quick reads
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -111,6 +174,9 @@ model Book {
 
   // Comments on this book
   comments Comment[]
+
+  // Notificações relacionadas a este livro
+  notifications Notification[]
 }
 
 // Auxiliary models for NextAuth
@@ -213,6 +279,8 @@ model Chapter {
   order     Int       @default(0)
   bookId    String
   volumeId  String?
+  // Aggregate for performance
+  totalViews Int      @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -222,8 +290,11 @@ model Chapter {
   // Comments on this chapter
   comments Comment[]
 
-  // Views on this chapter
+  // Views for this chapter
   views ChapterView[]
+
+  // Notificações relacionadas a este capítulo
+  notifications Notification[]
 
   @@index([bookId])
   @@index([volumeId])
@@ -255,6 +326,13 @@ model Comment {
 
   likes CommentLike[]
 
+  // Notificações relacionadas a este comentário
+  notificationComments Notification[] @relation("NotificationComment")
+  notificationReplies Notification[] @relation("NotificationReply")
+
+  // Reports (denúncias) against this comment
+  reports CommentReport[]
+
   @@index([bookId])
   @@index([chapterId])
   @@index([parentId])
@@ -273,11 +351,23 @@ model CommentLike {
   @@index([commentId])
 }
 
-// Track chapter views: authenticated-only, each view tied to a userId
+// Anonymous reports for comments. Reporter identity is NOT stored to protect users.
+model CommentReport {
+  id        String     @id @default(cuid())
+  commentId String
+  type      ReportType
+  createdAt DateTime   @default(now())
+
+  comment   Comment    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId, createdAt])
+}
+
+// Views per chapter, auth-only (no IP storage). This mirrors the shared DB table
 model ChapterView {
   id        String   @id @default(cuid())
   chapterId String
-  userId    String   // authenticated-only: every view is tied to a user
+  userId    String
   createdAt DateTime @default(now())
 
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
@@ -288,15 +378,25 @@ model ChapterView {
   @@index([chapterId, userId, createdAt])
 }
 
+// Homepage banners
+model Banner {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(200)
+  imageUrl  String   @db.VarChar(1000)
+  linkUrl   String   @db.VarChar(1000)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Stores raw profile images as base64 for simplicity
 model ProfileImage {
   id        String   @id @default(cuid())
-  userId    String   @unique 
-  imageData String   
+  userId    String   @unique
+  imageData String
   mimeType  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    
 }
-

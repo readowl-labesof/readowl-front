@@ -1,0 +1,274 @@
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import type { Prisma, Status } from '@prisma/client';
+import { stripHtmlToText } from '@/lib/sanitize';
+
+type SortKey =
+  | 'trending'           // Em destaque (14 dias, pesos)
+  | 'topRated14d'        // quantidade * média (14 dias)
+  | 'mostViewedTotal'    // visualizações totais
+  | 'mostCommented'      // comentários (all-time)
+  | 'chaptersCount'      // número de capítulos
+  | 'mostFollowed'       // seguidores (all-time)
+  | 'alpha'              // nome (asc)
+  | 'oldest'             // data de criação asc
+  | 'relevance';         // fallback quando há q
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  // Accept both `q` and `query` for convenience
+  const qRaw = (searchParams.get('q') || searchParams.get('query') || '').trim();
+  const q = qRaw.slice(0, 100); // guard
+  const genresParam = searchParams.get('genres') || '';
+  const statusesParam = searchParams.get('status') || '';
+  const dateFrom = searchParams.get('dateFrom') ? new Date(searchParams.get('dateFrom') as string) : undefined;
+  const dateTo = searchParams.get('dateTo') ? new Date(searchParams.get('dateTo') as string) : undefined;
+  const minRating = Number(searchParams.get('minRating') || '0');
+  const sort = (searchParams.get('sort') as SortKey) || 'trending';
+  const orderParam = (searchParams.get('order') || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
+  const page = Math.max(1, Number(searchParams.get('page') || '1'));
+  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get('pageSize') || '10')));
+  const take = pageSize; // keep legacy var for internal use
+
+  const genres = genresParam
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const statuses = statusesParam
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean) as Array<Status>;
+
+  // Where clause
+  const where: Prisma.BookWhereInput = {};
+
+  if (q) {
+    // Title-only search (case-insensitive). We keep it simple here, but we also implement a fallback below for accent-insensitive search.
+    where.title = { contains: q, mode: 'insensitive' };
+  }
+  if (genres.length) {
+    // all: require ALL selected genres via AND of some
+    const andArr = Array.isArray(where.AND) ? where.AND : (where.AND ? [where.AND] : []);
+    where.AND = [
+      ...andArr,
+      ...genres.map((g) => ({ genres: { some: { name: g } } })),
+    ];
+  }
+  if (statuses.length) {
+    where.status = { in: statuses };
+  }
+  if (dateFrom || dateTo) {
+    where.createdAt = {
+      ...(dateFrom ? { gte: dateFrom } : {}),
+      ...(dateTo ? { lte: dateTo } : {}),
+    };
+  }
+  if (!isNaN(minRating) && minRating > 0) {
+    where.ratingAvg = { gte: Math.min(5, Math.max(0, minRating)) };
+  }
+
+  // Sorting strategy
+  const orderBy: Prisma.BookOrderByWithRelationInput[] = [];
+  if (sort === 'alpha') {
+    orderBy.push({ title: orderParam }, { id: 'asc' });
+  } else if (sort === 'oldest') {
+    orderBy.push({ createdAt: orderParam }, { id: 'asc' });
+  } else if (sort === 'mostViewedTotal') {
+    // use denormalized totalViews field
+    orderBy.push({ totalViews: orderParam }, { ratingAvg: 'desc' }, { id: 'asc' });
+  } else if (sort === 'relevance' && q) {
+    orderBy.push({ ratingAvg: 'desc' }, { totalViews: 'desc' }, { createdAt: 'desc' }, { id: 'asc' });
+  } else {
+    // For complex sorts (trending, topRated14d, mostCommented, chaptersCount, mostFollowed), we'll fetch
+    // base set and re-rank in memory for now (simple, acceptable for small page sizes). This keeps the
+    // API stable without introducing raw SQL joins here. We still apply a deterministic orderBy fallback.
+    orderBy.push({ createdAt: 'desc' }, { id: 'asc' });
+  }
+
+  const bookSelect = {
+    id: true,
+    slug: true,
+    title: true,
+    synopsis: true,
+    coverUrl: true,
+    views: true,
+    totalViews: true,
+    ratingAvg: true,
+    status: true,
+    createdAt: true,
+    author: { select: { name: true } },
+    genres: { select: { name: true } },
+    _count: { select: { comments: true, chapters: true } },
+  } satisfies Prisma.BookSelect;
+
+  type BookRow = Prisma.BookGetPayload<{ select: typeof bookSelect }>;
+
+  const queryArgs: Prisma.BookFindManyArgs = {
+    where,
+    orderBy,
+    skip: (page - 1) * pageSize,
+    take: take,
+    select: bookSelect,
+  };
+
+  let itemsRaw: BookRow[];
+  let totalExact: number;
+  [itemsRaw, totalExact] = await Promise.all([
+    prisma.book.findMany(queryArgs) as unknown as Promise<BookRow[]>,
+    prisma.book.count({ where }),
+  ]);
+
+  // Fallback: if there is ONLY a text query (no extra filters) and nothing was found,
+  // try a lightweight accent-insensitive search using a raw SQL translate LIKE.
+  // IMPORTANT: Do NOT run this fallback when additional filters (genres/status/date/minRating)
+  // are present, otherwise we'd ignore those constraints and show unrelated results.
+  const hasExtraFilters = genres.length > 0 || statuses.length > 0 || !!dateFrom || !!dateTo || (!isNaN(minRating) && minRating > 0);
+  if (q && totalExact === 0 && !hasExtraFilters) {
+    const norm = q.toLowerCase();
+    const offset = (page - 1) * pageSize;
+    const translated = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+      `SELECT id FROM "Book" WHERE translate(lower(title), 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ', 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC') LIKE '%' || translate(lower($1), 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ', 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC') || '%' ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      norm,
+      pageSize,
+      offset
+    );
+    if (translated.length > 0) {
+      const ids = translated.map((r) => r.id);
+      // Fetch the full records with the same select/order
+      itemsRaw = await prisma.book.findMany({
+        where: { id: { in: ids } },
+        orderBy,
+        take: pageSize,
+        select: bookSelect,
+      }) as unknown as BookRow[];
+      // total count for fallback needs a separate count over all matches
+      const allTranslated = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+        `SELECT id FROM "Book" WHERE translate(lower(title), 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ', 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC') LIKE '%' || translate(lower($1), 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ', 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC') || '%'`,
+        norm
+      );
+      totalExact = allTranslated.length;
+    }
+  }
+
+  // Complex sorts: compute ordered ids using aggregates
+  let complexOrderedIds: string[] | null = null;
+  if (['trending', 'topRated14d', 'mostCommented', 'chaptersCount', 'mostFollowed'].includes(sort)) {
+    // establish candidate set based on filters to avoid expensive global ranking when possible
+    const candidateIds = await prisma.book.findMany({ where, select: { id: true } }).then(rows => rows.map(r => r.id));
+    const candidateSet = new Set(candidateIds);
+    const applyCandidates = (arr: Array<{ bookId: string; score?: number; cnt?: bigint; WR?: number }>) =>
+      (candidateIds.length ? arr.filter(x => candidateSet.has(x.bookId)) : arr);
+    const offset = (page - 1) * pageSize;
+    const dirFactor = orderParam === 'asc' ? 1 : -1;
+    if (sort === 'trending' || sort === 'topRated14d' || sort === 'mostCommented') {
+      const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      // views unique users per book in last 14 days
+      const viewsAgg = await prisma.$queryRaw<Array<{ bookId: string; views: bigint }>>`
+        SELECT c."bookId" as "bookId", COUNT(DISTINCT v."userId")::bigint as views
+        FROM "ChapterView" v
+        JOIN "Chapter" c ON v."chapterId" = c."id"
+        WHERE v."createdAt" >= ${cutoff}
+        GROUP BY c."bookId";
+      `;
+      // ratings 14d excluding author
+      const ratingsAgg = await prisma.$queryRaw<Array<{ bookId: string; ratings: bigint; avg: number }>>`
+        SELECT br."bookId" as "bookId", COUNT(*)::bigint as ratings, AVG(br."score")::float as avg
+        FROM "BookRating" br
+        JOIN "Book" b ON b."id" = br."bookId"
+        WHERE br."createdAt" >= ${cutoff} AND br."userId" <> b."authorId"
+        GROUP BY br."bookId";
+      `;
+      // comments 14d excluding author
+      const commentsAgg = await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
+        SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
+        FROM "Comment" c
+        JOIN "Book" b ON b."id" = c."bookId"
+        WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
+        GROUP BY c."bookId";
+      `;
+      const vArr = applyCandidates(viewsAgg.map(v => ({ bookId: v.bookId, cnt: v.views })));
+      const rArr = applyCandidates(ratingsAgg.map(r => ({ bookId: r.bookId, WR: Number(r.ratings) * r.avg })));
+      const cArr = applyCandidates(commentsAgg.map(c => ({ bookId: c.bookId, cnt: c.comments })));
+      const vMap = new Map(vArr.map(x => [x.bookId, Number(x.cnt || 0)]));
+      const rMap = new Map(rArr.map(x => [x.bookId, Number(x.WR || 0)]));
+      const cMap = new Map(cArr.map(x => [x.bookId, Number(x.cnt || 0)]));
+      if (sort === 'topRated14d') {
+        const rows = Array.from(rMap.entries()).map(([bookId, WR]) => ({ bookId, WR }));
+        rows.sort((a, b) => (b.WR - a.WR) * dirFactor);
+        const total = rows.length;
+        complexOrderedIds = rows.slice(offset, offset + pageSize).map(x => x.bookId);
+        totalExact = total;
+      } else if (sort === 'mostCommented') {
+        const rows = Array.from(cMap.entries()).map(([bookId, cnt]) => ({ bookId, cnt }));
+        rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * dirFactor);
+        const total = rows.length;
+        complexOrderedIds = rows.slice(offset, offset + pageSize).map(x => x.bookId);
+        totalExact = total;
+      } else if (sort === 'trending') {
+        // Normalize + weighted like Home page
+        const values = (m: Map<string, number>) => Array.from(m.values());
+        const normalize = (val: number, min: number, max: number) => (max > min ? (val - min) / (max - min) : 0);
+        const vVals = values(vMap); const rVals = values(rMap); const cVals = values(cMap);
+        const min = (arr: number[]) => (arr.length ? Math.min(...arr) : 0);
+        const max = (arr: number[]) => (arr.length ? Math.max(...arr) : 0);
+        const vMin = min(vVals), vMax = max(vVals);
+        const rMin = min(rVals), rMax = max(rVals);
+        const cMin = min(cVals), cMax = max(cVals);
+        const weights = { views: 0.2, ratings: 0.45, comments: 0.35 };
+        const candidateIdsSet = new Set<string>([...vMap.keys(), ...rMap.keys(), ...cMap.keys()].filter(id => candidateIds.length ? candidateSet.has(id) : true));
+        const scores = Array.from(candidateIdsSet).map(id => {
+          const sv = normalize(vMap.get(id) || 0, vMin, vMax);
+          const sr = normalize(rMap.get(id) || 0, rMin, rMax);
+          const sc = normalize(cMap.get(id) || 0, cMin, cMax);
+          return { bookId: id, score: sv * weights.views + sr * weights.ratings + sc * weights.comments };
+        });
+        scores.sort((a, b) => (b.score - a.score) * dirFactor);
+        const total = scores.length;
+        complexOrderedIds = scores.slice(offset, offset + pageSize).map(x => x.bookId);
+        totalExact = total;
+      }
+    } else if (sort === 'chaptersCount') {
+      const chAgg = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
+        SELECT "bookId", COUNT(*)::bigint as cnt FROM "Chapter" GROUP BY "bookId";
+      `;
+      const rows = applyCandidates(chAgg.map(x => ({ bookId: x.bookId, cnt: x.cnt })));
+      rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * (orderParam === 'asc' ? -1 : 1));
+      const total = rows.length;
+      complexOrderedIds = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map(x => x.bookId);
+      totalExact = total;
+    } else if (sort === 'mostFollowed') {
+      const flAgg = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
+        SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId";
+      `;
+      const rows = applyCandidates(flAgg.map(x => ({ bookId: x.bookId, cnt: x.cnt })));
+      rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * (orderParam === 'asc' ? -1 : 1));
+      const total = rows.length;
+      complexOrderedIds = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map(x => x.bookId);
+      totalExact = total;
+    }
+  }
+
+  if (complexOrderedIds) {
+    const books = await prisma.book.findMany({ where: { id: { in: complexOrderedIds } }, select: bookSelect });
+    const map = new Map(books.map(b => [b.id, b]));
+    itemsRaw = complexOrderedIds.map(id => map.get(id)).filter((b): b is BookRow => Boolean(b));
+  }
+
+  const items = itemsRaw.map((b) => ({
+    ...b,
+    synopsis: b.synopsis ? stripHtmlToText(b.synopsis) : b.synopsis,
+  }));
+  const totalPages = Math.max(1, Math.ceil(totalExact / pageSize));
+
+  return NextResponse.json(
+    {
+      items,
+      page: { page, pageSize, total: totalExact, totalPages },
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=30, s-maxage=60',
+      },
+    }
+  );
+}

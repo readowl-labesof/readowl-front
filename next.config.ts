@@ -1,56 +1,33 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  // Silence monorepo root warning by explicitly setting the tracing root to the workspace root
-  // https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats
-  outputFileTracingRoot: path.resolve(__dirname, "../../.."),
-  // Permitir pacotes externos no server (Next 15+)
-  serverExternalPackages: ["bcrypt"],
-  // Cabeçalhos padrão (não relacionados a 431)
-  headers: async () => {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-        ],
-      },
-    ];
-  },
+  // Silence monorepo/multiple lockfiles workspace root warning
+  outputFileTracingRoot: '/home/luiz/ADS/5 Quinto Período/LabESOF',
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'illusia.com.br' },
-      { protocol: 'https', hostname: 'res.cloudinary.com' },
-      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-      { protocol: 'https', hostname: 'i.imgur.com' },
-      { protocol: 'https', hostname: 'imgur.com' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'pbs.twimg.com' },
-      { protocol: 'https', hostname: 'ibb.co' },
-      { protocol: 'https', hostname: 'i.ibb.co' },
-      { protocol: 'https', hostname: 'cdn.discordapp.com' },
-      { protocol: 'https', hostname: 'media.discordapp.net' },
-      { protocol: 'https', hostname: 'imageshack.com' },
-      { protocol: 'https', hostname: 'i.imageshack.com' },
-      { protocol: 'https', hostname: 'postimg.cc' },
-      { protocol: 'https', hostname: 'i.postimg.cc' },
-      { protocol: 'https', hostname: 'flickr.com' },
-      { protocol: 'https', hostname: 'live.staticflickr.com' },
-      { protocol: 'https', hostname: 'tinypic.com' },
-      { protocol: 'https', hostname: 'i.pinimg.com' },
-      { protocol: 'https', hostname: 'static.wikia.nocookie.net' },
-      { protocol: 'https', hostname: 'cdn-icons-png.flaticon.com' }
+      { protocol: 'https', hostname: 'illusia.com.br' }, // Your own domain or project host
+      { protocol: 'https', hostname: 'res.cloudinary.com' }, // Cloudinary image hosting
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google user content (Google Photos, etc.)
+      { protocol: 'https', hostname: 'i.imgur.com' }, // Imgur direct image links
+      { protocol: 'https', hostname: 'imgur.com' }, // Imgur main domain
+      { protocol: 'https', hostname: 'images.unsplash.com' }, // Unsplash image CDN
+      { protocol: 'https', hostname: 'pbs.twimg.com' }, // Twitter image CDN
+      { protocol: 'https', hostname: 'ibb.co' }, // imgbb image hosting (short links)
+      { protocol: 'https', hostname: 'i.ibb.co' }, // imgbb direct image links
+      { protocol: 'https', hostname: 'cdn.discordapp.com' }, // Discord CDN for attachments
+      { protocol: 'https', hostname: 'media.discordapp.net' }, // Discord CDN for media previews
+      { protocol: 'https', hostname: 'imageshack.com' }, // Imageshack main domain
+      { protocol: 'https', hostname: 'i.imageshack.com' }, // Imageshack direct image links
+      { protocol: 'https', hostname: 'postimg.cc' }, // PostImage image hosting
+      { protocol: 'https', hostname: 'i.postimg.cc' }, // PostImage direct image links
+      { protocol: 'https', hostname: 'flickr.com' }, // Flickr main domain
+      { protocol: 'https', hostname: 'live.staticflickr.com' }, // Flickr image CDN
+      { protocol: 'https', hostname: 'tinypic.com' }, // TinyPic image hosting (now defunct)
+      { protocol: 'https', hostname: 'i.pinimg.com' }, // Pinterest image CDN
+      { protocol: 'https', hostname: 'static.wikia.nocookie.net' } // Fandom/Wikia static assets
     ],
   },
-  webpack: (config, { dev }) => {
-    if (dev) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cfg = config as any;
-      if (cfg.cache) cfg.cache = false;
-    }
-    return config;
-  },
+  // Use Next.js defaults for webpack caching; do not disable cache to ensure browser assets are generated.
 };
 
 export default nextConfig;

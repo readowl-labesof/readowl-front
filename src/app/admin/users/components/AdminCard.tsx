@@ -6,9 +6,7 @@ import type { SafeUser } from "@/types/user";
 import BlockButton from "./BlockButton";
 import { useState } from "react";
 
-interface AdminCardProps {
-  user: SafeUser;
-}
+interface AdminCardProps { user: SafeUser }
 
 export default function AdminCard({ user }: AdminCardProps) {
   const router = useRouter();
@@ -34,22 +32,11 @@ export default function AdminCard({ user }: AdminCardProps) {
       {/* Avatar */}
       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white flex items-center justify-center flex-shrink-0 shadow-md">
         {user.image ? (
-          <Image 
-            src={user.image} 
-            alt={user.name || user.email}
-            width={64}
-            height={64}
-            className="w-full h-full object-cover"
-            unoptimized={user.image.startsWith('data:')}
-          />
+          <Image src={user.image} alt={user.name || user.email} width={64} height={64} className="w-full h-full object-cover" unoptimized={user.image.startsWith('data:')} />
         ) : (
-          <div className="w-full h-full bg-purple-100 flex items-center justify-center">
-            <User className="text-purple-600" size={28} />
-          </div>
+          <div className="w-full h-full bg-purple-100 flex items-center justify-center"><User className="text-purple-600" size={28} /></div>
         )}
       </div>
-
-      {/* Info do usuário */}
       <div className="flex-1">
         <div className="flex items-center gap-3">
           <User className="text-white/90 flex-shrink-0" size={18} />
@@ -77,12 +64,8 @@ export default function AdminCard({ user }: AdminCardProps) {
           </p>
         )}
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-white/70 text-xs">
-            Admin desde {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-          </span>
-          {user.emailVerified && (
-            <span className="text-green-300 text-xs">✓ Verificado</span>
-          )}
+          <span className="text-white/70 text-xs">Admin desde {new Date(user.createdAt).toLocaleDateString('pt-BR')}</span>
+          {user.emailVerified && (<span className="text-green-300 text-xs">✓ Verificado</span>)}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { ThumbsUp, MessageSquareReply, Pencil, Trash2, ShieldUser } from 'lucide-react';
+import { ThumbsUp, MessageSquareReply, Pencil, Trash2, ShieldUser, Flag } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Modal from '@/components/ui/modal/Modal';
 import CommentInput from './CommentInput';
@@ -25,17 +25,23 @@ type Props = {
   // Optional granular permissions (override delete or edit separately)
   canEdit?: (c: CommentDto) => boolean;
   canDelete?: (c: CommentDto) => boolean;
+  // Report API caller
+  reportApi?: (commentId: string, type: string) => Promise<void>;
   onReply: (parentId: string, html: string) => Promise<void>;
   onEdit: (id: string, html: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  headerClassName?: string; // style for the top "X comentários" line
 };
 
-export default function CommentsList({ comments, total, likeApi, canEditDelete, canEdit, canDelete, onReply, onEdit, onDelete }: Props) {
+export default function CommentsList({ comments, total, likeApi, canEditDelete, canEdit, canDelete, reportApi, onReply, onEdit, onDelete, headerClassName }: Props) {
   useSession();
   const [replyTo, setReplyTo] = React.useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<string | null>(null);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [items, setItems] = React.useState<CommentDto[]>(comments);
+  const [reportingId, setReportingId] = React.useState<string | null>(null);
+  const [reportType, setReportType] = React.useState<string>("");
+  const [reportError, setReportError] = React.useState<string>("");
 
   React.useEffect(() => setItems(comments), [comments]);
 
@@ -67,7 +73,7 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
     const date = when.toLocaleDateString('pt-BR');
     const time = when.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const container = (
-      <div key={c.id} className={`rounded-md bg-readowl-purple-extradark/90 p-3 mb-3 ${depth > 0 ? 'ml-8' : ''}`}>
+      <div key={c.id} id={`comment-${c.id}`} className={`rounded-md bg-readowl-purple-extradark/90 p-3 mb-3 ${depth > 0 ? 'ml-8' : ''}`}>
         <div className="flex items-start gap-3">
           {/* avatar */}
           <div className="flex-0">
@@ -107,16 +113,29 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
               <div className="mt-2 prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: c.content }} />
             )}
           </div>
-          {(canEditEval || canDeleteEval) && (
-            <div className="flex items-start gap-2 ml-2">
-              {canEditEval ? (
-                <button onClick={() => setEditingId(c.id)} aria-label="Editar" className="text-white/80 hover:text-white"><Pencil size={18} /></button>
-              ) : null}
-              {canDeleteEval ? (
-                <button onClick={() => setConfirmDelete(c.id)} aria-label="Excluir" className="text-white/80 hover:text-white"><Trash2 size={18} /></button>
-              ) : null}
-            </div>
-          )}
+          <div className="flex items-start gap-2 ml-2">
+            {/* Report button: hidden for own comments (approximate: if canEdit suggests ownership) */}
+            {(!canEditEval && reportApi) ? (
+              <button
+                onClick={() => { setReportingId(c.id); setReportType(""); setReportError(""); }}
+                aria-label="Denunciar"
+                className="text-red-500 hover:text-red-400"
+                title="Denunciar comentário"
+              >
+                <Flag size={18} />
+              </button>
+            ) : null}
+            {(canEditEval || canDeleteEval) && (
+              <>
+                {canEditEval ? (
+                  <button onClick={() => setEditingId(c.id)} aria-label="Editar" className="text-white/80 hover:text-white"><Pencil size={18} /></button>
+                ) : null}
+                {canDeleteEval ? (
+                  <button onClick={() => setConfirmDelete(c.id)} aria-label="Excluir" className="text-white/80 hover:text-white"><Trash2 size={18} /></button>
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
         {/* actions */}
         <div className="mt-2 flex items-center gap-4 text-white">
@@ -139,7 +158,7 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
 
   return (
     <div>
-      <div className="mb-2 text-readowl-purple-extradark">{total} comentário{total === 1 ? '' : 's'}.</div>
+      <div className={`mb-2 ${headerClassName ?? 'text-white'}`}>{total} comentário{total === 1 ? '' : 's'}.</div>
       <div>
         {(() => {
           // Group flat list by parentId and render: parents first, then all descendants directly below (one-level indent), preserving order.
@@ -190,6 +209,55 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
         <div className="flex justify-end gap-2 mt-3">
           <button onClick={() => setConfirmDelete(null)} className="px-3 py-1 border border-white/30 text-white">Cancelar</button>
           <button onClick={async () => { if (confirmDelete) { await onDelete(confirmDelete); setConfirmDelete(null); } }} className="px-3 py-1 bg-red-600 text-white">Excluir</button>
+        </div>
+      </Modal>
+      {/* Report modal */}
+      <Modal open={!!reportingId} onClose={() => setReportingId(null)} title="Por que você está denunciando este conteúdo?" widthClass="max-w-lg">
+        <div className="space-y-3">
+          <fieldset className="space-y-2">
+            {[
+              { key: 'INCONVENIENT_CONTENT', label: 'Conteúdo inconveniente' },
+              { key: 'THREAT_OR_INTIMIDATION', label: 'Ameaça, intimidação ou abordagem imprópria' },
+              { key: 'RISK_TO_INTEGRITY', label: 'Risco à integridade física ou emocional' },
+              { key: 'INAPPROPRIATE_SEXUAL_CONTENT', label: 'Material sexual inadequado' },
+              { key: 'OFFENSIVE_OR_DISCRIMINATORY', label: 'Discurso ofensivo ou discriminatório' },
+              { key: 'VIOLENCE_OR_EXPLOITATION', label: 'Ato violento ou exploração de vulneráveis' },
+              { key: 'PROHIBITED_ITEMS', label: 'Divulgação de itens proibidos' },
+              { key: 'FRAUD_OR_SUSPICIOUS_ACTIVITY', label: 'Tentativa de engano ou atividade suspeita' },
+              { key: 'MISLEADING_INFORMATION', label: 'Informação duvidosa ou enganosa' },
+            ].map((opt) => (
+              <label key={opt.key} className="flex items-center gap-2 text-white/90">
+                <input
+                  type="radio"
+                  name="reportReason"
+                  value={opt.key}
+                  checked={reportType === opt.key}
+                  onChange={(e) => { setReportType(e.target.value); setReportError(''); }}
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          {reportError ? <p className="text-red-400 text-sm">{reportError}</p> : null}
+          <p className="text-xs text-white/60">Sua identidade não será registrada. A denúncia é anônima.</p>
+        </div>
+        <div className="flex justify-end gap-2 mt-3">
+          <button onClick={() => setReportingId(null)} className="px-3 py-1 border border-white/30 text-white">Cancelar</button>
+          <button
+            className="px-3 py-1 bg-red-600 text-white"
+            onClick={async () => {
+              if (!reportingId) return;
+              if (!reportType) { setReportError('Selecione um motivo para continuar.'); return; }
+              try {
+                if (reportApi) await reportApi(reportingId, reportType);
+                setReportingId(null);
+              } catch {
+                setReportError('Falha ao enviar denúncia. Tente novamente.');
+              }
+            }}
+          >
+            Enviar denúncia
+          </button>
         </div>
       </Modal>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import Image from 'next/image';
+import { Tags, CheckSquare, XCircle } from 'lucide-react';
 
 export interface GenreSelectorEditProps {
   filteredGenres: string[];
@@ -15,7 +15,7 @@ export const GenreSelectorEdit: React.FC<GenreSelectorEditProps> = ({ filteredGe
   return (
     <div className="lg:col-span-3 w-full mt-4">
       <label className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-        <Image src="/img/svg/book/label.svg" alt="Gêneros" width={18} height={18} className="opacity-80" />
+        <Tags className="w-4 h-4 opacity-80" aria-hidden />
         Gêneros
       </label>
   <div className="w-full bg-readowl-purple-extradark/70 border border-white/10 p-3 max-h-48 overflow-y-auto">
@@ -27,6 +27,31 @@ export const GenreSelectorEdit: React.FC<GenreSelectorEditProps> = ({ filteredGe
             placeholder="Buscar gênero..."
             className="w-full bg-white border-2 border-white/60 focus:ring-2 focus:ring-readowl-purple-dark pl-4 pr-4 py-2 text-sm text-readowl-purple placeholder-readowl-purple/50 mb-3"
           />
+        </div>
+        {/* Select all / Clear all buttons */}
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <button
+            type="button"
+            onClick={() => {
+              filteredGenres.forEach(g => {
+                if (!selectedGenres.includes(g)) toggleGenre(g);
+              });
+            }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-white/15 text-white rounded border border-white/20 hover:bg-white/25"
+          >
+            <CheckSquare className="w-4 h-4" />
+            Selecionar todos
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              selectedGenres.forEach(g => toggleGenre(g));
+            }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-white/15 text-white rounded border border-white/20 hover:bg-white/25"
+          >
+            <XCircle className="w-4 h-4" />
+            Limpar seleção
+          </button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
           {filteredGenres.map(g => {

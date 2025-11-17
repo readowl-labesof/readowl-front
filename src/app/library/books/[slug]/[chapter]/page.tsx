@@ -3,13 +3,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import prisma from '@/lib/prisma';
 import { slugify } from '@/lib/slug';
-import ReadChapterClient from './ui/ReadChapterClient';
+import ReadChapterClient from '../../../../client/chapter/ReadChapterClient';
 
 interface PageProps { params: Promise<{ slug: string; chapter: string }> }
 
 async function getBookBySlug(slug: string) {
-  const books = await prisma.book.findMany({ include: { author: true, genres: true } });
-  return books.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug }, include: { author: true, genres: true } });
 }
 
 export default async function ReadChapterPage({ params }: PageProps) {
@@ -25,7 +24,7 @@ export default async function ReadChapterPage({ params }: PageProps) {
     prisma.volume.findMany({ where: { bookId: book.id }, select: { id: true, order: true } }),
     prisma.chapter.findMany({
       where: { bookId: book.id },
-      select: { id: true, title: true, content: true, createdAt: true, volumeId: true, order: true },
+      select: { id: true, title: true, content: true, createdAt: true, volumeId: true, order: true, totalViews: true },
     }),
   ]);
   const volOrder = new Map<string, number>();
@@ -70,7 +69,7 @@ export default async function ReadChapterPage({ params }: PageProps) {
   // DTO for client
   const payload = {
     book: { id: book.id, title: book.title, authorName: book.author?.name || 'Autor desconhecido' },
-    chapter: { id: current.id, title: current.title, content: current.content, createdAt: current.createdAt },
+    chapter: { id: current.id, title: current.title, content: current.content, createdAt: current.createdAt, totalViews: current.totalViews },
     prevSlug: prev ? slugify(prev.title) : null,
     nextSlug: next ? slugify(next.title) : null,
     volumeTitle,

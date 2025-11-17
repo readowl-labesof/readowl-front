@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { slugify } from '@/lib/slug';
 
 async function findBookBySlug(slug: string) {
-  const all = await prisma.book.findMany();
-  return all.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug } });
 }
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ slug: string; volumeId: string }> }) {
