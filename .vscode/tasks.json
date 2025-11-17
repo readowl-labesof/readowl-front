@@ -77,6 +77,20 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "next:build",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"problemMatcher": [
+				"$tsc",
+				"$eslint - stylish"
+			],
+			"group": "build"
 		}
 	]
 }
