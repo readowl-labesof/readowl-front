@@ -14,15 +14,58 @@ export async function PATCH(request: Request) {
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
     if (!currentUser || currentUser.role !== "ADMIN") return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
 
-    const { name, description, role } = await request.json();
-    if (role && !["USER", "ADMIN"].includes(role)) return NextResponse.json({ error: "Role inválido" }, { status: 400 });
-    const exists = await prisma.user.findUnique({ where: { id } });
-    if (!exists) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    // Verificar se é administrador
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
 
-    const updated = await prisma.user.update({
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return NextResponse.json({ 
+        error: "Acesso negado. Apenas administradores podem editar usuários." 
+      }, { status: 403 });
+    }
+
+    // Pegar dados do body
+    const { name, description, role, blocked } = await request.json();
+
+    // Validar role se foi enviado
+    if (role && !["USER", "ADMIN"].includes(role)) {
+      return NextResponse.json({ error: "Role inválido" }, { status: 400 });
+    }
+
+    // Validar blocked se foi enviado
+    if (blocked !== undefined && typeof blocked !== 'boolean') {
+      return NextResponse.json({ error: "Status de bloqueio inválido" }, { status: 400 });
+    }
+
+    // Verificar se usuário existe
+    const userExists = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!userExists) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+
+    // Atualizar usuário no banco
+    const updatedUser = await prisma.user.update({
       where: { id },
-      data: { ...(name !== undefined && { name }), ...(description !== undefined && { description }), ...(role !== undefined && { role }) },
-      select: { id: true, name: true, email: true, description: true, role: true, updatedAt: true },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(role !== undefined && { role }),
+        ...(blocked !== undefined && { blocked }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        role: true,
+        blocked: true,
+        updatedAt: true,
+      },
     });
     return NextResponse.json(updated);
   } catch (e) {

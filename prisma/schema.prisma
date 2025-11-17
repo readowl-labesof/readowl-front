@@ -84,6 +84,7 @@ model User {
   image       String? // Profile image URL
   description String?
   role        Role     @default(USER)
+  blocked     Boolean  @default(false) // Field to block user login
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

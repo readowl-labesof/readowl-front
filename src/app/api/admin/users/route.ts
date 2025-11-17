@@ -11,8 +11,21 @@ export async function GET(request: NextRequest) {
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
     if (!currentUser || currentUser.role !== "ADMIN") return NextResponse.json({ error: "Acesso negado. Apenas administradores." }, { status: 403 });
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, image: true, role: true, description: true, createdAt: true, emailVerified: true },
-      orderBy: [{ role: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        role: true,
+        description: true,
+        blocked: true,
+        createdAt: true,
+        emailVerified: true,
+      },
+      orderBy: [
+        { role: 'desc' }, // ADMINs primeiro
+        { createdAt: 'desc' }, // Mais recentes primeiro
+      ],
     });
     return NextResponse.json(users);
   } catch (e) {

@@ -9,10 +9,26 @@ import { redirect } from "next/navigation";
 import type { SafeUser } from "@/types/user";
 
 export default async function AdminUsersPage() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
-  const current = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
-  if (!current || current.role !== "ADMIN") redirect("/user?error=access-denied");
+    // Buscar todos os usuários
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true,
+            description: true,
+            blocked: true,
+            createdAt: true,
+            updatedAt: true, 
+            emailVerified: true,
+            credentialVersion: true, 
+        },
+        orderBy: [
+            { role: 'desc' }, // ADMINs primeiro
+            { createdAt: 'desc' }, // Mais recentes primeiro
+        ],
+    });
 
   const users = await prisma.user.findMany({
     select: { id: true, name: true, email: true, image: true, role: true, description: true, createdAt: true, updatedAt: true, emailVerified: true, credentialVersion: true },

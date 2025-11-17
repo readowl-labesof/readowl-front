@@ -43,6 +43,12 @@ export const authOptions: NextAuthOptions = {
 				if (!credentials?.email || !credentials?.password) return null;
 				const user = await prisma.user.findUnique({ where: { email: credentials.email } });
 				if (!user || !user.password) return null;
+				
+				// Verificar se o usuário está bloqueado
+				if (user.blocked) {
+					return null; // Retorna null ao invés de lançar exceção
+				}
+				
 				const ok = await compare(credentials.password, user.password);
 				if (!ok) return null;
 				// Attach remember preference for JWT callback to consume
@@ -119,6 +125,47 @@ export const authOptions: NextAuthOptions = {
 			if (session.user && token.sub) {
 				session.user.id = token.sub;
 				if (t.role) session.user.role = t.role;
+				
+				try {
+					
+					// Buscar dados atualizados do usuário com imagem
+					const dbUser = await prisma.user.findUnique({
+						where: { id: token.sub },
+						select: { 
+							name: true, 
+							email: true,
+							description: true,
+							image: true, // Campo image existente (URL do Google)
+							blocked: true, // Campo para verificar se está bloqueado
+							profileImage: {
+								select: { id: true }
+							}
+						},
+					});
+					
+					if (dbUser) {
+						// Verificar se o usuário está bloqueado
+						if (dbUser.blocked) {
+							// Retornar uma sessão especial indicando que está bloqueado
+							(session as Session & { blocked?: boolean }).blocked = true;
+							return session;
+						}
+						
+						session.user.name = dbUser.name;
+						session.user.email = dbUser.email;
+						session.user.description = dbUser.description;
+						
+						// SOLUÇÃO DO ERRO 431: Priorizar imagem do banco, senão usar do Google
+						const finalImage = dbUser.profileImage 
+							? `/api/images/profile/${dbUser.profileImage.id}`
+							: dbUser.image; // URL do Google se não tiver imagem personalizada
+						
+						
+						session.user.image = finalImage;
+					}
+				} catch (error) {
+					console.error('❌ ERRO ao buscar dados do usuário:', error);
+				}
 			}
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).authProvider = t.authProvider;
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).stepUpAt = t.stepUpAt;

@@ -18,7 +18,12 @@ interface AdminEditProfileProps { user: AdminEditableUser }
 export default function AdminEditProfile({ user }: AdminEditProfileProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: user.name || "", description: user.description || "", role: user.role || "USER" });
+  const [form, setForm] = useState({
+    name: user.name || "",
+    description: user.description || "",
+    role: user.role || "USER",
+    blocked: user.blocked || false
+  });
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,8 +91,55 @@ export default function AdminEditProfile({ user }: AdminEditProfileProps) {
                 <option value="ADMIN" className="text-gray-800">Administrador</option>
               </select>
             </div>
-            {error && (<div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 backdrop-blur-sm"><p className="text-red-200 text-sm">{error}</p></div>)}
-            {success && (<div className="bg-green-500/20 border border-green-400/30 rounded-xl p-4 backdrop-blur-sm"><p className="text-green-200 text-sm">{success}</p></div>)}
+
+            {/* Status de bloqueio */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Status da Conta
+              </label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="blocked"
+                    checked={!form.blocked}
+                    onChange={() => setForm({ ...form, blocked: false })}
+                    className="w-4 h-4 text-green-500 bg-white/20 border-white/30 focus:ring-green-500 focus:ring-2"
+                  />
+                  <span className="text-white/90">Ativa</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="blocked"
+                    checked={form.blocked}
+                    onChange={() => setForm({ ...form, blocked: true })}
+                    className="w-4 h-4 text-red-500 bg-white/20 border-white/30 focus:ring-red-500 focus:ring-2"
+                  />
+                  <span className="text-white/90">Bloqueada</span>
+                </label>
+              </div>
+              {form.blocked && (
+                <p className="text-red-300 text-sm mt-2">
+                  ⚠️ Usuário bloqueado não poderá fazer login no sistema
+                </p>
+              )}
+            </div>
+
+            {/* Mensagens de feedback */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 backdrop-blur-sm">
+                <p className="text-red-200 text-sm">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-500/20 border border-green-400/30 rounded-xl p-4 backdrop-blur-sm">
+                <p className="text-green-200 text-sm">{success}</p>
+              </div>
+            )}
+
+            {/* Botões */}
             <div className="flex items-center justify-between pt-6 gap-4">
               <button type="button" onClick={handleDelete} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-red-600/80 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 transition-all duration-200 font-medium backdrop-blur-sm"><Trash2 size={18} /><span>Excluir Usuário</span></button>
               <button type="submit" disabled={loading} className="flex items-center gap-2 px-8 py-3 bg-green-600/80 text-white rounded-xl hover:bg-green-600 disabled:opacity-50 transition-all duration-200 font-medium backdrop-blur-sm"><Save size={18} /><span>{loading ? "Salvando..." : "Salvar Alterações"}</span></button>
