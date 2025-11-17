@@ -1,0 +1,18 @@
+-- CreateEnum
+CREATE TYPE "ReportType" AS ENUM ('INCONVENIENT_CONTENT', 'THREAT_OR_INTIMIDATION', 'RISK_TO_INTEGRITY', 'INAPPROPRIATE_SEXUAL_CONTENT', 'OFFENSIVE_OR_DISCRIMINATORY', 'VIOLENCE_OR_EXPLOITATION', 'PROHIBITED_ITEMS', 'FRAUD_OR_SUSPICIOUS_ACTIVITY', 'MISLEADING_INFORMATION');
+
+-- CreateTable
+CREATE TABLE "CommentReport" (
+    "id" TEXT NOT NULL,
+    "commentId" TEXT NOT NULL,
+    "type" "ReportType" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "CommentReport_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "CommentReport_commentId_createdAt_idx" ON "CommentReport"("commentId", "createdAt");
+
+-- AddForeignKey
+ALTER TABLE "CommentReport" ADD CONSTRAINT "CommentReport_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;

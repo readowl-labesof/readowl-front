@@ -249,6 +249,9 @@ export default function BookTabs({ canManage: canManageProp }: { canManage?: boo
                   const data = await res.json().catch(() => ({}));
                   return Number(data?.count || 0);
                 }}
+                reportApi={async (id, type) => {
+                  await fetch(`/api/books/${slug}/comments/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type }) });
+                }}
                 // Edit: only comment owner (admins cannot edit others' comments)
                 canEdit={(c: CommentDto) => !!session?.user?.id && session.user.id === c.user?.id}
                 // Delete: comment owner or admin, OR book owner (canManage)
