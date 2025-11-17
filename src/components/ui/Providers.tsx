@@ -1,9 +1,15 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
 import React from "react";
+import BlockedAccountHandler from "./BlockedAccountHandler";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-	return <SessionProvider>{children}</SessionProvider>;
+	return (
+		<SessionProvider>
+			{children}
+			<BlockedAccountHandler />
+		</SessionProvider>
+	);
 }
 /**
  * Global application providers wrapper.

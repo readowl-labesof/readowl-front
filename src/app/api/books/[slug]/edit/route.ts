@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import prisma from '@/lib/prisma';
 import { Status } from '@prisma/client';
-import { slugify } from '@/lib/slug';
 import { normalizeUpdateBookInput, updateBookSchema } from '@/types/book';
 import { sanitizeSynopsisHtml } from '@/lib/sanitize';
 
@@ -24,10 +23,9 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const data = normalizeUpdateBookInput(parsed.data);
   const cleanSynopsis = sanitizeSynopsisHtml(data.synopsis);
 
-  // Find by slug derived from title (no slug column yet)
+  // Find by slug directly
   const { slug } = await ctx.params;
-  const all = await prisma.book.findMany({ include: { genres: true } });
-  const found = all.find((b) => slugify(b.title) === slug);
+  const found = await prisma.book.findUnique({ where: { slug }, include: { genres: true } });
   if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const isOwner = found.authorId === session.user.id;

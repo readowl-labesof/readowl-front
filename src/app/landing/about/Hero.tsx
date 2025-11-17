@@ -45,6 +45,9 @@ const Hero: React.FC = () => {
             <Link href="/library/create">
               <Button variant="primary" className="text-base sm:text-lg md:text-xl px-7 py-4">Criar uma nova obra</Button>
             </Link>
+            <Link href="/native-guide">
+              <Button variant="secondary" className="text-base sm:text-lg md:text-xl px-7 py-4 hover:translate-y-[-1px] active:translate-y-0 transition-transform">Guia de Narrativa</Button>
+            </Link>
           </div>
         </div>
       </div>

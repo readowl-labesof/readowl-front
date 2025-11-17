@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:all": "npm run -s test && npm run -s test:e2e"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -22,6 +25,7 @@
     "clsx": "^2.1.1",
     "ioredis": "^5.8.0",
     "isomorphic-dompurify": "^2.18.0",
+  "framer-motion": "^11.3.31",
     "lucide-react": "^0.546.0",
     "next": "15.5.2",
     "next-auth": "^4.24.11",
@@ -29,11 +33,13 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-password-strength-bar-with-style-item": "^0.5.3",
+    "sanitize-html": "^2.17.0",
     "zod": "^4.1.5",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.49.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.15",
     "@types/bcrypt": "^6.0.0",
@@ -41,11 +47,15 @@
     "@types/nodemailer": "^7.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/testing-library__jest-dom": "^6.0.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "prisma": "^6.15.0",
+    "jsdom": "^27.1.0",
+    "prisma": "^6.18.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.4"
   }
 }

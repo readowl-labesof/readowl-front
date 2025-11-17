@@ -1,101 +1,148 @@
 # 🦉 Readowl
 
-Uma plataforma web para publicação e leitura de livros, com foco em promover a literatura amadora no Brasil e conectar leitores a escritores iniciantes.
-Desenvolvida com **Next.js**, **TypeScript** e **Tailwind CSS**.
+A web platform for publishing and reading books, focused on promoting amateur literature in Brazil and connecting readers with aspiring writers.  
+Developed using **Next.js**, **TypeScript**, and **Tailwind CSS**.
 
 -----
 
-## 📋 Sobre o Projeto
+## 📋 About the Project
 
-O **Readowl** foi criado para oferecer um espaço acolhedor a novos escritores e fortalecer a cultura literária no Brasil.
-A plataforma busca resolver problemas comuns encontrados em outros sistemas, como divulgação ineficiente e interfaces confusas, oferecendo um ambiente confiável para que autores publiquem suas obras gratuitamente e recebam feedback.
+**Readowl** was created to provide a welcoming space for new writers and strengthen the literary culture in Brazil.  
+The platform aims to solve common issues found in other systems, such as inefficient promotion and confusing interfaces, by offering a reliable environment for authors to publish their works for free and receive feedback.
 
-### 👥 Equipe do Projeto
+### 👥 Project Team
 
-| Nome | Função |
+| Name | Role |
 |---|---|
-| Luiz Alberto Cury Andalécio | Desenvolvedor |
-| Alexandre Monteiro Londe | Desenvolvedor |
-| Gabriel Lucas Silva Seabra | Desenvolvedor |
-| Jussie Lopes da Silva | Desenvolvedor |
-| Vitor Gabriel Resende Lopes Oliveira | Desenvolvedor |
+| Luiz Alberto Cury Andalécio | Author & Main Developer (Next Project) |
+| Alexandre Monteiro Londe | Contributor (React Project) |
+| Gabriel Lucas Silva Seabra | Contributor (React Project) |
+| Jussie Lopes da Silva | Contributor (React Project) |
+| Vitor Gabriel Resende Lopes Oliveira | Contributor (React Project) |
+
+*The contributors above are developers from a separate pure React project who provide indirect support and insights to the development of this Next.js project.*
 
 
-### 🎯 Principais Funcionalidades
+### 🎯 Main Features
 
-- Cadastro e login de usuários com autenticação segura e recuperação de senha.
-- Criar, ver, editar e excluir livros, volumes e capítulos.
-- Sistema de busca avançada com filtros por gênero, popularidade e data.
-- Biblioteca pessoal para favoritar obras e receber notificações.
-- Interação por meio de avaliações, curtidas e comentários em livros e capítulos.
-- Painel administrativo para gestão de usuários e moderação de conteúdo.
+- User registration and login with secure authentication and password recovery.
+- Create, view, edit, and delete books, volumes, and chapters.
+- Advanced search system with filters by genre, popularity, and date.
+- Personal library to favorite works and receive notifications.
+- Interaction through ratings, likes, and comments on books and chapters.
+- Admin panel for user management and content moderation.
 
-### 🛠️ Tecnologias Utilizadas
+### 🛠️ Technologies Used
 
-#### Frontend
-- **Next.js**: Framework React para renderização no servidor (SSR), roteamento e rotas de API.
-- **Next Router**: Roteamento nativo para navegação (Home, Livro, Perfil etc.).
-- **Tailwind CSS**: Estilização rápida e responsiva seguindo a identidade visual.
-- **TanStack Query**: Comunicação com backend, cache e atualização de dados.
-- **React Hook Form**: Todos os formulários (login, cadastro, publicação).
-- **TipTap**: Editor de texto rico para autores escreverem capítulos.
+#### **Frontend**
+- **Next.js**: React framework for server-side rendering, routing, and API routes.
+- **Next Router**: Built-in routing for navigation (Home, Book, Profile, etc.).
+- **Tailwind CSS**: Fast, responsive styling following the visual identity.
+- **TanStack Query**: Backend communication, caching, and data updates.
+- **React Hook Form**: All forms (login, registration, publishing).
+- **TipTap**: Rich text editor for authors to write chapters.
 
-#### Backend
+#### **Backend**
 
-- **Node.js (Rotas de API do Next.js)**: Lógica de servidor e endpoints.
-- **TypeScript**: Segurança de tipos e redução de bugs.
-- **Prisma**: ORM para integração com PostgreSQL.
-- **Zod**: Validação de dados unificada no frontend e no backend.
-- **JWT + Bcrypt.js**: Autenticação segura e hash de senhas.
-- **Gerenciamento de Sessão**: Suporte a "Lembrar de mim" com JWT e NextAuth, oferecendo sessões padrão de 8 horas ou 30 dias quando habilitado. O TTL da sessão é aplicado via middleware usando flags do token (`remember`, `stepUpAt`).
-- **Upload de Arquivos**: Multer e Cloudinary para armazenar capas de livros e imagens de perfil.
-- **Serviço de Email**: Nodemailer para recuperação de senha, com templates HTML e fallback em texto simples. O fluxo de redefinição usa tokens SHA-256 de uso único (expiração de 30 minutos) e invalidação de sessão via `credentialVersion`.
-- **Segurança**: Cooldown por usuário (120s) e rate limiting por IP (5 requisições/15min) em pedidos de recuperação de senha.
-- **Configuração de SMTP**: Defina `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `MAIL_FROM` no `.env`. Em desenvolvimento, se o SMTP não estiver configurado, os emails são logados no console.
-- **Redis (Opcional)**: Para rate limiting distribuído, configure `REDIS_URL` ou variáveis do Upstash; por padrão usa memória local se não definido.
-- **Melhorias de UX**: Página de sucesso após redefinição de senha e mensagens de feedback aprimoradas.
-- **Força da Senha**: `PasswordStrengthBar` usa heurística local e opcionalmente carrega `zxcvbn` para feedback avançado.
-- **Variáveis de Ambiente**: Consulte `.env.example` para as configurações necessárias.
+- **Node.js (Next.js API Routes)**: Handles server-side logic and API endpoints.
+- **TypeScript**: Ensures type safety and reduces bugs.
+- **Prisma**: ORM for seamless PostgreSQL integration.
+- **Zod**: Unified data validation across frontend and backend.
+- **JWT + Bcrypt.js**: Secure authentication and password hashing.
+- **Session Management**: Supports "Remember Me" with JWT and NextAuth, offering 8-hour default sessions or 30 days when enabled. Session TTL is enforced via middleware using token flags (`remember`, `stepUpAt`).
+- **File Uploads**: Uses Multer and Cloudinary for storing book covers and profile images.
+- **Email Services**: Nodemailer for password recovery, with HTML templates and plain-text fallback. Password reset flow uses single-use SHA-256 tokens (30-minute expiry) and session invalidation via `credentialVersion`.
+- **Security**: Per-user cooldown (120s) and IP rate limiting (5 requests/15min) on password recovery requests.
+- **SMTP Configuration**: Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` in `.env`. In development, if SMTP is not configured, emails are logged to the console.
+- **Redis (Optional)**: For distributed rate limiting, configure `REDIS_URL` or Upstash variables; defaults to in-memory if unset.
+- **UX Enhancements**: Success page after password reset and improved feedback messages.
+- **Password Strength**: `PasswordStrengthBar` uses a local heuristic and optionally loads `zxcvbn` for enhanced feedback.
+- **Environment Variables**: See `.env.example` for required settings.
 
-#### Banco de Dados
-- **PostgreSQL**: Armazenamento de dados.
+### 👀 Views (Chapter reads)
 
-#### Ambiente
-- **Docker**: Containerização para desenvolvimento e deploy.
-- **Git**: Controle de versão.
-- **VS Code**: Editor recomendado.
+- Auth-only: only logged-in reads are counted. No IP collection or storage.
+- Bot filter: common crawler user-agents are ignored.
+- Author skip: the book author’s own reads don’t count.
+- Dedupe: one view per user per chapter is counted at most once every 2 minutes (Redis SET NX PX; in-memory fallback).
+- Endpoints:
+        - POST `/api/books/:slug/chapters/:chapterSlug/view` — record a view.
+        - GET `/api/books/:slug/chapters/:chapterSlug/views` — returns `{ count }` for the chapter.
+        - GET `/api/books/:slug/views` — returns `{ count }` across all chapters of the book.
+- UI integration:
+        - The chapter reading page posts a view on mount and shows the live count.
+        - The book header shows total views via a small client fetcher.
 
-**Extensões VS Code:** Prisma, ESLint, Prettier - Code formatter, Tailwind CSS IntelliSense, EchoAPI
+Note: In monorepo workspaces with multiple lockfiles, set `outputFileTracingRoot` in `next.config.ts` to the workspace root to silence the Next.js warning.
+### Rules for views
+
+- Chapter: view count visible only to the book author and administrators (403 for others).
+- Book: total views are public and displayed in the book header.
+- Views are recorded only for authenticated users; the author's own views are not counted; deduplication enforces at most one view per user per chapter every 2 minutes.
+
+### 🚀 Performance Improvements (2025-11)
+
+To reduce UI latency and DB load, denormalized aggregates were added to the schema and are updated in real time by API routes:
+
+- Book.totalViews — cumulative unique views across the book’s chapters
+- Book.ratingSum / Book.ratingCount / Book.ratingAvg — live rating aggregates
+- Chapter.totalViews — per-chapter view counter
+
+Endpoints that mutate these totals continue to apply bot filtering, rate limiting and deduplication.
+
+#### **Database**
+- **PostgreSQL**: Data storage.
+
+#### **Environment**
+- **Docker**: Containerization for development and deployment.
+- **Git**: Version control.
+- **VS Code**: Recommended editor.
+
+**VS Code Extensions:** Prisma, ESLint, Prettier - Code formatter, Tailwind CSS IntelliSense, EchoAPI
 
 -----
 
-## 🚀 Começando (do zero)
+## 🚀 Getting Started (from scratch)
 
-Este guia leva você do zero até rodar a aplicação localmente com um PostgreSQL via Docker dedicado a este projeto Next.js. Se você já usa o pgAdmin do projeto React (container: `readowl_pgadmin`), continue usando; não subiremos um segundo pgAdmin aqui. Também cobre login com Google OAuth e SMTP para recuperação de senha.
+This guide walks you from zero to running the app locally with a Dockerized PostgreSQL dedicated to this Next.js project. If you already run pgAdmin for the React project (container name: `readowl_pgadmin`), keep using it; we don't run a second pgAdmin here. It also covers Google OAuth login and SMTP for password recovery.
 
-### 1) Pré-requisitos
+### 1) Prerequisites
 
-- Node.js 18+ e pnpm ou npm
-- Docker Desktop ou Docker Engine
-- Uma instância PostgreSQL (local/nativa ou em Docker). Se já tiver uma, você pode reutilizá-la.
-- Opcional: Projeto no Google Cloud para OAuth2 (fornecemos credenciais de exemplo para dev local)
+- Node.js 20+ and pnpm or npm
+- Docker Desktop or Docker Engine
+- A PostgreSQL instance (local/native or in Docker). If you already have one, you can keep using it.
+- Optional: Google Cloud project for OAuth2 (we provide example credentials for local dev)
 
-### 2) Clonar e instalar dependências
+### 2) Clone and install dependencies
 
 ```bash
-git clone <sua-url-do-repo>
+git clone <your-repo-url>
 cd readowl-next
 npm install
 ```
 
-### 3) Variáveis de ambiente
+Tip: if your Node is below 20, install Node 20 LTS with nvm:
 
-Copie `.env.example` para `.env` e preencha os valores. Para desenvolvimento local, um exemplo:
+```bash
+# Install nvm (once)
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# Install and use Node 20 LTS
+nvm install 20
+nvm use 20
+node -v
+npm -v
+```
+
+### 3) Environment variables
+
+Copy `.env.example` to `.env` and fill values. For local development, an example:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/readowl-next_db?schema=public"
+DATABASE_URL="postgresql://readowl:readowl@localhost:5433/readowl?schema=public"
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="<um-segredo-aleatório-forte>"
+NEXTAUTH_SECRET="<a-strong-random-secret>"
 
 # Google OAuth
 GOOGLE_CLIENT_ID="<google-client-id>"
@@ -104,146 +151,174 @@ GOOGLE_CLIENT_SECRET="<google-client-secret>"
 # SMTP (Gmail)
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
-SMTP_USER="<seu-gmail>@gmail.com"
+SMTP_USER="<your-gmail>@gmail.com"
 SMTP_PASS="<app-password>"
 MAIL_FROM="Readowl <no-reply@readowl.dev>"
 ```
 
-Observações:
-- Para SMTP do Gmail, use uma Senha de App (não sua senha normal). Ative a verificação em duas etapas e crie uma Senha de App.
-- O projeto inclui um template em `credentials/google-oauth.json`. A pasta `credentials/` é ignorada no Git para evitar vazamento de segredos.
+Notes:
+- For Gmail SMTP, use an App Password (not your normal password). Enable 2-Step Verification and create an App Password.
+- The project includes a `credentials/google-oauth.json` template. We ignore the `credentials/` folder in Git to avoid leaking secrets.
 
-### 4) Banco de dados
+### 4) Database
 
-Fornecemos um serviço Postgres dedicado via Docker Compose. Ele expõe a porta `5433` no host, evitando conflito com outras instâncias.
+We ship a dedicated Postgres service for this project via Docker Compose. It exposes port `5433` on your host, so it won’t conflict with other Postgres instances.
 
-Suba o serviço:
+Bring it up:
 
 ```bash
-docker compose up -d postgres
+docker compose up -d
 ```
+>If you want to use pgadmin web, run: "docker compose up -d postgres"
 
-Detalhes:
-- Nome do container: `readowl_next_db`
-- Banco: `readowl`
-- Usuário/Senha: `readowl` / `readowl`
-- Porta no host: 5433 (container 5432)
+If you get errors like "docker: 'compose' is not a docker command" or "unknown shorthand flag: 'd' in -d", your Docker does not have the Compose v2 plugin. Fix it using the official Docker repository (Ubuntu/Mint based on Ubuntu 24.04 "Noble"):
 
-Seu `.env` deve apontar `DATABASE_URL` para `postgresql://readowl:readowl@localhost:5433/readowl?schema=public`.
+1. Prereqs and Docker GPG key
 
-Se quiser gerenciar o DB por GUI, há duas opções:
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc >/dev/null
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-- Reutilizar o pgAdmin existente do projeto React (container `readowl_pgadmin`) em http://localhost:5050; ou
-- Usar o pgAdmin incluído neste projeto em http://localhost:5051.
+2. Add the Docker apt repository (uses the Ubuntu base codename on Mint via $UBUNTU_CODENAME)
 
-#### Usando o pgAdmin embutido (Opção 3)
+        source /etc/os-release
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${UBUNTU_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+        sudo apt-get update
 
-Incluímos um serviço `pgadmin` no `docker-compose.yml`. Para iniciá-lo junto ao Postgres:
+3. Install Compose v2 and verify
+
+        sudo apt-get install -y docker-compose-plugin
+        docker compose version
+
+If you prefer the legacy binary and already have it installed:
+
+        docker-compose up -d
+
+Both commands target the same `postgres` service defined in `docker-compose.yml`.
+
+Details:
+- Container name: `readowl_next_db`
+- Database: `readowl`
+- User/Password: `readowl` / `readowl`
+- Host port: 5433 (container 5432)
+
+Your `.env` should already point `DATABASE_URL` to `postgresql://readowl:readowl@localhost:5433/readowl?schema=public`.
+
+If you want to manage the DB via GUI, you have two options:
+
+- Reuse the existing pgAdmin from the React project (container `readowl_pgadmin`) at http://localhost:5050; or
+- Use the built-in pgAdmin service included in this project's docker-compose at http://localhost:5051.
+
+#### Using the built-in pgAdmin (Option 3)
+
+We include a `pgadmin` service in `docker-compose.yml`. To start it alongside Postgres:
 
 ```bash
 docker compose up -d postgres pgadmin
 ```
 
-Acesse http://localhost:5051 e autentique com as credenciais definidas no `.env`:
+Access http://localhost:5051 and log in using the credentials defined in your `.env`:
 
 ```env
 PGADMIN_DEFAULT_EMAIL=admin@example.com
 PGADMIN_DEFAULT_PASSWORD=admin
 ```
 
-Observações:
-- Essas variáveis são opcionais; se não definidas, os valores acima são usados.
-- No Linux, mapeamos `host.docker.internal` dentro do container para alcançar o Postgres exposto nas portas do host.
+Notes:
+- These variables are optional; if not set, the defaults above are used.
+- On Linux, we map `host.docker.internal` inside the container to reach the Postgres running on the host ports.
 
-Crie o servidor dentro do pgAdmin:
-1. Clique com o direito em “Servers” > Create > Server…
-2. Aba General: Name: `readowl-local`
-3. Aba Connection:
-        - Host: `host.docker.internal` (de dentro do container do pgAdmin)
+Create the server inside pgAdmin:
+1. Right-click “Servers” > Create > Server…
+2. General tab: Name: `readowl-local`
+3. Connection tab:
+        - Host: `host.docker.internal` (from inside pgAdmin container)
         - Port: `5433`
         - Maintenance DB: `readowl`
         - Username: `readowl`
         - Password: `readowl`
-4. Salve
+4. Save
 
-#### Criar um servidor no pgAdmin (passos GUI)
+#### Create a server in pgAdmin (GUI steps)
 
-1. Abra http://localhost:5051 e faça login.
-2. Click direito em “Servers” > Create > Server…
-3. Aba General: Name: `readowl-local`
-4. Aba Connection:
-   - Host: Se o pgAdmin estiver em Docker e o Postgres no host, use o IP do host (Linux) ou `host.docker.internal` (Mac/Windows). Se ambos estiverem no Docker, `host.docker.internal` também funciona em muitos setups.
+1. Open http://localhost:5051 and log in.
+2. Right-click “Servers” > Create > Server…
+3. General tab: Name: `readowl-local`
+4. Connection tab:
+   - Host: If pgAdmin is in Docker and Postgres is on the host, use your host IP (Linux) or `host.docker.internal` (Mac/Windows). If both are in Docker, `host.docker.internal` also works in many setups.
    - Port: `5433`
    - Maintenance DB: `readowl`
    - Username: `readowl`
    - Password: `readowl`
    - Save
-5. Expanda o servidor > Databases. O DB padrão `readowl` deve existir. Se não existir, crie-o.
+5. Expand the server > Databases. The default DB `readowl` should exist. If not, create it.
 
-### 5) Configuração do Prisma
+### 5) Prisma setup
 
-Gere e aplique o schema ao banco:
+Generate and apply the schema to your database:
 
 ```bash
 npx prisma generate
 npx prisma migrate deploy
-# Para o primeiro setup de dev (opcional) use:
+# For first-time dev setup (optional) use:
 # npx prisma migrate dev
 ```
 
-### 6) Configuração do Google OAuth
+### 6) Google OAuth setup
 
-No Google Cloud Console (APIs & Services > Credentials), crie um Client ID OAuth 2.0 para aplicação Web:
+In Google Cloud Console (APIs & Services > Credentials), create OAuth 2.0 Client ID for Web application:
 - Authorized JavaScript origins: `http://localhost:3000`
 - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
 
-Copie o Client ID e o Secret para o `.env` (`GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`).
+Copy Client ID and Secret to `.env` (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`).
 
-### 7) SMTP (recuperação de senha)
+### 7) SMTP (password recovery)
 
-Se for usar Gmail:
-- Ative a verificação em duas etapas (2FA)
-- Crie uma Senha de App e defina em `.env` como `SMTP_PASS`
-- Mantenha `SMTP_HOST=smtp.gmail.com` e `SMTP_PORT=587`
+If using Gmail:
+- Enable 2-Step Verification
+- Create an App Password and set it in `.env` as `SMTP_PASS`
+- Keep `SMTP_HOST=smtp.gmail.com` and `SMTP_PORT=587`
 
-### 8) Rodar a aplicação
+### 8) Run the app
 
 ```bash
 npm run dev
 ```
 
-Abra http://localhost:3000
+Open http://localhost:3000
 
-### 9) Solução de Problemas
+### 9) Troubleshooting
 
-- Verifique os valores do `.env` e a conectividade com o banco.
-- Se usar Postgres via Docker, confirme se o mapeamento de portas bate com sua `DATABASE_URL`.
-- Prisma não conecta: confira se o DB existe e as credenciais estão corretas.
-- Gmail EAUTH/535: use uma Senha de App, não a senha normal. Considere a porta 465 com `SMTP_PORT=465` para SSL.
+- Check `.env` values and database connectivity.
+- If using Dockerized Postgres, ensure the port mapping matches your `DATABASE_URL`.
+- Prisma fails to connect: verify DB exists and credentials are correct.
+- Gmail EAUTH/535: use an App Password, not the normal password. Consider port 465 with `SMTP_PORT=465` for SSL.
 
-### 10) Reset completo (Docker + Prisma)
+### 10) Full reset (Docker + Prisma)
 
-Use estes passos se quiser zerar containers, volumes e o estado de migrações do Prisma apenas para este projeto Next.js.
+Use these steps if you want to completely reset containers, volumes and Prisma migrations/state for this Next.js project only.
 
-1. Pare e remova containers (pgAdmin e Postgres):
+1. Stop and remove containers (pgAdmin and Postgres):
 
         ```bash
         docker rm -f readowl_next_pgadmin readowl_next_db 2>/dev/null || true
         ```
 
-2. Remova volumes (apaga os dados):
+2. Remove volumes (wipes data):
 
         ```bash
         docker volume rm -f readowl-next_readowl_next_pgdata 2>/dev/null || true
         ```
 
-3. Limpe as migrações do Prisma (squash para um baseline novo):
+3. Clear Prisma migrations (squash to a fresh baseline):
 
         ```bash
         rm -rf prisma/migrations/*
         ```
 
-4. Suba o Postgres novamente e recrie migrações:
+4. Bring Postgres back and recreate migrations:
 
         ```bash
         docker compose up -d postgres
@@ -251,194 +326,194 @@ Use estes passos se quiser zerar containers, volumes e o estado de migrações d
         npx prisma migrate dev --name init
         ```
 
-5. (Opcional) Suba o pgAdmin novamente:
+5. (Optional) Bring up pgAdmin again:
 
         ```bash
         docker compose up -d pgadmin
         ```
 
-6. Faça login no pgAdmin (http://localhost:5051) com as credenciais do `.env`:
+6. Log into pgAdmin (http://localhost:5051) with `.env` credentials:
 
         ```env
         PGADMIN_DEFAULT_EMAIL=admin@example.com
         PGADMIN_DEFAULT_PASSWORD=admin
         ```
 
-Se o login falhar com "incorrect password", remova o container existente do pgAdmin para permitir que as novas credenciais tenham efeito e inicie novamente (passo 1 e depois 5).
+If login fails with "incorrect password", remove the existing pgAdmin container to allow the new credentials to take effect and start it again (step 1 then 5).
 
 -----
 
-## 🧰 Notas de Desenvolvimento
+## 🧰 Development notes
 
-- Stack: Next.js (App Router), TypeScript, Tailwind CSS, Prisma, NextAuth, Zod, Nodemailer.
-- Adicionamos uma entrada `docker-compose.yml` para pgAdmin e simplificar o gerenciamento do DB em desenvolvimento.
+- Tech stack: Next.js (App Router), TypeScript, Tailwind CSS, Prisma, NextAuth, Zod, Nodemailer.
+- We added a `docker-compose.yml` entry for pgAdmin to simplify DB management in development.
 
-### 📑 Telas: Concluídas & A Fazer
+### 📑 Screens: Completed & To-Do
 
-| ✅ **Telas Concluídas** | Detalhes |
+| ✅ **Completed Screens** | Details |
 |---|---|
-| 🏠 Landing Page | Header, termos e informações |
-| 🔐 Login & Cadastro | Login/cadastro simples com recuperação de senha e opção de login com Google |
-| 📖 Índice de Livro | Detalhes do livro, seguir, avaliação, volumes com lista de capítulos |
-| 📄 Índice de Capítulo | Conteúdo principal e botões de CRUD |
-| 📚 Biblioteca | Carrossel de livros criados |
-| 📝 CRUD de Livro | Criar, ver, editar, excluir |
-| 📦 CRUD de Volume & Capítulo | Criar, editar, excluir volumes e capítulos |
-| ⚠️ Páginas de Erro | 403, 404, 500 e erros genéricos |
+| 🏠 Landing Page | Header, terms, and infos |
+| 🔐 Login & Registration | Simple login/registration with passoword recovery and Google sign in option |
+| 📖 Book Index | Book details, follow option, rating, volumes dropdown with chapter list |
+| 📄 Chapter Index | Principal content and crud buttons |
+| 📚 Library | Carousel of created books |
+| 📝 Book CRUD | Full create, view, edit, delete |
+| 📦 Volume & Chapter CRUD | Create, edit, delete volumes and chapters |
+| ⚠️ Error Pages | 403, 404, 500 and generic errors |
 
-| 🚧 **Telas a Fazer** | Detalhes |
+| 🚧 **Screens To-Do** | Details |
 |---|---|
-| 🏡 Home | Carrossel de banners, carrosséis de destaques, lista de capítulos recentes |
-| 🔎 Busca de Livros | Com filtros |
-| 📚 Carrossel de Seguidos | Na biblioteca |
-| 💬 Aba de Comentários | Na página do livro |
-| 📄 Índice de Capítulo | Avaliação por reações e comentários |
-| 🔔 Notificações | Para livros criados e seguidos |
-| 👤 Edição de Perfil | Tela de autoedição do usuário |
-| 🛠️ Edição de Usuário (Admin) | Gestão geral de usuários para admins |
+| 🏡 Home Page | Banner carousel, featured carousels, recent chapters list |
+| 🔎 Book Search | With filters |
+| 📚 Followed Books Carousel | In library |
+| 💬 Comments Tab | On book index |
+| 📄 Chapter Index | Reactions-based rating and comments |
+| 🔔 Notifications | For created and followed books |
+| 👤 User Profile Edit | User self-edit screen |
+| 🛠️ Admin User Edit | General user management for admins |
 
-> 62% concluído
+> 62% complete
 
-### 📁 Estrutura de Projeto Sugerida
+### 📁 Suggested Project Structure
 
-- `docs/` – Documentação e diagramas do projeto.
-- `prisma/` – Schema do Prisma e migrações do banco.
-- `public/` – Assets estáticos servidos como estão (imagens, ícones, fontes, SVGs).
-- `src/` – Código-fonte da aplicação.
-        - `app/` – Next.js App Router: páginas, layouts e rotas de API em `app/api`.
-        - `components/` – Componentes reutilizáveis de UI e features (ex.: book, ui, sections).
-        - `lib/` – Bibliotecas e utilitários da aplicação (cliente Prisma, auth, mailer, rate limiters, helpers de slug).
-        - `types/` – Tipos globais do TypeScript e ampliações de módulos (ex.: NextAuth, zxcvbn).
+- `docs/` – Project documentation and diagrams.
+- `prisma/` – Prisma schema and database migrations.
+- `public/` – Static assets served as-is (images, icons, fonts, SVGs).
+- `src/` – Application source code.
+        - `app/` – Next.js App Router: pages, layouts, and API routes under `app/api`.
+        - `components/` – Reusable UI and feature components (e.g., book, ui, sections).
+        - `lib/` – Application libraries and utilities (Prisma client, auth, mailer, rate limiters, slug helpers).
+        - `types/` – Global TypeScript types and module augmentations (e.g., NextAuth, zxcvbn).
 
 -----
 
-## 📓 Convenção de Commits
+## 📓 Commit Convention
 
-Este repositório segue uma variação do padrão [Conventional Commits](https://www.conventionalcommits.org/). Essa abordagem ajuda a manter o histórico de commits claro e organizado, contribuindo para automação de versionamento e geração de changelog.
+This repository follows a variation of the [Conventional Commits](https://www.conventionalcommits.org/) standard. This approach helps keep the commit history clear and organized, and contributes to version automation and changelog generation.
 
-### ✔️ Formato
+### ✔️ Format
 
 ```bash
-<tipo>(escopo):<ENTER>
-<mensagem curta descrevendo o que o commit faz>
+<type>(scope):<ENTER>
+<short message describing what the commit does>
 ```
 
-### 📍 O que é o "tipo"?
+### 📍 What is the "type"?
 
-    * `feat`: Nova funcionalidade
-    * `fix`: Correção de bug
-    * `docs`: Mudanças na documentação
-    * `style`: Ajustes de estilo (css, cores, imagens, etc.)
-    * `refactor`: Refatoração de código sem alteração de comportamento
-    * `perf`: Melhorias de performance
-    * `test`: Criação ou modificação de testes
-    * `build`: Mudanças que afetam o build (dependências, scripts)
-    * `ci`: Configurações de integração contínua
+    * `feat`: New feature
+    * `fix`: Bug fix
+    * `docs`: Documentation changes
+    * `style`: Styling adjustments (css, colors, images, etc.)
+    * `refactor`: Code refactoring without behavior change
+    * `perf`: Performance improvements
+    * `test`: Creating or modifying tests
+    * `build`: Changes that affect the build (dependencies, scripts)
+    * `ci`: Continuous integration configurations
 
-### 📍 O que é o "escopo"?
+### 📍 What is the "scope"?
 
-Define a parte do projeto afetada pelo commit, como um módulo (`encryption`), uma página (`login-page`) ou uma feature (`carousel`).
+Defines the part of the project affected by the commit, such as a module (`encryption`), a page (`login-page`), or a feature (`carousel`).
 
-### 📝 Exemplo
+### 📝 Example
 
 ```bash
 git commit -am "refactor(encryption):
-> Melhora identação."
+> Improves indentation."
 
 git commit -am "fix(login-page):
-> Corrige bug de login nulo."
+> Fixes null login bug."
 
 git commit -am "feat(carousel):
-> Implementa carrossel na página inicial."
+> Implements carousel on the home page."
 ```
 
 -----
 
-## 🪢 Convenção de Branches
+## 🪢 Branching Convention
 
-Este documento descreve o padrão de versionamento e organização de branches para o projeto Readowl, usando Git para um fluxo mais organizado e rastreável.
+This document describes the versioning and branch organization standard for the Readowl project, using Git for a more organized and traceable workflow.
 
-### 1. Nomenclatura de Branch
+### 1. Branch Naming Convention
 
-Toda nova branch criada para desenvolvimento de tarefas deve seguir estritamente o padrão abaixo para garantir consistência e clareza sobre o propósito de cada branch.
+Every new branch created for task development should strictly follow the pattern below to ensure consistency and clarity about the purpose of each branch.
 
-**Padrão:** `<descricao-curta-em-minusculas-com-hifens>`
+**Pattern:** `<short-lowercase-description-with-hyphens>`
 
-A descrição deve ser curta e usar hífens para separar palavras.
+The description should be short and use hyphens to separate words.
 
-**Exemplos de nomes de branch:**
+**Branch name examples:**
 
 - `landing-page`
 - `backend-configuration`
 - `login-form`
 
-**Comando para criar uma branch:**
+**Command to create a branch:**
 
-Para criar uma nova branch a partir de `dev` e mudar para ela:
+To create a new branch from `dev` and switch to it:
 
 ```bash
 git checkout -b landing-page
 ```
 
-### 2. Branches Locais vs. Remotas (Origin)
+### 2. Local vs. Remote Branches (Origin)
 
-É importante entender a diferença entre uma branch na sua máquina (local) e a branch no repositório remoto (origin).
+It's important to understand the difference between a branch on your machine (local) and the branch on the remote repository (origin).
 
-- **Branch Local:** Versão do repositório que existe apenas no seu computador. Onde você trabalha, desenvolve, testa e faz commits.
-- **Branch Remota (origin):** Versão da branch armazenada no servidor central (GitHub, GitLab etc.). Serve como ponto de sincronização para o time.
+- **Local Branch:** A version of the repository that exists only on your computer. This is where you work, develop code, test, and make commits.
+- **Remote Branch (origin):** The version of the branch stored on the central server (like GitHub, GitLab, etc.). It serves as a synchronization point for all team members.
 
-Embora sua branch local e a remota correspondente tenham o **mesmo nome** (ex.: `landing-page`), elas são entidades diferentes. Você desenvolve na branch local e, quando quiser compartilhar o progresso ou fazer backup, faz push dos seus commits para a branch remota com `git push`.
+Although your local branch and the corresponding remote branch have the **same name** (e.g., `landing-page`), they are different entities. You develop on your local branch, and when you want to share your progress or back up your work, you push your commits to the remote branch using `git push`.
 
-**Fluxo básico:**
+**Basic workflow:**
 
-1. Você cria a branch `landing-page` **localmente**.
-2. Você desenvolve e comita nessa branch local.
-3. Você envia seu trabalho ao repositório remoto com `git push`.
+1. You create the `landing-page` branch **locally**.
+2. You develop and commit on this local branch.
+3. You push your changes to the remote repository with `git push`.
 
-> Observação: O parâmetro `-u` (ou `--set-upstream`) vincula sua branch local à branch remota recém-criada, facilitando futuros `git push` e `git pull`.
+> Note: The `-u` (or `--set-upstream`) parameter links your local branch to the newly created remote branch, making future `git push` and `git pull` commands easier.
 
-### 3. Fluxo de Desenvolvimento
+### 3. Development Workflow
 
-1. **Sincronize sua `dev` local:**
+1. **Sync your local `dev` branch:**
         ```bash
         git checkout dev
         git pull origin dev
         ```
-2. **Crie a branch da sua tarefa:**
-        Crie sua branch local a partir da `dev` atualizada, seguindo a convenção de nomes.
+2. **Create your task branch:**
+        Create your local branch from the updated `dev`, following the naming convention.
         ```bash
         git checkout -b login-form
         ```
-3. **Desenvolva e faça commits:**
-        Trabalhe no código e faça commits claros e concisos. Lembre de seguir a convenção de commits.
+3. **Develop and commit:**
+        Work on the code and make clear, concise commits. Remember to follow the commit convention.
         ```bash
         git add .
         git commit -m "feat(login-form):
-        > Adiciona validação de campos"
+        > Adds field validation"
         ```
-4. **Envie seu trabalho ao repositório remoto:**
-        Faça push dos seus commits para a branch remota com o mesmo nome.
+4. **Push your work to the remote repository:**
+        Push your commits to the remote branch with the same name.
         ```bash
         git push origin -u login-form
         ```
 
-### 4. Siga a Convenção de Commits
+### 4. Follow the Commit Convention
 
-[Veja a convenção detalhada acima](#-convenção-de-commits) para garantir que suas mensagens sejam claras, rastreáveis e sempre referenciem a parte relevante do projeto.
+[See the detailed commit convention above](#commit-convention) to ensure your messages are clear, traceable, and always reference the relevant part of the project.
 
-### 5. Processo de Pull Request (PR)
+### 5. Pull Request (PR) Process
 
-Um Pull Request (PR) é o mecanismo para revisar e integrar código de uma branch em outra.
+A Pull Request (PR) is the mechanism for reviewing and integrating code from one branch into another.
 
-- **Ao finalizar uma tarefa:**
-        Quando o desenvolvimento na sua branch (ex.: `login-form`) estiver concluído e testado, você deve abrir um **Pull Request** da sua branch para a branch `dev`.
-        Isso serve para:
-        1. Permitir revisão de código por outros membros do time.
-        2. Manter um histórico de todas as mudanças integradas.
-        3. Disponibilizar o código da tarefa em `dev` para outros desenvolvedores, se necessário.
+- **When finishing a task:**
+        When development on your task branch (e.g., `login-form`) is complete and tested, you should open a **Pull Request** from your branch to the `dev` branch.
+        This serves to:
+        1. Allow code review by other team members.
+        2. Keep a historical record of all integrated changes.
+        3. Make the task's code available in `dev` for other developers if needed.
 
-- **Ao final de um Sprint:**
-        A branch `main` é a de produção e deve conter apenas código estável e testado. Atualizações em `main` ocorrem apenas ao final de cada ciclo de desenvolvimento (Sprint).
-        Ao final do sprint, será aberto um **Pull Request** da branch `dev` para a `main`, contendo todas as funcionalidades e correções desenvolvidas no período.
+- **At the end of a Sprint:**
+        The `main` branch is the production branch and should only contain stable, tested code. Updates to `main` occur only at the end of each development cycle (Sprint).
+        At the end of the sprint, a **Pull Request** will be opened from the `dev` branch to the `main` branch, containing all features and fixes developed during the cycle.
 
 -----
