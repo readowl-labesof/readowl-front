@@ -15,7 +15,8 @@ export default function AdminEditProfile({ user }: AdminEditProfileProps) {
   const [form, setForm] = useState({
     name: user.name || "",
     description: user.description || "",
-    role: user.role || "USER"
+    role: user.role || "USER",
+    blocked: user.blocked || false
   });
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -180,6 +181,40 @@ export default function AdminEditProfile({ user }: AdminEditProfileProps) {
                 <option value="USER" className="text-gray-800">Usuário</option>
                 <option value="ADMIN" className="text-gray-800">Administrador</option>
               </select>
+            </div>
+
+            {/* Status de bloqueio */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Status da Conta
+              </label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="blocked"
+                    checked={!form.blocked}
+                    onChange={() => setForm({ ...form, blocked: false })}
+                    className="w-4 h-4 text-green-500 bg-white/20 border-white/30 focus:ring-green-500 focus:ring-2"
+                  />
+                  <span className="text-white/90">Ativa</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="blocked"
+                    checked={form.blocked}
+                    onChange={() => setForm({ ...form, blocked: true })}
+                    className="w-4 h-4 text-red-500 bg-white/20 border-white/30 focus:ring-red-500 focus:ring-2"
+                  />
+                  <span className="text-white/90">Bloqueada</span>
+                </label>
+              </div>
+              {form.blocked && (
+                <p className="text-red-300 text-sm mt-2">
+                  ⚠️ Usuário bloqueado não poderá fazer login no sistema
+                </p>
+              )}
             </div>
 
             {/* Mensagens de feedback */}

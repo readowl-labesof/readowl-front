@@ -36,6 +36,7 @@ export default async function AdminEditUserPage({ params }: AdminEditUserPagePro
       description: true,
       image: true,
       role: true,
+      blocked: true,
       createdAt: true,
       updatedAt: true,
       emailVerified: true,

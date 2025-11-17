@@ -30,11 +30,16 @@ export async function PATCH(
     }
 
     // Pegar dados do body
-    const { name, description, role } = await request.json();
+    const { name, description, role, blocked } = await request.json();
 
     // Validar role se foi enviado
     if (role && !["USER", "ADMIN"].includes(role)) {
       return NextResponse.json({ error: "Role inválido" }, { status: 400 });
+    }
+
+    // Validar blocked se foi enviado
+    if (blocked !== undefined && typeof blocked !== 'boolean') {
+      return NextResponse.json({ error: "Status de bloqueio inválido" }, { status: 400 });
     }
 
     // Verificar se usuário existe
@@ -53,6 +58,7 @@ export async function PATCH(
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
         ...(role !== undefined && { role }),
+        ...(blocked !== undefined && { blocked }),
       },
       select: {
         id: true,
@@ -60,6 +66,7 @@ export async function PATCH(
         email: true,
         description: true,
         role: true,
+        blocked: true,
         updatedAt: true,
       },
     });

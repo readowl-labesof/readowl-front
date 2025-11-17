@@ -4,9 +4,11 @@ import Link from "next/link";
 import InputWithIcon from "@/components/ui/input/InputWithIcon";
 import Button from "@/components/ui/button/Button";
 import GoogleButton from "@/components/ui/button/GoogleButton";
+import BlockedAccountModal from "@/components/ui/modal/BlockedAccountModal";
 
 import { useState } from "react";
 import MagicNotification, { MagicNotificationProps } from "@/components/ui/modal/MagicNotification";
+import { useBlockedLogin } from "@/lib/hooks/useBlockedLogin";
 import { signIn } from "next-auth/react";
 
 function Login() {
@@ -23,6 +25,9 @@ function Login() {
   // State to remember login
   const [remember, setRemember] = useState(false);
 
+  // Hook para lidar com contas bloqueadas
+  const { handleLogin, isBlocked, isLoading, setIsBlocked } = useBlockedLogin();
+
   // Handles input changes and resets error state
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,18 +39,18 @@ function Login() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    // Attempt to sign in with credentials
+    
     // Persist the remember preference in a cookie for server-side checks (Lax for CSRF safety)
     document.cookie = `rw_rem=${remember ? "yes" : "no"}; Path=/; SameSite=Lax; ${remember ? "Max-Age=2592000;" : ""}`;
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: form.email,
-      password: form.password,
-      // Pass through for potential server-side use
-      remember: remember ? "true" : "false",
-    });
-    if (res?.error) {
+    // Usar o hook personalizado para lidar com contas bloqueadas
+    const res = await handleLogin(form.email, form.password, remember);
+    
+    if (res?.error === 'BLOCKED_ACCOUNT') {
+      // Conta bloqueada - o modal será mostrado automaticamente
+      setLoading(false);
+      return;
+    } else if (res?.error) {
       // Show error if authentication fails
       setError({ email: "Usuário ou senha inválidos.", password: "Usuário ou senha inválidos." });
       pushToast({ message: 'Credenciais inválidas.', icon: '🔐', bgClass: 'bg-red-600/80' });
@@ -133,8 +138,8 @@ function Login() {
           </div>
           {/* Submit button */}
           <div className="flex justify-center">
-            <Button type="submit" variant="primary" className="md:w-1/2 text-center" disabled={loading}>
-              {loading ? "Logando..." : "Logar"}
+            <Button type="submit" variant="primary" className="md:w-1/2 text-center" disabled={loading || isLoading}>
+              {loading || isLoading ? "Logando..." : "Logar"}
             </Button>
           </div>
         </form>
@@ -148,6 +153,12 @@ function Login() {
           <Link href="/" className="text-xs text-readowl-purple-extralight underline hover:text-white">← Voltar para a página inicial</Link>
         </div>
       </div>
+      
+      {/* Modal para conta bloqueada */}
+      <BlockedAccountModal 
+        isOpen={isBlocked} 
+        onClose={() => setIsBlocked(false)} 
+      />
     </div>
   );
 }

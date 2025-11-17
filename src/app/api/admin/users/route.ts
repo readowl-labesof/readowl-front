@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         image: true,
         role: true,
         description: true,
+        blocked: true,
         createdAt: true,
         emailVerified: true,
       },
