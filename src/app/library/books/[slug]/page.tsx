@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { slugify } from '@/lib/slug';
-import BookHeader from '../../../../components/book/BookHeader';
-import RatingBox from '../../../../components/book/RatingBox';
-import BookActions from '../../../../components/book/BookActions';
-import BookTabs from '../../../../components/book/BookTabs';
-import CoverZoom from '@/components/book/CoverZoom';
+import BookHeader from './ui/BookHeader';
+import RatingBox from './ui/RatingBox';
+import BookActions from './ui/BookActions';
+import BookTabs from './ui/BookTabs';
+import CoverZoom from '@/app/library/books/[slug]/ui/CoverZoom';
 import type { BookWithAuthorAndGenres } from '@/types/book';
 import { sanitizeSynopsisHtml } from '@/lib/sanitize';
 import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
@@ -15,9 +14,7 @@ import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
 interface PageProps { params: Promise<{ slug: string }> }
 
 async function getBookBySlug(slug: string) {
-  // No slug column yet; derive from title for SSR match.
-  const books = await prisma.book.findMany({ include: { author: true, genres: true } });
-  return books.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug }, include: { author: true, genres: true } });
 }
 
 export default async function BookPage({ params }: PageProps) {
@@ -77,8 +74,13 @@ export default async function BookPage({ params }: PageProps) {
               {/* Shared row for infos + buttons, stretched to match the cover height */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div className="min-h-full">
-                  <BookHeader book={book} mode="meta" followersCount={followersCount}
-                    ratingAvg={ratingAvg} ratingCount={ratingCount}
+                  <BookHeader
+                    book={book}
+                    mode="meta"
+                    followersCount={followersCount}
+                    ratingAvg={ratingAvg}
+                    ratingCount={ratingCount}
+                    bookTotalViews={book.totalViews}
                   />
                 </div>
                 <div className="flex min-h-full">

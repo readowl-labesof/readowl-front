@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 
 // Configure allowed tags/attributes for synopsis HTML
 const ALLOWED_TAGS = [
@@ -6,11 +6,7 @@ const ALLOWED_TAGS = [
   'ul', 'ol', 'li',
   'blockquote', 'hr', 'code', 'h2', 'h3'
 ];
-// Base allowed attributes (without style)
-// Note: width/height are globally allowed but will be filtered via hook to only allow on <img> with numeric values
-const BASE_ALLOWED_ATTR = ['href', 'target', 'rel', 'src', 'alt', 'width', 'height'] as const;
 // Extended allowed attributes with style (only enabled when our hook is active)
-const ALLOWED_ATTR_WITH_STYLE = [...BASE_ALLOWED_ATTR, 'style'] as const;
 const ALLOWED_IMAGE_HOSTS = [
   'illusia.com.br',
   'res.cloudinary.com',
@@ -44,52 +40,27 @@ function isAllowedImageUrl(src: string): boolean {
   }
 }
 
-// Ensure we only keep safe CSS in style attributes
-// Specifically, we keep only `text-align: left|center|right|justify` on paragraphs and headings.
-let hookInstalled = false;
-type DPWithHook = typeof DOMPurify & { addHook?: (name: string, cb: (...args: unknown[]) => void) => void };
-function ensureSanitizeHook() {
-  if (hookInstalled) return;
-  const dp = DOMPurify as DPWithHook;
-  if (typeof dp.addHook !== 'function') return; // cannot safely sanitize style; we'll avoid allowing it
-  dp.addHook('uponSanitizeAttribute', (node: Element, data: { attrName: string; attrValue: string; keepAttr?: boolean }) => {
-    const tag = node.nodeName.toLowerCase();
-    // Guard allowed style only on paragraphs/headings and only for text-align
-    if (data.attrName === 'style') {
-      if (!['p', 'h2', 'h3'].includes(tag)) {
-        data.keepAttr = false;
-        return;
-      }
-      const m = /(^|;|\s)text-align\s*:\s*(left|center|right|justify)\s*;?/i.exec(data.attrValue || '');
-      if (m) {
-        const align = (m[2] || '').toLowerCase();
-        data.attrValue = `text-align: ${align};`;
-        data.keepAttr = true;
-      } else {
-        data.keepAttr = false;
-      }
-      return;
-    }
-
-    // Allow numeric width/height only on <img>
-    if (data.attrName === 'width' || data.attrName === 'height') {
-      if (tag !== 'img') { data.keepAttr = false; return; }
-      const n = parseInt((data.attrValue || '').toString(), 10);
-      if (Number.isFinite(n) && n > 0 && n <= 5000) {
-        data.attrValue = String(n); // HTML attribute expects number (pixels)
-        data.keepAttr = true;
-      } else {
-        data.keepAttr = false; // drop invalid values
-      }
-      return;
-    }
+// We sanitize using sanitize-html (works in Node and browsers) and avoid jsdom entirely.
+function sanitizeWithPolicy(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {
+      a: ['href', 'target', 'rel'],
+      img: ['src', 'alt', 'width', 'height'],
+      '*': ['class', 'data-align'],
+    },
+    allowedSchemesByTag: { img: ['http', 'https'] },
+    allowedStyles: {
+      p: { 'text-align': [/^(left|center|right|justify)$/] },
+      h2: { 'text-align': [/^(left|center|right|justify)$/] },
+      h3: { 'text-align': [/^(left|center|right|justify)$/] },
+    },
+    disallowedTagsMode: 'discard',
+    nonTextTags: ['style', 'script', 'textarea', 'option'],
   });
-  hookInstalled = true;
 }
 
 export function sanitizeSynopsisHtml(html: string): string {
-  ensureSanitizeHook();
-  const dp = DOMPurify as DPWithHook;
   let cleaned = '';
   // Preprocess: migrate text-align from style into a safe data-align attribute on p/h2/h3
   // This ensures alignment survives even if 'style' is removed by DOMPurify (in environments without hooks)
@@ -110,15 +81,8 @@ export function sanitizeSynopsisHtml(html: string): string {
   // Normalize spacing: remove empty paragraphs like <p><br></p> or <p>&nbsp;</p> and collapse stray NBSPs
   const preprocessed = normalizeHtmlSpacing(preprocessedAlign);
   try {
-    cleaned = DOMPurify.sanitize(preprocessed, {
-      ALLOWED_TAGS,
-      ALLOWED_ATTR: hookInstalled && typeof dp.addHook === 'function' ? (ALLOWED_ATTR_WITH_STYLE as unknown as string[]) : (BASE_ALLOWED_ATTR as unknown as string[]),
-      ADD_ATTR: ['class', 'data-align'],
-      FORBID_TAGS: ['script', 'style', 'iframe'],
-      FORBID_ATTR: ['onerror', 'onclick', 'onload'],
-    });
+    cleaned = sanitizeWithPolicy(preprocessed);
   } catch {
-    // Fallback: very basic strip of tags (avoid breaking the request entirely)
     cleaned = (html || '').replace(/<[^>]*>/g, ' ');
   }
   // Strip <img> with disallowed hosts
@@ -163,4 +127,24 @@ export function normalizeHtmlSpacing(html: string): string {
   // Remove multiple consecutive empty <p> just in case (after previous rules)
   out = out.replace(/(?:\s*<p\b[^>]*>\s*<\/p>\s*){2,}/gi, '');
   return out;
+}
+
+// Strip all HTML tags and decode a few common entities to plain text
+export function stripHtmlToText(html: string): string {
+  if (!html) return '';
+  // Remove tags
+  let text = html.replace(/<[^>]*>/g, ' ');
+  // Normalize spaces
+  text = text.replace(/\s+/g, ' ').trim();
+  // Basic entity decoding for common cases
+  const entities: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+  };
+  text = text.replace(/(&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;)/g, (m) => entities[m] || m);
+  return text;
 }

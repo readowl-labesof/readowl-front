@@ -43,7 +43,7 @@ export function BookCard({ book }: { book: BookListItem }) {
   const synopsisText = book.synopsis ? stripHtmlToText(book.synopsis) : '';
 
   return (
-    <article className="rounded-2xl overflow-hidden bg-readowl-purple shadow-lg ring-1 ring-readowl-purple/60 text-white">
+    <article className="overflow-hidden bg-readowl-purple shadow-lg ring-1 ring-readowl-purple/60 text-white">
       <div className="flex gap-3 p-3">
         <div className="w-[92px] sm:w-[110px] md:w-[120px] shrink-0 aspect-[3/4] rounded-md overflow-hidden bg-readowl-purple-extralight/20 ring-1 ring-readowl-purple/40">
           {book.coverUrl ? (
