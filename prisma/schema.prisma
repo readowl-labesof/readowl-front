@@ -62,6 +62,19 @@ enum Status {
   PAUSED     // Paused
 }
 
+// Enum for report types on comments (denúncias)
+enum ReportType {
+  INCONVENIENT_CONTENT          // Conteúdo inconveniente
+  THREAT_OR_INTIMIDATION        // Ameaça, intimidação ou abordagem imprópria
+  RISK_TO_INTEGRITY             // Risco à integridade física ou emocional
+  INAPPROPRIATE_SEXUAL_CONTENT  // Material sexual inadequado
+  OFFENSIVE_OR_DISCRIMINATORY   // Discurso ofensivo ou discriminatório
+  VIOLENCE_OR_EXPLOITATION      // Ato violento ou exploração de vulneráveis
+  PROHIBITED_ITEMS              // Divulgação de itens proibidos
+  FRAUD_OR_SUSPICIOUS_ACTIVITY  // Tentativa de engano ou atividade suspeita
+  MISLEADING_INFORMATION        // Informação duvidosa ou enganosa
+}
+
 // User model
 model User {
   id          String   @id @default(cuid())
@@ -316,6 +329,9 @@ model Comment {
   notificationComments Notification[] @relation("NotificationComment")
   notificationReplies Notification[] @relation("NotificationReply")
 
+  // Reports (denúncias) against this comment
+  reports CommentReport[]
+
   @@index([bookId])
   @@index([chapterId])
   @@index([parentId])
@@ -332,6 +348,18 @@ model CommentLike {
 
   @@id([userId, commentId])
   @@index([commentId])
+}
+
+// Anonymous reports for comments. Reporter identity is NOT stored to protect users.
+model CommentReport {
+  id        String     @id @default(cuid())
+  commentId String
+  type      ReportType
+  createdAt DateTime   @default(now())
+
+  comment   Comment    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId, createdAt])
 }
 
 // Views per chapter, auth-only (no IP storage). This mirrors the shared DB table
