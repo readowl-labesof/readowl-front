@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { User as UserIcon, Key, Eye, EyeOff } from "lucide-react";
 import InputWithIcon from "@/components/ui/input/InputWithIcon";
 import Button from "@/components/ui/button/Button";
 import GoogleButton from "@/components/ui/button/GoogleButton";
@@ -8,7 +9,7 @@ import BlockedAccountModal from "@/components/ui/modal/BlockedAccountModal";
 import { useState } from "react";
 import MagicNotification, { MagicNotificationProps } from "@/components/ui/modal/MagicNotification";
 import { useBlockedLogin } from "@/lib/hooks/useBlockedLogin";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
 function Login() {
   // State for form fields

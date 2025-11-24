@@ -12,18 +12,8 @@ export async function PATCH(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
-    if (!currentUser || currentUser.role !== "ADMIN") return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
-
-    // Verificar se é administrador
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
     if (!currentUser || currentUser.role !== "ADMIN") {
-      return NextResponse.json({ 
-        error: "Acesso negado. Apenas administradores podem editar usuários." 
-      }, { status: 403 });
+      return NextResponse.json({ error: "Acesso negado. Apenas administradores podem editar usuários." }, { status: 403 });
     }
 
     // Pegar dados do body
@@ -63,11 +53,10 @@ export async function PATCH(request: Request) {
         email: true,
         description: true,
         role: true,
-        blocked: true,
         updatedAt: true,
       },
     });
-    return NextResponse.json(updated);
+    return NextResponse.json(updatedUser);
   } catch (e) {
     console.error("Erro ao atualizar usuário:", e);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });

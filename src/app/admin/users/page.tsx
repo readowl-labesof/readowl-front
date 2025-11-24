@@ -18,7 +18,6 @@ export default async function AdminUsersPage() {
             image: true,
             role: true,
             description: true,
-            blocked: true,
             createdAt: true,
             updatedAt: true, 
             emailVerified: true,
@@ -30,10 +29,7 @@ export default async function AdminUsersPage() {
         ],
     });
 
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, image: true, role: true, description: true, createdAt: true, updatedAt: true, emailVerified: true, credentialVersion: true },
-    orderBy: [{ role: 'desc' }, { createdAt: 'desc' }],
-  });
+  // Dados já carregados acima em 'users'
 
   return (
     <>

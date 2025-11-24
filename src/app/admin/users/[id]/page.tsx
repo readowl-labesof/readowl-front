@@ -15,32 +15,9 @@ export default async function AdminEditUserPage({ params }: AdminEditUserPagePro
   const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
   if (!currentUser || currentUser.role !== "ADMIN") redirect("/user?error=access-denied");
 
-  // Verificar se é administrador
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true }
-  });
-
-  if (!currentUser || currentUser.role !== "ADMIN") {
-    redirect("/user?error=access-denied");
-  }
-
   // Buscar usuário para editar
   const userToEdit = await prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      description: true,
-      image: true,
-      role: true,
-      blocked: true,
-      createdAt: true,
-      updatedAt: true,
-      emailVerified: true,
-      credentialVersion: true,
-    },
+    where: { id }
   });
 
   if (!userToEdit) {

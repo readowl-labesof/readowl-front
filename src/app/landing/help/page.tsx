@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import LandingHeader from "../about/LandingHeader";
 import AppearCard from "@/components/animation/AppearCard";
 

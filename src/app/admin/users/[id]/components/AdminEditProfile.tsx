@@ -10,6 +10,8 @@ type AdminEditableUser = {
   description: string | null;
   image: string | null;
   role: "USER" | "ADMIN";
+  // Optional to tolerate pages that don't select this field explicitly
+  blocked?: boolean | null;
   createdAt: string | Date;
 };
 
