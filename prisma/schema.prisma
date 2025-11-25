@@ -6,6 +6,15 @@ enum NotificationType {
   NEW_CHAPTER
 }
 
+// Reactions on books (one per user per book)
+enum ReactionType {
+  JOY
+  LOVE
+  FEAR
+  SADNESS
+  ANGER
+}
+
 model Notification {
   id            String           @id @default(cuid())
   userId        String
@@ -124,6 +133,9 @@ model User {
   // Notificações recebidas
   notifications Notification[]
 
+  // Reactions given by this user (one per book)
+  reactions Reaction[]
+
   // Profile image (stored as base64 in separate table)
   profileImage ProfileImage?
 }
@@ -174,6 +186,9 @@ model Book {
 
   // Comments on this book
   comments Comment[]
+
+  // Reactions on this book
+  reactions Reaction[]
 
   // Notificações relacionadas a este livro
   notifications Notification[]
@@ -399,4 +414,21 @@ model ProfileImage {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// A user's single reaction per book (can be changed). Aggregations are computed on demand for now.
+model Reaction {
+  id        String       @id @default(cuid())
+  userId    String
+  bookId    String
+  type      ReactionType
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([bookId])
+  @@index([userId])
 }

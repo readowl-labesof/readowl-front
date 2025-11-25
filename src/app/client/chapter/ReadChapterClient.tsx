@@ -6,6 +6,7 @@ import ButtonWithIcon from '@/components/ui/button/ButtonWithIcon';
 import { Breadcrumb } from '@/components/ui/navbar/Breadcrumb';
 import { useSession } from 'next-auth/react';
 import CommentInput from '@/components/comment/CommentInput';
+import ReactionBar from '@/components/reactions/ReactionBar';
 import CommentsList, { type CommentDto } from '@/components/comment/CommentsList';
 import { Eye, SunMedium, Moon, ArrowLeft, ArrowRight, BookText, Pencil, FilePlus2, FilePenLine } from 'lucide-react';
 
@@ -50,7 +51,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
         const keyBase = 'readowl:chapter:theme';
         const key = userId ? `${keyBase}:u:${userId}` : `${keyBase}:anon`;
         localStorage.setItem(key, next ? 'dark' : 'light');
-      } catch {}
+      } catch { }
       return next;
     });
   }, [userId]);
@@ -84,10 +85,10 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
     let ignore = false;
     (async () => {
       try {
-  // Fire-and-forget view record; ignore errors
+        // Fire-and-forget view record; ignore errors
         const pr = fetch(`/api/books/${slug}/chapters/${chapterSlug}/view`, { method: 'POST' });
-        pr.catch(() => {});
-      } catch {}
+        pr.catch(() => { });
+      } catch { }
       try {
         const tGet0 = performance.now();
         const r = await fetch(`/api/books/${slug}/chapters/${chapterSlug}/views`, { cache: 'no-store' });
@@ -102,7 +103,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
             console.log(`[ReadChapterClient] GET views for ${slug}/${chapterSlug} in ${(tGet1 - tGet0).toFixed(1)}ms`, { initial: initialChapterViewsRef.current, apiCount: data?.count });
           }
         }
-      } catch {}
+      } catch { }
     })();
     return () => { ignore = true; };
   }, [slug, chapterSlug]);
@@ -272,6 +273,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
           {/* Content */}
           <article className={`${containerClass} mt-6`} dangerouslySetInnerHTML={{ __html: payload.chapter.content }} />
 
+
           {/* Bottom controls: Prev / Índice / Next (keep index in middle, align with content width) */}
           {/* Bottom controls */}
           {/* Mobile: prev/next on the same row, index on its own row below */}
@@ -312,10 +314,13 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
             </div>
           </div>
         </div>
+        
+        {/* Reactions (per book, one per user) */}
+        <ReactionBar slug={slug} dark={dark} />
         {/* Comments */}
         <div className="relative rounded-md p-4 md:p-6 font-ptserif mt-6">
-      <label className={`block mb-2 font-semibold ${dark ? 'text-white' : 'text-readowl-purple-extradark'}`}>Deixe um comentário:</label>
-      <CommentInput onSubmit={async (html) => { await fetch(`/api/books/${slug}/chapters/${chapterSlug}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: html }) }); await refetch(); }} />
+          <label className={`block mb-2 font-semibold ${dark ? 'text-white' : 'text-readowl-purple-extradark'}`}>Deixe um comentário:</label>
+          <CommentInput onSubmit={async (html) => { await fetch(`/api/books/${slug}/chapters/${chapterSlug}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: html }) }); await refetch(); }} />
           <div className="mt-4">
             <CommentsList
               comments={comments}
