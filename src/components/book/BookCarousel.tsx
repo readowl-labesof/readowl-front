@@ -51,7 +51,7 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
     const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Loop and clone logic
-    const loopEnabled = books.length > visibleCount + 1;
+    const loopEnabled = books.length > visibleCount;
     const cloneCount = loopEnabled ? Math.min(books.length, visibleCount + 2) : 0;
     const dataset = useMemo(() => {
         if (!loopEnabled) return books;

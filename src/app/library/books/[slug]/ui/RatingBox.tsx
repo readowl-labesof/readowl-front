@@ -9,7 +9,7 @@ type Props = { bookId: string; slug: string };
 function StarIcon({ active }: { active: boolean }) {
     return (
         <Star
-            className="w-16 h-16 text-yellow-400 drop-shadow"
+            className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-yellow-400 drop-shadow"
             strokeWidth={1.5}
             fill={active ? 'currentColor' : 'none'}
         />
@@ -85,7 +85,7 @@ export default function RatingBox({ bookId, slug }: Props) {
     return (
     <div className="relative bg-readowl-purple-light border-2 text-white border-readowl-purple shadow-md p-4 text-center" data-bookid={bookId}>
             <div className="mb-2 text-white font-bold text-4xl">AVALIE ESTA OBRA</div>
-            <div className="inline-flex items-center gap-3 select-none">
+            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 select-none">
                 {Array.from({ length: 5 }).map((_, i) => {
                     const idx = i + 1;
                     const active = display >= idx;

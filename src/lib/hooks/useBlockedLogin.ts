@@ -37,7 +37,7 @@ export function useBlockedLogin() {
 
       setIsLoading(false);
       return result;
-    } catch (error) {
+    } catch {
       setIsLoading(false);
       return { error: 'NETWORK_ERROR' };
     }

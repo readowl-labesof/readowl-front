@@ -76,7 +76,8 @@ export async function GET(req: NextRequest) {
     orderBy.push({ createdAt: orderParam }, { id: 'asc' });
   } else if (sort === 'mostViewedTotal') {
     // use denormalized totalViews field
-    orderBy.push({ totalViews: orderParam }, { ratingAvg: 'desc' }, { id: 'asc' });
+    // Primary by total views; tie/fallback lists all books oldest→newest deterministically
+    orderBy.push({ totalViews: orderParam }, { createdAt: 'asc' }, { id: 'asc' });
   } else if (sort === 'relevance' && q) {
     orderBy.push({ ratingAvg: 'desc' }, { totalViews: 'desc' }, { createdAt: 'desc' }, { id: 'asc' });
   } else {
@@ -183,7 +184,7 @@ export async function GET(req: NextRequest) {
       `;
       // comments: timeframe depends on sort
       const commentsAgg = sort === 'mostCommented'
-        // all-time excluding author for search 'mostCommented'
+        // all-time excluding author for search 'mostCommented'; includes both book and chapter comments via Comment.bookId
         ? await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
             SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
             FROM "Comment" c
@@ -229,10 +230,22 @@ export async function GET(req: NextRequest) {
         const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
         complexOrderedIds = combined.slice(offset, offset + pageSize);
       } else if (sort === 'trending') {
-        // Normalize + weighted like Home page
+        // Normalize + weighted like Home page, with percentile caps
         const values = (m: Map<string, number>) => Array.from(m.values());
         const normalize = (val: number, min: number, max: number) => (max > min ? (val - min) / (max - min) : 0);
-        const vVals = values(vMap); const rVals = values(rMap); const cVals = values(cMap);
+        const percentile = (arr: number[], p: number) => {
+          if (!arr.length) return 0;
+          const sorted = [...arr].sort((a, b) => a - b);
+          const idx = Math.floor((p / 100) * (sorted.length - 1));
+          return sorted[Math.max(0, Math.min(sorted.length - 1, idx))];
+        };
+        const vValsRaw = values(vMap); const rValsRaw = values(rMap); const cValsRaw = values(cMap);
+        const vCap = percentile(vValsRaw, 98);
+        const rCap = percentile(rValsRaw, 95);
+        const cCap = percentile(cValsRaw, 95);
+        const vVals = vValsRaw.map(x => Math.min(x, vCap || x));
+        const rVals = rValsRaw.map(x => Math.min(x, rCap || x));
+        const cVals = cValsRaw.map(x => Math.min(x, cCap || x));
         const min = (arr: number[]) => (arr.length ? Math.min(...arr) : 0);
         const max = (arr: number[]) => (arr.length ? Math.max(...arr) : 0);
         const vMin = min(vVals), vMax = max(vVals);
@@ -241,9 +254,12 @@ export async function GET(req: NextRequest) {
         const weights = { views: 0.2, ratings: 0.45, comments: 0.35 };
         const candidateIdsSet = new Set<string>([...vMap.keys(), ...rMap.keys(), ...cMap.keys()].filter(id => candidateIds.length ? candidateSet.has(id) : true));
         const scores = Array.from(candidateIdsSet).map(id => {
-          const sv = normalize(vMap.get(id) || 0, vMin, vMax);
-          const sr = normalize(rMap.get(id) || 0, rMin, rMax);
-          const sc = normalize(cMap.get(id) || 0, cMin, cMax);
+          const vRaw = Math.min(vMap.get(id) || 0, vCap || (vMap.get(id) || 0));
+          const rRaw = Math.min(rMap.get(id) || 0, rCap || (rMap.get(id) || 0));
+          const cRaw = Math.min(cMap.get(id) || 0, cCap || (cMap.get(id) || 0));
+          const sv = normalize(vRaw, vMin, vMax);
+          const sr = normalize(rRaw, rMin, rMax);
+          const sc = normalize(cRaw, cMin, cMax);
           return { bookId: id, score: sv * weights.views + sr * weights.ratings + sc * weights.comments };
         });
         scores.sort((a, b) => (b.score - a.score) * dirFactor);
@@ -257,9 +273,17 @@ export async function GET(req: NextRequest) {
         complexOrderedIds = combined.slice(offset, offset + pageSize);
       }
     } else if (sort === 'mostRatedTotal') {
-      // All-time: order by ratingCount * ratingAvg, then fill remaining by createdAt ASC
+      // All-time "Mais avaliados" using a Bayesian average to balance avg and count.
+      // score = (v/(v+m)) * R + (m/(v+m)) * C, where C is prior mean (3.5) and m is prior weight (8)
       const candidates = await prisma.book.findMany({ where, select: { id: true, ratingCount: true, ratingAvg: true, createdAt: true } });
-      const rows = candidates.map(b => ({ bookId: b.id, score: (b.ratingCount || 0) * (b.ratingAvg || 0) }));
+      const PRIOR_MEAN = 3.5;
+      const PRIOR_WEIGHT = 8;
+      const rows = candidates.map(b => {
+        const v = Math.max(0, b.ratingCount || 0);
+        const R = Math.max(0, Math.min(5, b.ratingAvg || 0));
+        const score = (v / (v + PRIOR_WEIGHT)) * R + (PRIOR_WEIGHT / (v + PRIOR_WEIGHT)) * PRIOR_MEAN;
+        return { bookId: b.id, score };
+      });
       rows.sort((a, b) => (b.score - a.score) * (orderParam === 'asc' ? -1 : 1));
       complexBaseIds = rows.map(x => x.bookId);
       const remaining = await prisma.book.findMany({
