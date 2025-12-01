@@ -17,7 +17,7 @@ type ApiItem = {
   createdAt: string;
   author: { name: string | null } | null;
   genres: { name: string }[];
-  _count: { comments: number; chapters: number };
+  _count: { comments: number; chapters: number; followers?: number };
 };
 
 export default function SearchResults() {
@@ -73,6 +73,7 @@ export default function SearchResults() {
           genres: b.genres,
           commentsCount: b._count?.comments,
           chaptersCount: b._count?.chapters,
+      followersCount: b._count?.followers,
         }));
         // server handles all sorts now
         setItems(mapped);

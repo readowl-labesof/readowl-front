@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { House, Bell, LibrarySquare, Search as SearchIcon, LogOut as LogOutIcon, User as UserIcon } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
+import Modal from '@/components/ui/modal/Modal';
 // Modal removido pois não é mais usado diretamente
 
 // NavLink removido pois não é mais usado
@@ -20,6 +21,7 @@ export default function FloatingNavbar() {
     const ticking = useRef(false);
 
     const [unread, setUnread] = useState<number>(0);
+    const [logoutOpen, setLogoutOpen] = useState(false);
     // Nova ordem de botões à direita
     const rightLinks: Array<{ label: string; href: string; Icon: React.ElementType }> = [
         { label: 'Home', href: '/home', Icon: House },
@@ -118,7 +120,7 @@ export default function FloatingNavbar() {
                                 )}
                             </button>
                             {/* Logout */}
-                            <button onClick={() => signOut({ callbackUrl: '/landing' })} className="flex items-center justify-center w-9 h-9 text-readowl-purple-extralight/80 transition-colors group" aria-label="Sair">
+                            <button onClick={() => setLogoutOpen(true)} className="flex items-center justify-center w-9 h-9 text-readowl-purple-extralight/80 transition-colors group" aria-label="Sair">
                                 <LogOutIcon className="w-5 h-5 transition-colors text-readowl-purple-extralight/80 group-hover:text-white" />
                             </button>
                         </div>
@@ -128,6 +130,14 @@ export default function FloatingNavbar() {
                 {/* Mobile menu panel e Modal permanecem iguais */}
                 {/* ...existing code... */}
             </header>
+            {/* Logout modal rendered as overlay outside header to ensure full-screen coverage */}
+            <Modal open={logoutOpen} onClose={() => setLogoutOpen(false)} title="Sair da conta?" widthClass="max-w-sm">
+                <p className="text-sm text-readowl-purple-extralight">Tem certeza que deseja sair?</p>
+                <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => setLogoutOpen(false)} className="px-3 py-1 border border-readowl-purple/30">Cancelar</button>
+                    <button type="button" onClick={() => signOut({ callbackUrl: '/landing' })} className="px-3 py-1 bg-readowl-purple-dark text-white">Sair</button>
+                </div>
+            </Modal>
             {/* ...existing code... */}
         </>
     );

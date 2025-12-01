@@ -21,7 +21,7 @@ const sortLabels: Record<SortOption, string> = {
   mostViewedTotal: 'Mais visualizados',
   mostCommented: 'Mais comentados',
   mostFollowed: 'Mais seguidos',
-  chaptersCount: 'Número de capítulos',
+  chaptersCount: 'Mais capítulos',
   alpha: 'Nome',
   oldest: 'Data de criação',
 };

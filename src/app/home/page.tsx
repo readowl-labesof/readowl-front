@@ -6,14 +6,15 @@ import { Breadcrumb } from "@/components/ui/navbar/Breadcrumb";
 import prisma from "@/lib/prisma";
 import BannerCarousel from "@/components/book/BannerCarousel";
 import BookCarousel, { type CarouselBook } from "@/components/book/BookCarousel";
+import TrendingHelpCarousel from "@/components/book/TrendingHelpCarousel";
 import LatestReleasesTable from '@/components/book/LatestReleasesTable';
 import { AppRole } from "@/types/user";
 import {
     Sparkles,
-    TrendingUp,
     Medal,
     Eye,
     MessageSquare,
+    Users,
     Wand2,
 } from "lucide-react";
 
@@ -120,64 +121,117 @@ export default async function Home() {
         });
         // Preserve order by score
             const trendingMap = new Map<string, { id: string; title: string; coverUrl: string | null }>(trendingBooksRaw.map(b => [b.id, b]));
-            const trending = trendingScores
-                .map(s => trendingMap.get(s.bookId))
-                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
-                .map(b => toCarousel(b!));
+                let trending = trendingScores
+                                .map(s => trendingMap.get(s.bookId))
+                                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
+                                .map(b => toCarousel(b!));
+                if (trending.length < LIMIT) {
+                    const exclude = trending.map(b => b.id);
+                    const fill = await prisma.book.findMany({
+                        where: { id: { notIn: exclude } },
+                        orderBy: { createdAt: 'asc' },
+                        take: LIMIT - trending.length,
+                        select: { id: true, slug: true, title: true, coverUrl: true },
+                    });
+                    trending = trending.concat(fill.map(toCarousel));
+                }
 
-                // Mais avaliados (últimos 14 dias, sem autor): quantidade_de_avaliações × média_das_notas
-                const byWeighted = ratingsAgg
-                    .map(r => ({ bookId: r.bookId, WR: Number(r.ratings) * r.avg }))
-                    .sort((a, b) => b.WR - a.WR)
+                // Mais avaliados (all-time): Bayesian average combining ratingAvg and ratingCount
+                // score = (v/(v+m)) * R + (m/(v+m)) * C, with C=3.5 (prior mean), m=8 (prior weight)
+                const candidatesRated = await prisma.book.findMany({
+                    orderBy: [{ ratingCount: 'desc' }, { ratingAvg: 'desc' }],
+                    take: 200,
+                    select: { id: true, slug: true, title: true, coverUrl: true, ratingAvg: true, ratingCount: true, createdAt: true },
+                });
+                const PRIOR_MEAN = 3.5;
+                const PRIOR_WEIGHT = 8;
+                const rankedRated = candidatesRated
+                    .map(b => {
+                        const v = Math.max(0, b.ratingCount || 0);
+                        const R = Math.max(0, Math.min(5, b.ratingAvg || 0));
+                        const score = (v / (v + PRIOR_WEIGHT)) * R + (PRIOR_WEIGHT / (v + PRIOR_WEIGHT)) * PRIOR_MEAN;
+                        return { book: b, score };
+                    })
+                    .sort((a, b) => b.score - a.score)
                     .slice(0, LIMIT);
-    const topRatedRaw = await prisma.book.findMany({ where: { id: { in: byWeighted.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
-            const topRatedMap = new Map<string, { id: string; title: string; coverUrl: string | null }>(topRatedRaw.map(b => [b.id, b]));
-            const maisAvaliados = byWeighted
-                .map(x => topRatedMap.get(x.bookId))
-                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
-                .map(b => toCarousel(b!));
+                let maisAvaliados = rankedRated.map(r => toCarousel(r.book));
+                if (maisAvaliados.length < LIMIT) {
+                    const exclude = maisAvaliados.map(b => b.id);
+                    const fill = await prisma.book.findMany({
+                        where: { id: { notIn: exclude } },
+                        orderBy: { createdAt: 'asc' },
+                        take: LIMIT - maisAvaliados.length,
+                        select: { id: true, slug: true, title: true, coverUrl: true },
+                    });
+                    maisAvaliados = maisAvaliados.concat(fill.map(toCarousel));
+                }
 
-        // Mais visualizados (últimos 14 dias, visualizações únicas)
-        const viewsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
-            SELECT c."bookId" as "bookId", COUNT(DISTINCT v."userId")::bigint as cnt
-            FROM "ChapterView" v JOIN "Chapter" c ON v."chapterId" = c."id"
-            WHERE v."createdAt" >= ${cutoff}
-            GROUP BY c."bookId" ORDER BY cnt DESC LIMIT ${LIMIT};
-        `;
-    const mostViewedRaw = await prisma.book.findMany({ where: { id: { in: viewsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
-            const mvMap = new Map<string, { id: string; title: string; coverUrl: string | null }>(mostViewedRaw.map(b => [b.id, b]));
-            const maisVisualizados = viewsAll
-                .map(x => mvMap.get(x.bookId))
-                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
-                .map(b => toCarousel(b!));
+        // Mais visualizados (all-time): use denormalized Book.totalViews
+        const mvAll = await prisma.book.findMany({
+            orderBy: { totalViews: 'desc' },
+            take: LIMIT,
+            select: { id: true, slug: true, title: true, coverUrl: true },
+        });
+        let maisVisualizados = mvAll.map(toCarousel);
+        if (maisVisualizados.length < LIMIT) {
+            const exclude = maisVisualizados.map(b => b.id);
+            const fill = await prisma.book.findMany({
+                where: { id: { notIn: exclude } },
+                orderBy: { createdAt: 'asc' },
+                take: LIMIT - maisVisualizados.length,
+                select: { id: true, slug: true, title: true, coverUrl: true },
+            });
+            maisVisualizados = maisVisualizados.concat(fill.map(toCarousel));
+        }
 
-                // Mais comentados (últimos 14 dias, exclui autor)
+                // Mais comentados (all-time, exclui autor). Counts both book and chapter comments via Comment.bookId
                 const commentsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
                     SELECT c."bookId" as "bookId", COUNT(*)::bigint as cnt
                     FROM "Comment" c
                     JOIN "Book" b ON b."id" = c."bookId"
-                    WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
+                    WHERE c."userId" <> b."authorId"
                     GROUP BY c."bookId"
                     ORDER BY cnt DESC
                     LIMIT ${LIMIT};
                 `;
     const mostCommentedRaw = await prisma.book.findMany({ where: { id: { in: commentsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
             const mcMap = new Map<string, { id: string; title: string; coverUrl: string | null }>(mostCommentedRaw.map(b => [b.id, b]));
-            const maisComentados = commentsAll
-                .map(x => mcMap.get(x.bookId))
-                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
-                .map(b => toCarousel(b!));
+                        let maisComentados = commentsAll
+                                .map(x => mcMap.get(x.bookId))
+                                .filter((b): b is { id: string; title: string; coverUrl: string | null } => Boolean(b))
+                                .map(b => toCarousel(b!));
+                        if (maisComentados.length < LIMIT) {
+                            const exclude = maisComentados.map(b => b.id);
+                            const fill = await prisma.book.findMany({
+                                where: { id: { notIn: exclude } },
+                                orderBy: { createdAt: 'asc' },
+                                take: LIMIT - maisComentados.length,
+                                select: { id: true, slug: true, title: true, coverUrl: true },
+                            });
+                            maisComentados = maisComentados.concat(fill.map(toCarousel));
+                        }
 
                 // Mais seguidos (all-time) removed from UI for now; keep query commented for future use
-        // const followsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
-        //     SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId" ORDER BY cnt DESC LIMIT ${LIMIT};
-        // `;
-        // const mostFollowedRaw = await prisma.book.findMany({ where: { id: { in: followsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
-        // const mfMap = new Map<string, { id: string; slug?: string | null; title: string; coverUrl: string | null }>(mostFollowedRaw.map(b => [b.id, b]));
-        // const maisSeguidos = followsAll
-        //     .map(x => mfMap.get(x.bookId))
-        //     .filter((b): b is { id: string; slug?: string | null; title: string; coverUrl: string | null } => Boolean(b))
-        //     .map(b => toCarousel(b!));
+        // Mais seguidos (all-time) with fallback to fill by createdAt ASC
+        const followsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
+            SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId" ORDER BY cnt DESC LIMIT ${LIMIT};
+        `;
+        const mostFollowedRaw = await prisma.book.findMany({ where: { id: { in: followsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
+        const mfMap = new Map<string, { id: string; slug?: string | null; title: string; coverUrl: string | null }>(mostFollowedRaw.map(b => [b.id, b]));
+        let maisSeguidos = followsAll
+            .map(x => mfMap.get(x.bookId))
+            .filter((b): b is { id: string; slug?: string | null; title: string; coverUrl: string | null } => Boolean(b))
+            .map(b => toCarousel(b!));
+        if (maisSeguidos.length < LIMIT) {
+            const exclude = maisSeguidos.map(b => b.id);
+            const fill = await prisma.book.findMany({
+                where: { id: { notIn: exclude } },
+                orderBy: { createdAt: 'asc' },
+                take: LIMIT - maisSeguidos.length,
+                select: { id: true, slug: true, title: true, coverUrl: true },
+            });
+            maisSeguidos = maisSeguidos.concat(fill.map(toCarousel));
+        }
 
         // Quem sabe você goste: aleatórios
         const randomIds = await prisma.$queryRaw<Array<{ id: string }>>`
@@ -203,7 +257,7 @@ export default async function Home() {
                     <BookCarousel title="Novidades!" icon={<Sparkles size={18} />} books={novidades} itemsPerView={6} />
                 </div>
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
-                    <BookCarousel title="Em destaque!" icon={<TrendingUp size={18} />} books={trending} itemsPerView={6} />
+                    <TrendingHelpCarousel books={trending} itemsPerView={6} />
                 </div>
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais avaliados!" icon={<Medal size={18} />} books={maisAvaliados} itemsPerView={6} />
@@ -214,9 +268,9 @@ export default async function Home() {
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais comentados!" icon={<MessageSquare size={18} />} books={maisComentados} itemsPerView={6} />
                 </div>
-                {/* <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
+                <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais seguidos!" icon={<Users size={18} />} books={maisSeguidos} itemsPerView={6} />
-                </div> */}
+                </div>
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-8">
                     <BookCarousel title="Quem sabe você goste!" icon={<Wand2 size={18} />} books={quemSabe} itemsPerView={6} />
                 </div>

@@ -434,7 +434,7 @@ export default function BannerCarousel({ initialBanners = [], isAdmin = false, c
 
       {/* Bullets */}
       {n > 1 && (
-        <div className="mt-2 flex items-center justify-center gap-2">
+        <div className="mt-2 flex items-center justify-center gap-2 flex-wrap" aria-label="Indicadores de posição">
           {banners.map((_, i) => (
             <button
               key={i}
@@ -447,9 +447,10 @@ export default function BannerCarousel({ initialBanners = [], isAdmin = false, c
                 setVirtualIndex(targetReal);
               }}
               aria-label={`Ir para banner ${i + 1}`}
-              className={`h-2.5 rounded-full transition-all ${i === activeIndex ? "bg-readowl-purple w-5" : "bg-readowl-purple-extralight w-2.5 hover:bg-readowl-purple-medium/70"}`}
-            />)
-          )}
+              aria-current={i === activeIndex}
+              className={`h-2.5 transition-all ${i === activeIndex ? "bg-readowl-purple w-5" : "bg-readowl-purple-light/50 w-2 hover:bg-readowl-purple-light/80"}`}
+            />
+          ))}
         </div>
       )}
 

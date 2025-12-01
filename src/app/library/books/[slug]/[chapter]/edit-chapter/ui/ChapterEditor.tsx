@@ -141,17 +141,23 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
       onUpdate({ editor }: any) {
         const text = editor.getText();
         if (typeof maxChars === 'number' && text.length > maxChars) {
-          // revert to the last valid content
-          editor.commands.setContent(lastGoodHtmlRef.current || '<p></p>', false);
+          // Revert content in a microtask to avoid nested updates/flush during TipTap lifecycle
+          const revertTo = lastGoodHtmlRef.current || '<p></p>';
+          queueMicrotask(() => {
+            try { editor.commands.setContent(revertTo, false); } catch {}
+          });
           return;
         }
         const trimmed = text.trim();
-        setIsEmpty(trimmed.length === 0);
-        setCharCount(text.length);
-        setWordCount(trimmed ? trimmed.split(/\s+/).length : 0);
         const html = editor.getHTML();
         lastGoodHtmlRef.current = html;
-        onChange(html);
+        // Defer React state updates to avoid flushSync warnings inside TipTap lifecycle
+        queueMicrotask(() => {
+          setIsEmpty(trimmed.length === 0);
+          setCharCount(text.length);
+          setWordCount(trimmed ? trimmed.split(/\s+/).length : 0);
+          onChange(html);
+        });
       },
     },
     []
@@ -183,7 +189,7 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
   return (
     <div className="w-full font-ptserif">
       {/* Toolbar with extralight background and all controls */}
-      <div className="flex flex-wrap items-center gap-2 text-readowl-purple-medium bg-readowl-purple-extralight px-2 py-1 border-b border-readowl-purple/10">
+      <div className="flex flex-wrap items-center gap-2 text-readowl-purple-medium bg-readowl-purple-extralight px-1 py-1 border-b border-readowl-purple/10">
         {/* Undo/Redo */}
         <button title="Desfazer" onClick={() => editor?.chain().focus().undo().run()} className="px-1 py-0.5 rounded-none hover:bg-readowl-purple-extralight/40">
           <Undo2 size={18} />
@@ -321,8 +327,8 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
         </button>
       </div>
 
-      {/* Editor area on extralight */}
-      <div className="relative bg-readowl-purple-extralight px-3 py-2 min-h-[16rem]">
+      {/* Editor area on extralight with internal scroll */}
+      <div className="relative bg-readowl-purple-extralight px-3 py-2 min-h-[16rem] max-h-[60vh] overflow-y-auto">
         {isEmpty && (
           <div className="absolute top-2 left-3 text-readowl-purple-extradark/40 pointer-events-none select-none">Conteúdo...</div>
         )}

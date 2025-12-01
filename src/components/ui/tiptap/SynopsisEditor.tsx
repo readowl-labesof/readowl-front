@@ -243,7 +243,7 @@ export default function SynopsisEditor({ value, onChange, maxChars, error, showE
         onClick={() => editor?.chain().focus().run()}
       >
         {/* Toolbar (desktop) */}
-        <div className="hidden md:flex flex-nowrap items-center gap-1.5 whitespace-nowrap text-readowl-purple-medium bg-white px-2 py-1 border-b border-readowl-purple/10">
+        <div className="hidden md:flex flex-nowrap items-center gap-1 whitespace-nowrap text-readowl-purple-medium bg-white px-2 py-1 border-b border-readowl-purple/10">
           <button
             type="button"
             title="Desfazer (Ctrl/Cmd+Z)"
