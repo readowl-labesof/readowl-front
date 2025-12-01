@@ -1,34 +1,29 @@
+version: '3.8'
+
 services:
-  # Dedicated Postgres for the Next.js project.
-  # Exposes 5433 on the host to avoid clashing with any other Postgres you may have.
-  postgres:
-    image: postgres:16-alpine
-    container_name: readowl_next_db
-    restart: unless-stopped
+  app:
+    build: .
+    ports:
+      - "8081:3000"
+    env_file:
+      - .env.production
+    depends_on:
+      - db
+    
+    # --- ADICIONE ESTA LINHA ---
+    restart: always
+
+  db:
+    image: postgres:15
+    restart: always # Esta linha você já tinha
     environment:
-      POSTGRES_USER: readowl
-      POSTGRES_PASSWORD: readowl
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: readowl
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - readowl_next_pgdata:/var/lib/postgresql/data
-
-  # Optional: pgAdmin for managing the Postgres of this project.
-  # Reads default admin credentials from environment variables if provided.
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   container_name: readowl_next_pgadmin
-  #   restart: unless-stopped
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
-  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-  #   ports:
-  #     - "5051:80" # Access pgAdmin at http://localhost:5051
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway" # allow pgAdmin container to reach host ports on Linux
-  #   depends_on:
-  #     - postgres
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  readowl_next_pgdata:
+  postgres_data:
