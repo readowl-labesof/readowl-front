@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
 	open: boolean;
@@ -41,7 +42,7 @@ export default function Modal({
 
 	if (!open) return null;
 
-	return (
+	const overlay = (
 		<div
 			className="fixed inset-0 z-[150] flex items-center justify-center"
 			aria-modal="true"
@@ -80,5 +81,8 @@ export default function Modal({
 			`}</style>
 		</div>
 	);
+
+	// Render via portal to escape any ancestor stacking/overflow contexts (e.g., navbar)
+	return createPortal(overlay, typeof window !== 'undefined' ? document.body : ({} as unknown as Element));
 }
 

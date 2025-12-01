@@ -15,6 +15,7 @@ import {
     Medal,
     Eye,
     MessageSquare,
+    Users,
     Wand2,
 } from "lucide-react";
 
@@ -210,15 +211,26 @@ export default async function Home() {
                         }
 
                 // Mais seguidos (all-time) removed from UI for now; keep query commented for future use
-        // const followsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
-        //     SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId" ORDER BY cnt DESC LIMIT ${LIMIT};
-        // `;
-        // const mostFollowedRaw = await prisma.book.findMany({ where: { id: { in: followsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
-        // const mfMap = new Map<string, { id: string; slug?: string | null; title: string; coverUrl: string | null }>(mostFollowedRaw.map(b => [b.id, b]));
-        // const maisSeguidos = followsAll
-        //     .map(x => mfMap.get(x.bookId))
-        //     .filter((b): b is { id: string; slug?: string | null; title: string; coverUrl: string | null } => Boolean(b))
-        //     .map(b => toCarousel(b!));
+        // Mais seguidos (all-time) with fallback to fill by createdAt ASC
+        const followsAll = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
+            SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId" ORDER BY cnt DESC LIMIT ${LIMIT};
+        `;
+        const mostFollowedRaw = await prisma.book.findMany({ where: { id: { in: followsAll.map(x => x.bookId) } }, select: { id: true, slug: true, title: true, coverUrl: true } });
+        const mfMap = new Map<string, { id: string; slug?: string | null; title: string; coverUrl: string | null }>(mostFollowedRaw.map(b => [b.id, b]));
+        let maisSeguidos = followsAll
+            .map(x => mfMap.get(x.bookId))
+            .filter((b): b is { id: string; slug?: string | null; title: string; coverUrl: string | null } => Boolean(b))
+            .map(b => toCarousel(b!));
+        if (maisSeguidos.length < LIMIT) {
+            const exclude = maisSeguidos.map(b => b.id);
+            const fill = await prisma.book.findMany({
+                where: { id: { notIn: exclude } },
+                orderBy: { createdAt: 'asc' },
+                take: LIMIT - maisSeguidos.length,
+                select: { id: true, slug: true, title: true, coverUrl: true },
+            });
+            maisSeguidos = maisSeguidos.concat(fill.map(toCarousel));
+        }
 
         // Quem sabe você goste: aleatórios
         const randomIds = await prisma.$queryRaw<Array<{ id: string }>>`
@@ -255,9 +267,9 @@ export default async function Home() {
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais comentados!" icon={<MessageSquare size={18} />} books={maisComentados} itemsPerView={6} />
                 </div>
-                {/* <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
+                <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais seguidos!" icon={<Users size={18} />} books={maisSeguidos} itemsPerView={6} />
-                </div> */}
+                </div>
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-8">
                     <BookCarousel title="Quem sabe você goste!" icon={<Wand2 size={18} />} books={quemSabe} itemsPerView={6} />
                 </div>

@@ -129,14 +129,15 @@ export default function FloatingNavbar() {
                 {/* ...existing code... (mobile menu, modal) */}
                 {/* Mobile menu panel e Modal permanecem iguais */}
                 {/* ...existing code... */}
-                <Modal open={logoutOpen} onClose={() => setLogoutOpen(false)} title="Sair da conta?" widthClass="max-w-sm">
-                    <p className="text-sm text-readowl-purple-extradark">Tem certeza que deseja sair?</p>
-                    <div className="mt-4 flex justify-end gap-2">
-                        <button type="button" onClick={() => setLogoutOpen(false)} className="px-3 py-1 border border-readowl-purple/30">Cancelar</button>
-                        <button type="button" onClick={() => signOut({ callbackUrl: '/landing' })} className="px-3 py-1 bg-readowl-purple-dark text-white">Sair</button>
-                    </div>
-                </Modal>
             </header>
+            {/* Logout modal rendered as overlay outside header to ensure full-screen coverage */}
+            <Modal open={logoutOpen} onClose={() => setLogoutOpen(false)} title="Sair da conta?" widthClass="max-w-sm">
+                <p className="text-sm text-readowl-purple-extralight">Tem certeza que deseja sair?</p>
+                <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => setLogoutOpen(false)} className="px-3 py-1 border border-readowl-purple/30">Cancelar</button>
+                    <button type="button" onClick={() => signOut({ callbackUrl: '/landing' })} className="px-3 py-1 bg-readowl-purple-dark text-white">Sair</button>
+                </div>
+            </Modal>
             {/* ...existing code... */}
         </>
     );

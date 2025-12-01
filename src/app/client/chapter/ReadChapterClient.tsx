@@ -63,6 +63,10 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
   // Keyboard navigation: Left/Right arrows
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      const ae = document.activeElement as HTMLElement | null;
+      const tag = (ae?.tagName || '').toLowerCase();
+      const isTypingField = tag === 'input' || tag === 'textarea' || tag === 'select' || ae?.isContentEditable;
+      if (isTypingField) return; // don't navigate while typing/editing
       if (e.key === 'ArrowLeft' && prevHref) router.push(prevHref);
       if (e.key === 'ArrowRight' && nextHref) router.push(nextHref);
     }

@@ -9,8 +9,12 @@ import { redirect } from "next/navigation";
 import type { SafeUser } from "@/types/user";
 
 export default async function AdminUsersPage() {
-    // Buscar todos os usuários
-    const users = await prisma.user.findMany({
+  // Admin-only gate: non-admins go to 403
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'ADMIN') redirect('/403');
+
+  // Buscar todos os usuários (after auth)
+  const users = await prisma.user.findMany({
         select: {
             id: true,
             name: true,

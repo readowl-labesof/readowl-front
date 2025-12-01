@@ -6,6 +6,7 @@ import { stripHtmlToText } from '@/lib/sanitize';
 type SortKey =
   | 'trending'           // Em destaque (14 dias, pesos)
   | 'topRated14d'        // quantidade * média (14 dias)
+  | 'mostRatedTotal'     // all-time: ratingCount * ratingAvg
   | 'mostViewedTotal'    // visualizações totais
   | 'mostCommented'      // comentários (all-time)
   | 'chaptersCount'      // número de capítulos
@@ -93,12 +94,13 @@ export async function GET(req: NextRequest) {
     coverUrl: true,
     views: true,
     totalViews: true,
+    ratingCount: true,
     ratingAvg: true,
     status: true,
     createdAt: true,
     author: { select: { name: true } },
     genres: { select: { name: true } },
-    _count: { select: { comments: true, chapters: true } },
+    _count: { select: { comments: true, chapters: true, followers: true } },
   } satisfies Prisma.BookSelect;
 
   type BookRow = Prisma.BookGetPayload<{ select: typeof bookSelect }>;
@@ -153,7 +155,7 @@ export async function GET(req: NextRequest) {
   // Complex sorts: compute ordered ids using aggregates
   let complexOrderedIds: string[] | null = null;
   let complexBaseIds: string[] | null = null; // ids produced by aggregate scoring before fallback
-  if (['trending', 'topRated14d', 'mostCommented', 'chaptersCount', 'mostFollowed'].includes(sort)) {
+  if (['trending', 'topRated14d', 'mostRatedTotal', 'mostCommented', 'chaptersCount', 'mostFollowed'].includes(sort)) {
     // establish candidate set based on filters to avoid expensive global ranking when possible
     const candidateIds = await prisma.book.findMany({ where, select: { id: true } }).then(rows => rows.map(r => r.id));
     const candidateSet = new Set(candidateIds);
@@ -179,14 +181,24 @@ export async function GET(req: NextRequest) {
         WHERE br."createdAt" >= ${cutoff} AND br."userId" <> b."authorId"
         GROUP BY br."bookId";
       `;
-      // comments 14d excluding author
-      const commentsAgg = await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
-        SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
-        FROM "Comment" c
-        JOIN "Book" b ON b."id" = c."bookId"
-        WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
-        GROUP BY c."bookId";
-      `;
+      // comments: timeframe depends on sort
+      const commentsAgg = sort === 'mostCommented'
+        // all-time excluding author for search 'mostCommented'
+        ? await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
+            SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
+            FROM "Comment" c
+            JOIN "Book" b ON b."id" = c."bookId"
+            WHERE c."userId" <> b."authorId"
+            GROUP BY c."bookId";
+          `
+        // trending context (14d)
+        : await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
+            SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
+            FROM "Comment" c
+            JOIN "Book" b ON b."id" = c."bookId"
+            WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
+            GROUP BY c."bookId";
+          `;
       const vArr = applyCandidates(viewsAgg.map(v => ({ bookId: v.bookId, cnt: v.views })));
       const rArr = applyCandidates(ratingsAgg.map(r => ({ bookId: r.bookId, WR: Number(r.ratings) * r.avg })));
       const cArr = applyCandidates(commentsAgg.map(c => ({ bookId: c.bookId, cnt: c.comments })));
@@ -244,6 +256,19 @@ export async function GET(req: NextRequest) {
         const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
         complexOrderedIds = combined.slice(offset, offset + pageSize);
       }
+    } else if (sort === 'mostRatedTotal') {
+      // All-time: order by ratingCount * ratingAvg, then fill remaining by createdAt ASC
+      const candidates = await prisma.book.findMany({ where, select: { id: true, ratingCount: true, ratingAvg: true, createdAt: true } });
+      const rows = candidates.map(b => ({ bookId: b.id, score: (b.ratingCount || 0) * (b.ratingAvg || 0) }));
+      rows.sort((a, b) => (b.score - a.score) * (orderParam === 'asc' ? -1 : 1));
+      complexBaseIds = rows.map(x => x.bookId);
+      const remaining = await prisma.book.findMany({
+        where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+        select: { id: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+      complexOrderedIds = combined.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
     } else if (sort === 'chaptersCount') {
       const chAgg = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
         SELECT "bookId", COUNT(*)::bigint as cnt FROM "Chapter" GROUP BY "bookId";
@@ -266,8 +291,14 @@ export async function GET(req: NextRequest) {
       const rows = applyCandidates(flAgg.map(x => ({ bookId: x.bookId, cnt: x.cnt })));
       rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * (orderParam === 'asc' ? -1 : 1));
       complexBaseIds = rows.map(x => x.bookId);
-      // For follows, do not append fallback unless desired; keeping current behavior
-      complexOrderedIds = complexBaseIds.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
+      // Append remaining books (including with zero followers) by createdAt ASC
+      const remaining = await prisma.book.findMany({
+        where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+        select: { id: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+      complexOrderedIds = combined.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
     }
   }
 
