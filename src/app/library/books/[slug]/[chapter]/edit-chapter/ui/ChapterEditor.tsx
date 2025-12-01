@@ -189,7 +189,7 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
   return (
     <div className="w-full font-ptserif">
       {/* Toolbar with extralight background and all controls */}
-      <div className="flex flex-wrap items-center gap-2 text-readowl-purple-medium bg-readowl-purple-extralight px-2 py-1 border-b border-readowl-purple/10">
+      <div className="flex flex-wrap items-center gap-2 text-readowl-purple-medium bg-readowl-purple-extralight px-1 py-1 border-b border-readowl-purple/10">
         {/* Undo/Redo */}
         <button title="Desfazer" onClick={() => editor?.chain().focus().undo().run()} className="px-1 py-0.5 rounded-none hover:bg-readowl-purple-extralight/40">
           <Undo2 size={18} />
