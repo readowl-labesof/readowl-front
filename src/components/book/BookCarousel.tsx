@@ -8,7 +8,7 @@ import { slugify } from "@/lib/slug";
 // Minimal data shape
 export interface CarouselBook { id: string; title: string; coverUrl: string | null; slug?: string }
 // Public API (kept stable)
-interface BookCarouselProps { books: CarouselBook[]; title: string; icon?: React.ReactNode; itemsPerView?: number; emptyMessage?: string; storageKey?: string }
+interface BookCarouselProps { books: CarouselBook[]; title: string; icon?: React.ReactNode; itemsPerView?: number; emptyMessage?: string; storageKey?: string; rightAction?: React.ReactNode }
 
 // Placeholder when no cover
 const NoCover = (
@@ -28,6 +28,7 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
     itemsPerView = 5,
     emptyMessage = "Nenhuma obra registrada.",
     storageKey,
+    rightAction,
 }) => {
     // Refs
     const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -270,9 +271,15 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
     return (
         <section ref={sectionRef} tabIndex={0} aria-roledescription="carousel" aria-label={title} className="mt-8 w-full">
             <div className="relative">
-                <div className="flex items-center justify-center gap-2 bg-readowl-purple-medium px-6 sm:px-8 py-2 text-white font-ptserif text-lg select-none shadow mx-auto max-w-full">
-                    <span className="w-5 h-5 inline-flex items-center justify-center">{icon}</span>
-                    <h2 className="text-sm sm:text-base md:text-lg font-ptserif tracking-wide">{title}</h2>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center bg-readowl-purple-medium px-6 sm:px-8 py-2 text-white font-ptserif text-lg select-none shadow mx-auto max-w-full">
+                    <div />
+                    <div className="flex items-center justify-center gap-2">
+                        <span className="w-5 h-5 inline-flex items-center justify-center">{icon}</span>
+                        <h2 className="text-sm sm:text-base md:text-lg font-ptserif tracking-wide">{title}</h2>
+                    </div>
+                    <div className="flex items-center justify-end">
+                        {rightAction}
+                    </div>
                 </div>
             </div>
 

@@ -49,7 +49,26 @@ export default function ReactionBar({ slug, dark }: ReactionBarProps) {
     }
     if (loading) return;
     const next = meta.type;
-    if (selected === next) return; // already selected
+    // Toggle off if clicking the same reaction again
+    if (selected === next) {
+      setError(null);
+      setLoading(true);
+      // Optimistic update: decrement and clear selection
+      setCounts((prev) => ({ ...prev, [next]: Math.max(0, (prev[next] || 0) - 1) }));
+      setSelected(null);
+      try {
+        const r = await fetch(`/api/books/${slug}/reactions`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reaction: next }) });
+        if (!r.ok) throw new Error('Falha ao remover reação');
+        const data: CountsResponse = await r.json();
+        setCounts(data.counts);
+        setSelected(data.userReaction);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro desconhecido');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     setError(null);
     setLoading(true);
     // Optimistic update
@@ -74,22 +93,28 @@ export default function ReactionBar({ slug, dark }: ReactionBarProps) {
   }
 
   return (
-    <div className={`relative rounded-md p-4 md:p-6 mt-6 font-ptserif ${dark ? 'bg-readowl-purple-extradark text-white' : 'bg-readowl-purple-extralight text-readowl-purple-extradark'} shadow-md`}>      
-      <h3 className="text-center font-bold text-xl mb-4 tracking-wide">DEIXE UMA REAÇÃO AO CAPÍTULO</h3>
-      <div className="flex flex-wrap md:flex-nowrap items-stretch justify-center gap-4">
-        {reactionMetas.map((meta) => {
+    <div className={`relative rounded-md p-3 md:p-6 mt-6 font-ptserif ${dark ? 'bg-readowl-purple-extradark text-white' : 'bg-readowl-purple-extralight text-readowl-purple-extradark'} shadow-md`}>      
+      <h3 className="text-center font-bold text-2xl sm:text-3xl md:text-4xl mb-6 md:mb-8 tracking-wide">DEIXE SUA REAÇÃO AO CAPÍTULO</h3>
+      <div className="flex flex-wrap items-stretch justify-center gap-3 sm:gap-5 md:gap-8">
+        {["LOVE", "SADNESS", "ANGER", "FEAR", "JOY"].map((typeKey) => {
+          const meta = reactionMetas.find(m => m.type === typeKey)!;
           const isSel = selected === meta.type;
+          // Cards: roxo claro no tema claro, roxo escuro no tema escuro
+          const customBg = dark
+            ? 'bg-readowl-purple/50 hover:bg-readowl-purple'
+            : 'bg-readowl-purple-extralight hover:bg-readowl-purple-200';
           return (
             <button
               key={meta.type}
               onClick={() => handleClick(meta)}
               disabled={loading}
-              className={`group relative flex flex-col items-center justify-center w-24 h-24 rounded-xl border border-transparent ${meta.color} ${meta.hover} transition-all duration-300 ease-out shadow-sm hover:shadow-lg focus:outline-none ${isSel ? `ring-4 ${meta.ring} scale-105 shadow-xl` : 'hover:scale-105'} active:scale-95`}
+              className={`group relative flex flex-col items-center justify-center w-[20%] min-w-[84px] sm:w-40 md:w-48 h-24 sm:h-40 md:h-48 rounded-3xl border border-transparent ${customBg} transition-all duration-300 ease-out shadow-md hover:shadow-lg focus:outline-none ${isSel ? `ring-4 ${meta.ring} scale-105 shadow-xl` : 'hover:scale-105'} active:scale-95`}
+              title={meta.label}
             >
-              <div className="w-14 h-14 flex items-center justify-center">
-                <Image src={meta.image} alt={meta.label} width={56} height={56} className={`object-contain drop-shadow-sm ${isSel ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
+              <div className="w-16 h-16 sm:w-28 sm:h-28 md:w-36 md:h-36 flex items-center justify-center">
+                <Image src={meta.image} alt={meta.label} width={144} height={144} className="object-contain drop-shadow-sm" />
               </div>
-              <div className={`mt-1 text-sm font-semibold ${dark ? 'text-white' : 'text-readowl-purple-extradark'}`}>{counts[meta.type] ?? 0}</div>
+              <div className={`mt-2 sm:mt-3 text-lg sm:text-2xl md:text-3xl font-bold ${dark ? 'text-white' : 'text-readowl-purple-extradark'}`}>{counts[meta.type] ?? 0}</div>
               <span className="sr-only">{meta.label}</span>
             </button>
           );
@@ -99,9 +124,9 @@ export default function ReactionBar({ slug, dark }: ReactionBarProps) {
         <p className="mt-4 text-center text-sm text-red-400">{error}</p>
       )}
       {session?.user?.id ? (
-        <p className="mt-4 text-center text-xs opacity-70">Sua reação pode ser alterada a qualquer momento.</p>
+        <p className="mt-6 text-center text-2xl font-semibold opacity-80">Sua reação pode ser alterada a qualquer momento.</p>
       ) : (
-        <p className="mt-4 text-center text-xs opacity-70">Faça login para reagir.</p>
+        <p className="mt-6 text-center text-2xl font-semibold opacity-80">Faça login para reagir.</p>
       )}
     </div>
   );

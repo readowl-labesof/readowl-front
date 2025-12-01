@@ -80,7 +80,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
     typeof payload.chapter.totalViews === 'number' ? payload.chapter.totalViews : null
   );
   const [views, setViews] = React.useState<number | null>(initialChapterViewsRef.current);
-  const [canSeeViews, setCanSeeViews] = React.useState<boolean>(true);
+  const [canSeeViews, setCanSeeViews] = React.useState<boolean>(false);
   React.useEffect(() => {
     let ignore = false;
     (async () => {

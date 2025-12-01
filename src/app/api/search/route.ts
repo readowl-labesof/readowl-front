@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
 
   // Complex sorts: compute ordered ids using aggregates
   let complexOrderedIds: string[] | null = null;
+  let complexBaseIds: string[] | null = null; // ids produced by aggregate scoring before fallback
   if (['trending', 'topRated14d', 'mostCommented', 'chaptersCount', 'mostFollowed'].includes(sort)) {
     // establish candidate set based on filters to avoid expensive global ranking when possible
     const candidateIds = await prisma.book.findMany({ where, select: { id: true } }).then(rows => rows.map(r => r.id));
@@ -195,15 +196,26 @@ export async function GET(req: NextRequest) {
       if (sort === 'topRated14d') {
         const rows = Array.from(rMap.entries()).map(([bookId, WR]) => ({ bookId, WR }));
         rows.sort((a, b) => (b.WR - a.WR) * dirFactor);
-        const total = rows.length;
-        complexOrderedIds = rows.slice(offset, offset + pageSize).map(x => x.bookId);
-        totalExact = total;
+        complexBaseIds = rows.map(x => x.bookId);
+        // Fallback: append remaining books by oldest creation date
+        const remaining = await prisma.book.findMany({
+          where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+          select: { id: true },
+          orderBy: { createdAt: 'asc' },
+        });
+        const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+        complexOrderedIds = combined.slice(offset, offset + pageSize);
       } else if (sort === 'mostCommented') {
         const rows = Array.from(cMap.entries()).map(([bookId, cnt]) => ({ bookId, cnt }));
         rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * dirFactor);
-        const total = rows.length;
-        complexOrderedIds = rows.slice(offset, offset + pageSize).map(x => x.bookId);
-        totalExact = total;
+        complexBaseIds = rows.map(x => x.bookId);
+        const remaining = await prisma.book.findMany({
+          where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+          select: { id: true },
+          orderBy: { createdAt: 'asc' },
+        });
+        const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+        complexOrderedIds = combined.slice(offset, offset + pageSize);
       } else if (sort === 'trending') {
         // Normalize + weighted like Home page
         const values = (m: Map<string, number>) => Array.from(m.values());
@@ -223,9 +235,14 @@ export async function GET(req: NextRequest) {
           return { bookId: id, score: sv * weights.views + sr * weights.ratings + sc * weights.comments };
         });
         scores.sort((a, b) => (b.score - a.score) * dirFactor);
-        const total = scores.length;
-        complexOrderedIds = scores.slice(offset, offset + pageSize).map(x => x.bookId);
-        totalExact = total;
+        complexBaseIds = scores.map(x => x.bookId);
+        const remaining = await prisma.book.findMany({
+          where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+          select: { id: true },
+          orderBy: { createdAt: 'asc' },
+        });
+        const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+        complexOrderedIds = combined.slice(offset, offset + pageSize);
       }
     } else if (sort === 'chaptersCount') {
       const chAgg = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
@@ -233,18 +250,24 @@ export async function GET(req: NextRequest) {
       `;
       const rows = applyCandidates(chAgg.map(x => ({ bookId: x.bookId, cnt: x.cnt })));
       rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * (orderParam === 'asc' ? -1 : 1));
-      const total = rows.length;
-      complexOrderedIds = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map(x => x.bookId);
-      totalExact = total;
+      complexBaseIds = rows.map(x => x.bookId);
+      // Append books with zero chapters (or not in agg) by createdAt ASC
+      const remaining = await prisma.book.findMany({
+        where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+        select: { id: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+      complexOrderedIds = combined.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
     } else if (sort === 'mostFollowed') {
       const flAgg = await prisma.$queryRaw<Array<{ bookId: string; cnt: bigint }>>`
         SELECT "bookId", COUNT(*)::bigint as cnt FROM "BookFollow" GROUP BY "bookId";
       `;
       const rows = applyCandidates(flAgg.map(x => ({ bookId: x.bookId, cnt: x.cnt })));
       rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * (orderParam === 'asc' ? -1 : 1));
-      const total = rows.length;
-      complexOrderedIds = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map(x => x.bookId);
-      totalExact = total;
+      complexBaseIds = rows.map(x => x.bookId);
+      // For follows, do not append fallback unless desired; keeping current behavior
+      complexOrderedIds = complexBaseIds.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
     }
   }
 
