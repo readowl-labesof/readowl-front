@@ -17,3 +17,7 @@ declare module '@tiptap/extension-image' {
 declare module 'isomorphic-dompurify' {
   const DOMPurify: any; export default DOMPurify;
 }
+declare module 'sanitize-html' {
+  const sanitizeHtml: any;
+  export default sanitizeHtml;
+}

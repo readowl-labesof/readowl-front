@@ -14,6 +14,7 @@ if (missingGoogle) {
 
 export const authOptions: NextAuthOptions = {
 	adapter: PrismaAdapter(prisma),
+	debug: process.env.NEXTAUTH_DEBUG === 'true',
 	providers: [
 		...(missingGoogle
 			? []
@@ -22,7 +23,13 @@ export const authOptions: NextAuthOptions = {
 						clientId: process.env.GOOGLE_CLIENT_ID as string,
 						clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
 						authorization: {
-							params: { prompt: "consent", access_type: "offline", response_type: "code" },
+							// Force showing account picker to avoid reusing previous Google session
+							// Keep consent for refresh token issuance in some scenarios
+							params: {
+								prompt: "select_account consent",
+								access_type: "offline",
+								response_type: "code",
+							},
 						},
 					}),
 				]),
@@ -36,6 +43,12 @@ export const authOptions: NextAuthOptions = {
 				if (!credentials?.email || !credentials?.password) return null;
 				const user = await prisma.user.findUnique({ where: { email: credentials.email } });
 				if (!user || !user.password) return null;
+				
+				// Verificar se o usuário está bloqueado
+				if (user.blocked) {
+					return null; // Retorna null ao invés de lançar exceção
+				}
+				
 				const ok = await compare(credentials.password, user.password);
 				if (!ok) return null;
 				// Attach remember preference for JWT callback to consume
@@ -57,11 +70,102 @@ export const authOptions: NextAuthOptions = {
 		// 	path: "/",
 		// },
 	callbacks: {
+		async signIn({ user, account, profile }) {
+			// Proactively link Google account to existing user with same email to avoid OAuthAccountNotLinked.
+			if (account?.provider === 'google') {
+				const p = profile as Record<string, unknown> | null | undefined;
+				const email = (p?.['email'] as string | undefined) || (user?.email as string | undefined);
+				const emailVerified = (p?.['email_verified'] as boolean | undefined) === undefined ? true : !!p?.['email_verified'];
+				if (email && emailVerified) {
+					try {
+						const existing = await prisma.user.findUnique({ where: { email } });
+						if (existing) {
+							// If no Account is linked yet for this providerAccountId, create it pointing to the existing user
+							const providerAccountId = account.providerAccountId as string | undefined;
+							if (providerAccountId) {
+								const already = await prisma.account.findUnique({
+									where: { provider_providerAccountId: { provider: account.provider, providerAccountId } },
+								});
+								if (!already) {
+									// lightweight audit log (console + db table later)
+									console.info('[Auth][Link]', {
+										provider: account.provider,
+										providerAccountId,
+										userId: existing.id,
+										email,
+										ts: new Date().toISOString(),
+									});
+									await prisma.account.create({
+										data: {
+											userId: existing.id,
+											type: account.type as string,
+											provider: account.provider,
+											providerAccountId,
+											refresh_token: (account as Record<string, unknown>)['refresh_token'] as string | null | undefined,
+											access_token: (account as Record<string, unknown>)['access_token'] as string | null | undefined,
+											expires_at: (account as Record<string, unknown>)['expires_at'] as number | null | undefined,
+											token_type: (account as Record<string, unknown>)['token_type'] as string | null | undefined,
+											scope: (account as Record<string, unknown>)['scope'] as string | null | undefined,
+											id_token: (account as Record<string, unknown>)['id_token'] as string | null | undefined,
+											session_state: (account as Record<string, unknown>)['session_state'] as string | null | undefined,
+										},
+									});
+								}
+							}
+						}
+					} catch (e) {
+						console.warn('[Auth] Account linking warning:', e);
+					}
+				}
+			}
+			return true;
+		},
 		async session({ session, token }) {
 			const t = token as JWT & { role?: AppRole; authProvider?: string; stepUpAt?: number; remember?: boolean; credentialVersion?: number };
 			if (session.user && token.sub) {
 				session.user.id = token.sub;
 				if (t.role) session.user.role = t.role;
+				
+				try {
+					
+					// Buscar dados atualizados do usuário com imagem
+					const dbUser = await prisma.user.findUnique({
+						where: { id: token.sub },
+						select: { 
+							name: true, 
+							email: true,
+							description: true,
+							image: true, // Campo image existente (URL do Google)
+							blocked: true, // Campo para verificar se está bloqueado
+							profileImage: {
+								select: { id: true }
+							}
+						},
+					});
+					
+					if (dbUser) {
+						// Verificar se o usuário está bloqueado
+						if (dbUser.blocked) {
+							// Retornar uma sessão especial indicando que está bloqueado
+							(session as Session & { blocked?: boolean }).blocked = true;
+							return session;
+						}
+						
+						session.user.name = dbUser.name;
+						session.user.email = dbUser.email;
+						session.user.description = dbUser.description;
+						
+						// SOLUÇÃO DO ERRO 431: Priorizar imagem do banco, senão usar do Google
+						const finalImage = dbUser.profileImage 
+							? `/api/images/profile/${dbUser.profileImage.id}`
+							: dbUser.image; // URL do Google se não tiver imagem personalizada
+						
+						
+						session.user.image = finalImage;
+					}
+				} catch (error) {
+					console.error('❌ ERRO ao buscar dados do usuário:', error);
+				}
 			}
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).authProvider = t.authProvider;
 			(session as Session & { authProvider?: string; stepUpAt?: number; remember?: boolean }).stepUpAt = t.stepUpAt;
@@ -97,7 +201,12 @@ export const authOptions: NextAuthOptions = {
 			return token;
 		},
 	},
-	events: {},
+	events: {
+		async signOut() {
+			// No-op here; we rely on NextAuth to clear the session cookie.
+			// If you cache authProvider in a client store, clear it on signOut client-side as well.
+		},
+	},
 	pages: { signIn: "/login" },
 };
 

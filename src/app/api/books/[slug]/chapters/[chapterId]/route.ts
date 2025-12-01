@@ -6,8 +6,7 @@ import { slugify } from '@/lib/slug';
 import { getPlainTextLength } from '@/lib/sanitize';
 
 async function findBookBySlug(slug: string) {
-  const all = await prisma.book.findMany();
-  return all.find((b) => slugify(b.title) === slug) || null;
+  return prisma.book.findUnique({ where: { slug } });
 }
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ slug: string; chapterId: string }> }) {

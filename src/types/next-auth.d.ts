@@ -6,6 +6,7 @@ declare module "next-auth" {
         user: {
             id: string;
             role: AppRole;
+            description?: string | null;
         } & DefaultSession["user"];
     authProvider?: string;
     stepUpAt?: number; // epoch ms of last (re)authentication

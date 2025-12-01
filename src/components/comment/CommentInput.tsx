@@ -166,12 +166,17 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
         )}
       </div>
       <div className="mt-2">
-        <div className="px-2 py-2 min-h-[100px] max-h-[280px] overflow-y-auto [&_.ProseMirror_p]:m-0 [&_.ProseMirror_p+_.ProseMirror_p]:mt-2 [&_.ProseMirror_a]:underline-offset-2">
+        <div
+          className="px-2 pr-10 pb-14 py-2 min-h-[100px] max-h-[280px] overflow-y-auto cursor-text [&_.ProseMirror_p]:m-0 [&_.ProseMirror_p+_.ProseMirror_p]:mt-2 [&_.ProseMirror_a]:underline-offset-2"
+          onClick={() => editor?.chain().focus().run()}
+          role="textbox"
+          aria-label="Área de digitação do comentário"
+        >
           <EditorContent editor={editor} />
         </div>
       </div>
-      <div className="absolute right-3 bottom-3">
-        <button disabled={sending} onClick={send} aria-label="Enviar" className={`p-1 rounded ${sending ? 'opacity-50 cursor-not-allowed' : 'hover:text-white'} text-white`}>
+      <div className="absolute right-3 bottom-3 pointer-events-auto">
+        <button disabled={sending} onClick={send} aria-label="Enviar" className={`${sending ? 'opacity-50 cursor-not-allowed' : 'hover:text-white'} text-white p-1 rounded`}>
           <SendHorizontal size={22} strokeWidth={2.5} />
         </button>
       </div>
