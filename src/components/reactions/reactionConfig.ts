@@ -20,7 +20,7 @@ export const reactionMetas: ReactionMeta[] = [
   },
   {
     type: 'FEAR',
-    label: 'Medo',
+    label: 'Susto',
     image: '/img/mascot/reactions/fear.png',
     color: 'bg-violet-600/20',
     hover: 'hover:bg-violet-600/40',
@@ -32,11 +32,11 @@ export const reactionMetas: ReactionMeta[] = [
     image: '/img/mascot/reactions/sadness.png',
     color: 'bg-indigo-600/20',
     hover: 'hover:bg-indigo-600/40',
-    ring: 'ring-blue-300'
+    ring: 'ring-indigo-500'
   },
   {
     type: 'JOY',
-    label: 'Cinema',
+    label: 'Alegria',
     image: '/img/mascot/reactions/happiness.png',
     color: 'bg-yellow-400/30',
     hover: 'hover:bg-yellow-400/50',
@@ -46,9 +46,9 @@ export const reactionMetas: ReactionMeta[] = [
     type: 'LOVE',
     label: 'Amor',
     image: '/img/mascot/reactions/love.png',
-    color: 'bg-pink-200',
+    color: 'bg-pink-600/30',
     hover: 'hover:bg-pink-600/50',
-    ring: 'ring-pink-400'
+    ring: 'ring-pink-500'
   }
 ];
 

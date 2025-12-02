@@ -63,10 +63,6 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
   // Keyboard navigation: Left/Right arrows
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const ae = document.activeElement as HTMLElement | null;
-      const tag = (ae?.tagName || '').toLowerCase();
-      const isTypingField = tag === 'input' || tag === 'textarea' || tag === 'select' || ae?.isContentEditable;
-      if (isTypingField) return; // don't navigate while typing/editing
       if (e.key === 'ArrowLeft' && prevHref) router.push(prevHref);
       if (e.key === 'ArrowRight' && nextHref) router.push(nextHref);
     }
@@ -84,7 +80,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
     typeof payload.chapter.totalViews === 'number' ? payload.chapter.totalViews : null
   );
   const [views, setViews] = React.useState<number | null>(initialChapterViewsRef.current);
-  const [canSeeViews, setCanSeeViews] = React.useState<boolean>(false);
+  const [canSeeViews, setCanSeeViews] = React.useState<boolean>(true);
   React.useEffect(() => {
     let ignore = false;
     (async () => {
@@ -321,6 +317,7 @@ export default function ReadChapterClient({ slug, chapterSlug, payload, canManag
         
         {/* Reactions (per book, one per user) */}
         <ReactionBar slug={slug} dark={dark} />
+        
         {/* Comments */}
         <div className="relative rounded-md p-4 md:p-6 font-ptserif mt-6">
           <label className={`block mb-2 font-semibold ${dark ? 'text-white' : 'text-readowl-purple-extradark'}`}>Deixe um comentário:</label>
