@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
   // Complex sorts: compute ordered ids using aggregates
   let complexOrderedIds: string[] | null = null;
   let complexBaseIds: string[] | null = null; // ids produced by aggregate scoring before fallback
-  if (['trending', 'topRated14d', 'mostRatedTotal', 'mostCommented', 'chaptersCount', 'mostFollowed'].includes(sort)) {
+  if (['trending', 'mostRatedTotal', 'mostCommented', 'chaptersCount', 'mostFollowed', 'topRated14d'].includes(sort)) {
     // establish candidate set based on filters to avoid expensive global ranking when possible
     const candidateIds = await prisma.book.findMany({ where, select: { id: true } }).then(rows => rows.map(r => r.id));
     const candidateSet = new Set(candidateIds);
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
       (candidateIds.length ? arr.filter(x => candidateSet.has(x.bookId)) : arr);
     const offset = (page - 1) * pageSize;
     const dirFactor = orderParam === 'asc' ? 1 : -1;
-    if (sort === 'trending' || sort === 'topRated14d' || sort === 'mostCommented') {
+    if (sort === 'trending' || sort === 'mostCommented') {
       const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
       // views unique users per book in last 14 days
       const viewsAgg = await prisma.$queryRaw<Array<{ bookId: string; views: bigint }>>`
@@ -174,30 +174,26 @@ export async function GET(req: NextRequest) {
         WHERE v."createdAt" >= ${cutoff}
         GROUP BY c."bookId";
       `;
-      // ratings 14d excluding author
+      // trending uses 14d ratings; mostCommented does not rely on ratings but we still collect for unified maps
       const ratingsAgg = await prisma.$queryRaw<Array<{ bookId: string; ratings: bigint; avg: number }>>`
         SELECT br."bookId" as "bookId", COUNT(*)::bigint as ratings, AVG(br."score")::float as avg
         FROM "BookRating" br
-        JOIN "Book" b ON b."id" = br."bookId"
-        WHERE br."createdAt" >= ${cutoff} AND br."userId" <> b."authorId"
+        WHERE br."createdAt" >= ${cutoff}
         GROUP BY br."bookId";
       `;
       // comments: timeframe depends on sort
       const commentsAgg = sort === 'mostCommented'
-        // all-time excluding author for search 'mostCommented'; includes both book and chapter comments via Comment.bookId
+        // all-time comments INCLUDING author interactions; count index (chapterId null) and chapter comments via bookId
         ? await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
             SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
             FROM "Comment" c
-            JOIN "Book" b ON b."id" = c."bookId"
-            WHERE c."userId" <> b."authorId"
             GROUP BY c."bookId";
           `
-        // trending context (14d)
+        // trending context (14d) INCLUDING author
         : await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
             SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
             FROM "Comment" c
-            JOIN "Book" b ON b."id" = c."bookId"
-            WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
+            WHERE c."createdAt" >= ${cutoff}
             GROUP BY c."bookId";
           `;
       const vArr = applyCandidates(viewsAgg.map(v => ({ bookId: v.bookId, cnt: v.views })));
@@ -206,19 +202,7 @@ export async function GET(req: NextRequest) {
       const vMap = new Map(vArr.map(x => [x.bookId, Number(x.cnt || 0)]));
       const rMap = new Map(rArr.map(x => [x.bookId, Number(x.WR || 0)]));
       const cMap = new Map(cArr.map(x => [x.bookId, Number(x.cnt || 0)]));
-      if (sort === 'topRated14d') {
-        const rows = Array.from(rMap.entries()).map(([bookId, WR]) => ({ bookId, WR }));
-        rows.sort((a, b) => (b.WR - a.WR) * dirFactor);
-        complexBaseIds = rows.map(x => x.bookId);
-        // Fallback: append remaining books by oldest creation date
-        const remaining = await prisma.book.findMany({
-          where: { AND: [where, { id: { notIn: complexBaseIds } }] },
-          select: { id: true },
-          orderBy: { createdAt: 'asc' },
-        });
-        const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
-        complexOrderedIds = combined.slice(offset, offset + pageSize);
-      } else if (sort === 'mostCommented') {
+      if (sort === 'mostCommented') {
         const rows = Array.from(cMap.entries()).map(([bookId, cnt]) => ({ bookId, cnt }));
         rows.sort((a, b) => (Number(b.cnt) - Number(a.cnt)) * dirFactor);
         complexBaseIds = rows.map(x => x.bookId);
@@ -272,16 +256,66 @@ export async function GET(req: NextRequest) {
         const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
         complexOrderedIds = combined.slice(offset, offset + pageSize);
       }
-    } else if (sort === 'mostRatedTotal') {
-      // All-time "Mais avaliados" using a Bayesian average to balance avg and count.
-      // score = (v/(v+m)) * R + (m/(v+m)) * C, where C is prior mean (3.5) and m is prior weight (8)
+    } else if (sort === 'topRated14d') {
+      // Renamed semantics: now all-time top rated with recency removed (only trending is 14d).
+      // Apply same weighting as mostRatedTotal: 0.6 avg + 0.4 capped power(count*avg).
       const candidates = await prisma.book.findMany({ where, select: { id: true, ratingCount: true, ratingAvg: true, createdAt: true } });
-      const PRIOR_MEAN = 3.5;
-      const PRIOR_WEIGHT = 8;
+      const rawAvg = candidates.map(b => Math.max(0, Math.min(5, b.ratingAvg || 0)));
+      const rawPower = candidates.map(b => (Math.max(0, b.ratingCount || 0) * Math.max(0, Math.min(5, b.ratingAvg || 0))));
+      const minAvg = rawAvg.length ? Math.min(...rawAvg) : 0;
+      const maxAvg = rawAvg.length ? Math.max(...rawAvg) : 0;
+      const sortedPower = [...rawPower].sort((a, b) => a - b);
+      const p95Idx = sortedPower.length ? Math.floor(0.95 * (sortedPower.length - 1)) : 0;
+      const powerCap = sortedPower[p95Idx] || 0;
+      const cappedPower = rawPower.map(v => Math.min(v, powerCap || v));
+      const minPower = cappedPower.length ? Math.min(...cappedPower) : 0;
+      const maxPower = cappedPower.length ? Math.max(...cappedPower) : 0;
+      const norm = (val: number, min: number, max: number) => (max > min ? (val - min) / (max - min) : 0);
+      const AVG_W = 0.6;
+      const POWER_W = 0.4;
       const rows = candidates.map(b => {
-        const v = Math.max(0, b.ratingCount || 0);
-        const R = Math.max(0, Math.min(5, b.ratingAvg || 0));
-        const score = (v / (v + PRIOR_WEIGHT)) * R + (PRIOR_WEIGHT / (v + PRIOR_WEIGHT)) * PRIOR_MEAN;
+        const avg = Math.max(0, Math.min(5, b.ratingAvg || 0));
+        const powerRaw = Math.max(0, b.ratingCount || 0) * avg;
+        const power = Math.min(powerRaw, powerCap || powerRaw);
+        const score = norm(avg, minAvg, maxAvg) * AVG_W + norm(power, minPower, maxPower) * POWER_W;
+        return { bookId: b.id, score };
+      });
+      rows.sort((a, b) => (b.score - a.score) * (orderParam === 'asc' ? -1 : 1));
+      complexBaseIds = rows.map(x => x.bookId);
+      const remaining = await prisma.book.findMany({
+        where: { AND: [where, { id: { notIn: complexBaseIds } }] },
+        select: { id: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      const combined = [...complexBaseIds, ...remaining.map(r => r.id)];
+      complexOrderedIds = combined.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
+    } else if (sort === 'mostRatedTotal') {
+      // All-time "Mais avaliados" weighting average more than volume.
+      // Score formula:
+      //   score = 0.6 * norm(ratingAvg) + 0.4 * norm(min(ratingCount * ratingAvg, cap_95th))
+      // Rationale:
+      //   - ratingAvg (quality) drives majority of score.
+      //   - ratingCount * ratingAvg adds stability for consistently rated books.
+      //   - 95th percentile cap on (count*avg) prevents extremely high volume from eclipsing quality.
+      const candidates = await prisma.book.findMany({ where, select: { id: true, ratingCount: true, ratingAvg: true, createdAt: true } });
+      const rawAvg = candidates.map(b => Math.max(0, Math.min(5, b.ratingAvg || 0)));
+      const rawPower = candidates.map(b => (Math.max(0, b.ratingCount || 0) * Math.max(0, Math.min(5, b.ratingAvg || 0))));
+      const minAvg = rawAvg.length ? Math.min(...rawAvg) : 0;
+      const maxAvg = rawAvg.length ? Math.max(...rawAvg) : 0;
+      const sortedPower = [...rawPower].sort((a, b) => a - b);
+      const p95Idx = sortedPower.length ? Math.floor(0.95 * (sortedPower.length - 1)) : 0;
+      const powerCap = sortedPower[p95Idx] || 0;
+      const cappedPower = rawPower.map(v => Math.min(v, powerCap || v));
+      const minPower = cappedPower.length ? Math.min(...cappedPower) : 0;
+      const maxPower = cappedPower.length ? Math.max(...cappedPower) : 0;
+      const norm = (val: number, min: number, max: number) => (max > min ? (val - min) / (max - min) : 0);
+      const AVG_W = 0.6;
+      const POWER_W = 0.4;
+      const rows = candidates.map(b => {
+        const avg = Math.max(0, Math.min(5, b.ratingAvg || 0));
+        const powerRaw = Math.max(0, b.ratingCount || 0) * avg;
+        const power = Math.min(powerRaw, powerCap || powerRaw);
+        const score = norm(avg, minAvg, maxAvg) * AVG_W + norm(power, minPower, maxPower) * POWER_W;
         return { bookId: b.id, score };
       });
       rows.sort((a, b) => (b.score - a.score) * (orderParam === 'asc' ? -1 : 1));

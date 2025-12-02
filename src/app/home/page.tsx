@@ -50,9 +50,9 @@ export default async function Home() {
         });
         const novidades = novidadesRaw.map(toCarousel);
 
-        // Em destaque: normalize metrics, exclude author interactions, apply truncation
+    // Em destaque: normalize metrics (now INCLUDING author interactions) & apply truncation caps.
                 const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-                // Views: unique users in last 14 days per book
+                // Views: unique users in last 14 days per book (author included)
                 const viewsAgg = await prisma.$queryRaw<Array<{ bookId: string; views: bigint }>>`
                     SELECT c."bookId" as "bookId", COUNT(DISTINCT v."userId")::bigint as views
                     FROM "ChapterView" v
@@ -60,20 +60,18 @@ export default async function Home() {
                     WHERE v."createdAt" >= ${cutoff}
                     GROUP BY c."bookId";
                 `;
-                // Ratings: last 14 days, exclude ratings by the book author
+                // Ratings: last 14 days (author included now to reflect full engagement)
                 const ratingsAgg = await prisma.$queryRaw<Array<{ bookId: string; ratings: bigint; avg: number }>>`
                     SELECT br."bookId" as "bookId", COUNT(*)::bigint as ratings, AVG(br."score")::float as avg
                     FROM "BookRating" br
-                    JOIN "Book" b ON b."id" = br."bookId"
-                    WHERE br."createdAt" >= ${cutoff} AND br."userId" <> b."authorId"
+                    WHERE br."createdAt" >= ${cutoff}
                     GROUP BY br."bookId";
                 `;
-                // Comments: last 14 days, exclude comments by the book author
+                // Comments: last 14 days (author included)
                 const commentsAgg = await prisma.$queryRaw<Array<{ bookId: string; comments: bigint }>>`
                     SELECT c."bookId" as "bookId", COUNT(*)::bigint as comments
                     FROM "Comment" c
-                    JOIN "Book" b ON b."id" = c."bookId"
-                    WHERE c."createdAt" >= ${cutoff} AND c."userId" <> b."authorId"
+                    WHERE c."createdAt" >= ${cutoff}
                     GROUP BY c."bookId";
                 `;
                 // Normalize and truncate metrics per spec
@@ -136,25 +134,39 @@ export default async function Home() {
                     trending = trending.concat(fill.map(toCarousel));
                 }
 
-                // Mais avaliados (all-time): Bayesian average combining ratingAvg and ratingCount
-                // score = (v/(v+m)) * R + (m/(v+m)) * C, with C=3.5 (prior mean), m=8 (prior weight)
+                // Mais avaliados (all-time): Weighted normalization favoring ratingAvg over volume.
+                // Score formula (explained):
+                //   score = 0.6 * norm(ratingAvg) + 0.4 * norm(min(ratingCount * ratingAvg, cap_95th))
+                // - ratingAvg keeps quality central (0–5 mapped to 0–1).
+                // - ratingCount * ratingAvg rewards sustained engagement but is percentile‑capped (95th) to avoid runaway dominance.
+                // - Weights (0.6 / 0.4) ensure many solid 4.6+ ratings outrank a lone 5.0 with 1 rating.
                 const candidatesRated = await prisma.book.findMany({
                     orderBy: [{ ratingCount: 'desc' }, { ratingAvg: 'desc' }],
-                    take: 200,
+                    take: 400,
                     select: { id: true, slug: true, title: true, coverUrl: true, ratingAvg: true, ratingCount: true, createdAt: true },
                 });
-                const PRIOR_MEAN = 3.5;
-                const PRIOR_WEIGHT = 8;
-                const rankedRated = candidatesRated
-                    .map(b => {
-                        const v = Math.max(0, b.ratingCount || 0);
-                        const R = Math.max(0, Math.min(5, b.ratingAvg || 0));
-                        const score = (v / (v + PRIOR_WEIGHT)) * R + (PRIOR_WEIGHT / (v + PRIOR_WEIGHT)) * PRIOR_MEAN;
-                        return { book: b, score };
-                    })
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, LIMIT);
-                let maisAvaliados = rankedRated.map(r => toCarousel(r.book));
+                const rawAvgVals = candidatesRated.map(b => Math.max(0, Math.min(5, b.ratingAvg || 0)));
+                const rawPowerVals = candidatesRated.map(b => (Math.max(0, b.ratingCount || 0) * Math.max(0, Math.min(5, b.ratingAvg || 0))));
+                const minAvg = rawAvgVals.length ? Math.min(...rawAvgVals) : 0;
+                const maxAvg = rawAvgVals.length ? Math.max(...rawAvgVals) : 0;
+                // Apply 95th percentile cap to power to reduce extreme dominance
+                const sortedPower = [...rawPowerVals].sort((a, b) => a - b);
+                const p95Idx = sortedPower.length ? Math.floor(0.95 * (sortedPower.length - 1)) : 0;
+                const powerCap = sortedPower[p95Idx] || 0;
+                const cappedPowerVals = rawPowerVals.map(v => Math.min(v, powerCap || v));
+                const minPower = cappedPowerVals.length ? Math.min(...cappedPowerVals) : 0;
+                const maxPower = cappedPowerVals.length ? Math.max(...cappedPowerVals) : 0;
+                const norm = (val: number, min: number, max: number) => (max > min ? (val - min) / (max - min) : 0);
+                const R_WEIGHT = 0.6;
+                const POWER_WEIGHT = 0.4;
+                const ratedScores = candidatesRated.map(b => {
+                    const avg = Math.max(0, Math.min(5, b.ratingAvg || 0));
+                    const powerRaw = (Math.max(0, b.ratingCount || 0) * avg);
+                    const power = Math.min(powerRaw, powerCap || powerRaw);
+                    const score = norm(avg, minAvg, maxAvg) * R_WEIGHT + norm(power, minPower, maxPower) * POWER_WEIGHT;
+                    return { book: b, score };
+                }).sort((a, b) => b.score - a.score).slice(0, LIMIT);
+                let maisAvaliados = ratedScores.map(r => toCarousel(r.book));
                 if (maisAvaliados.length < LIMIT) {
                     const exclude = maisAvaliados.map(b => b.id);
                     const fill = await prisma.book.findMany({
