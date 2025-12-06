@@ -156,7 +156,7 @@ export default function CreateBookForm({ availableGenres, redirectAfter = '/libr
     };
 
     return (
-    <div className="w-full max-w-6xl mx-auto bg-readowl-purple-medium p-8 shadow-2xl">
+        <div className="w-full max-w-6xl mx-auto bg-readowl-purple-medium p-8 shadow-2xl">
             <div className="flex items-center justify-center gap-3 mb-8">
                 <BookPlus className="w-10 h-10 text-white/90" aria-hidden="true" />
                 <h1 className="text-3xl font-ptserif text-center font-semibold text-white">Criar nova obra</h1>
@@ -229,7 +229,7 @@ export default function CreateBookForm({ availableGenres, redirectAfter = '/libr
             </Modal>
 
             {/* Confirm save */}
-                        <Modal open={confirmSaveOpen} onClose={() => setConfirmSaveOpen(false)} title="Confirmar registro" widthClass="max-w-sm" >
+            <Modal open={confirmSaveOpen} onClose={() => setConfirmSaveOpen(false)} title="Confirmar registro" widthClass="max-w-sm" >
                 <p>Deseja salvar este novo livro?</p>
                 <div className="flex gap-3 justify-end mt-6">
                     <button onClick={() => setConfirmSaveOpen(false)} className="px-4 py-2 text-sm bg-white text-readowl-purple border border-readowl-purple/30 hover:bg-readowl-purple-extralight">Voltar</button>
@@ -237,21 +237,21 @@ export default function CreateBookForm({ availableGenres, redirectAfter = '/libr
                 </div>
             </Modal>
 
-                        {/* Success modal: option to create another or go back */}
-                        <Modal open={successModal} onClose={() => { setSuccessModal(false); window.location.href = redirectAfter; }} title="Livro criado!" widthClass="max-w-sm" >
-                                <p>Seu livro foi criado com sucesso.</p>
-                                <div className="flex justify-end mt-6 gap-3">
-                                        <button onClick={() => {
-                                                // Reset fields to create another book
-                                                setSuccessModal(false);
-                                                setTitle(''); setSynopsis(''); setReleaseFrequency(''); setCoverUrl(''); setSelectedGenres([]);
-                                                setCoverValid(null); setAttemptedSubmit(false);
-                                        }} className="px-4 py-2 text-sm bg-white text-readowl-purple border border-readowl-purple/30 hover:bg-readowl-purple-extralight">Criar outro</button>
-                                        <button onClick={() => { setSuccessModal(false); window.location.href = redirectAfter; }} className="px-4 py-2 text-sm bg-readowl-purple-light text-white hover:bg-readowl-purple">Ir para biblioteca</button>
-                                </div>
-                        </Modal>
+            {/* Success modal: option to create another or go back */}
+            <Modal open={successModal} onClose={() => { setSuccessModal(false); window.location.href = redirectAfter; }} title="Livro criado!" widthClass="max-w-sm" >
+                <p>Seu livro foi criado com sucesso.</p>
+                <div className="flex justify-end mt-6 gap-3">
+                    <button onClick={() => {
+                        // Reset fields to create another book
+                        setSuccessModal(false);
+                        setTitle(''); setSynopsis(''); setReleaseFrequency(''); setCoverUrl(''); setSelectedGenres([]);
+                        setCoverValid(null); setAttemptedSubmit(false);
+                    }} className="px-4 py-2 text-sm bg-white text-readowl-purple border border-readowl-purple/30 hover:bg-readowl-purple-extralight">Criar outro</button>
+                    <button onClick={() => { setSuccessModal(false); window.location.href = redirectAfter; }} className="px-4 py-2 text-sm bg-readowl-purple-light text-white hover:bg-readowl-purple">Ir para biblioteca</button>
+                </div>
+            </Modal>
 
-                        {/* Notifications removed for create flow as requested */}
+            {/* Notifications removed for create flow as requested */}
         </div>
     );
 }

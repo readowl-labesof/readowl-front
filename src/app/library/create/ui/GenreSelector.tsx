@@ -18,7 +18,7 @@ export const GenreSelector: React.FC<GenreSelectorProps> = ({ filteredGenres, ge
         <Tags className="w-4 h-4 opacity-80" aria-hidden />
         Gêneros
       </label>
-  <div className="w-full bg-readowl-purple-extradark/70 border border-white/10 p-3 max-h-48 overflow-y-auto">
+      <div className="w-full bg-readowl-purple-extradark/70 border border-white/10 p-3 max-h-48 overflow-y-auto">
         <div className="relative">
           <input
             type="text"

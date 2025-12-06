@@ -43,13 +43,13 @@ export const BasicFields: React.FC<BasicFieldsProps> = ({ title, synopsis, relea
           Sinopse
         </label>
         <div onBlur={onBlurSynopsis}>
-        <SynopsisEditor
-          value={synopsis}
-          onChange={onSynopsis}
-          maxChars={BOOK_SYNOPSIS_MAX}
-          error={errors.synopsis}
-          showError={touched.synopsis || attemptedSubmit}
-        />
+          <SynopsisEditor
+            value={synopsis}
+            onChange={onSynopsis}
+            maxChars={BOOK_SYNOPSIS_MAX}
+            error={errors.synopsis}
+            showError={touched.synopsis || attemptedSubmit}
+          />
         </div>
       </div>
 

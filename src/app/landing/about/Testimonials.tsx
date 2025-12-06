@@ -10,7 +10,7 @@ const Testimonials: React.FC = () => {
             Depoimentos
           </h2>
         </AppearCard>
-        
+
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Testimonial 1 */}
           <AppearCard className="bg-readowl-purple-medium/30 p-8" delayMs={0}>

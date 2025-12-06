@@ -43,7 +43,7 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
     const { state, view } = e;
     const sel = state.selection as unknown;
     if (sel instanceof NodeSelection) {
-      try { const ns = sel as NodeSelection; const near = TextSelection.near(state.doc.resolve(ns.from), -1); view.dispatch(state.tr.setSelection(near)); } catch {}
+      try { const ns = sel as NodeSelection; const near = TextSelection.near(state.doc.resolve(ns.from), -1); view.dispatch(state.tr.setSelection(near)); } catch { }
     }
   };
 
@@ -67,8 +67,8 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
       }).configure({ inline: true, allowBase64: false }),
     ],
     content: initialHtml && initialHtml.trim().length > 0 ? initialHtml : '<p></p>',
-  immediatelyRender: false,
-  editorProps: {
+    immediatelyRender: false,
+    editorProps: {
       attributes: {
         class: [
           'ProseMirror focus:outline-none',
@@ -79,7 +79,7 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
           'prose-em:text-white',
           'prose-a:text-white',
         ].join(' '),
-  },
+      },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       handlePaste(_view: any, event: any) {
         const dt = event.clipboardData;
@@ -190,7 +190,7 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
             <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." className="w-full border border-readowl-purple/30 px-3 py-2 mb-3 outline-none" />
             <div className="flex justify-end gap-2">
               <button onClick={() => setLinkOpen(false)} className="px-3 py-1 border border-readowl-purple/30">Cancelar</button>
-              <button onClick={() => { try { const u = new URL(linkUrl); if (!['http:', 'https:'].includes(u.protocol)) return; alignWorkaround(editor); editor?.chain().focus().setLink({ href: u.toString(), target: '_blank', rel: 'nofollow noopener noreferrer' }).run(); setLinkOpen(false); } catch {} }} className="px-3 py-1 bg-readowl-purple-light text-white">Aplicar</button>
+              <button onClick={() => { try { const u = new URL(linkUrl); if (!['http:', 'https:'].includes(u.protocol)) return; alignWorkaround(editor); editor?.chain().focus().setLink({ href: u.toString(), target: '_blank', rel: 'nofollow noopener noreferrer' }).run(); setLinkOpen(false); } catch { } }} className="px-3 py-1 bg-readowl-purple-light text-white">Aplicar</button>
             </div>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function CommentInput({ maxChars = 1200, onSubmit, className, com
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => setImageOpen(false)} className="px-3 py-1 border border-readowl-purple/30">Cancelar</button>
-              <button onClick={() => { try { const u = new URL(imageUrl); if (!['http:', 'https:'].includes(u.protocol)) return; const attrs: Record<string, unknown> = { src: u.toString() }; if (imageWidth) attrs.width = parseInt(imageWidth, 10); if (imageHeight) attrs.height = parseInt(imageHeight, 10); editor?.chain().focus().setImage(attrs).run(); setImageOpen(false); } catch {} }} className="px-3 py-1 bg-readowl-purple-light text-white">Inserir</button>
+              <button onClick={() => { try { const u = new URL(imageUrl); if (!['http:', 'https:'].includes(u.protocol)) return; const attrs: Record<string, unknown> = { src: u.toString() }; if (imageWidth) attrs.width = parseInt(imageWidth, 10); if (imageHeight) attrs.height = parseInt(imageHeight, 10); editor?.chain().focus().setImage(attrs).run(); setImageOpen(false); } catch { } }} className="px-3 py-1 bg-readowl-purple-light text-white">Inserir</button>
             </div>
           </div>
         </div>

@@ -67,8 +67,8 @@ export default function CommentsList({ comments, total, likeApi, canEditDelete, 
   };
 
   const renderItem = (c: CommentDto, depth = 0, parentAuthor?: string, parentText?: string): React.ReactNode => {
-  const canEditEval = typeof canEdit === 'function' ? canEdit(c) : canEditDelete(c);
-  const canDeleteEval = typeof canDelete === 'function' ? canDelete(c) : canEditDelete(c);
+    const canEditEval = typeof canEdit === 'function' ? canEdit(c) : canEditDelete(c);
+    const canDeleteEval = typeof canDelete === 'function' ? canDelete(c) : canEditDelete(c);
     const when = new Date(c.createdAt);
     const date = when.toLocaleDateString('pt-BR');
     const time = when.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

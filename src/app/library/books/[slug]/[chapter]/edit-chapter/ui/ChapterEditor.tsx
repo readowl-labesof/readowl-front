@@ -204,7 +204,7 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
         <div className="relative">
           <select
             title="Título"
-            className="appearance-none pl-1.5 pr-5 py-0.5 pt-1 rounded border border-readowl-purple/30 text-readowl-purple-medium text-xs bg-white hover:bg-readowl-purple-extralight/30 focus:outline-none"
+            className="pl-1.5 pr-2 py-0.5 pt-1 rounded-md border border-readowl-purple/30 text-readowl-purple-medium text-xs bg-white hover:bg-readowl-purple-extralight/30 focus:outline-none"
             value={
               editor?.isActive('heading', { level: 2 })
                 ? 'h2'
@@ -223,9 +223,7 @@ export default function ChapterEditor({ value, onChange, maxChars = 50000 }: Cha
             <option value="h2">H2</option>
             <option value="h3">H3</option>
           </select>
-          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-readowl-purple-medium opacity-80" aria-hidden>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-          </span>
+          {/* Removed custom chevron to avoid double arrow */}
         </div>
 
         <span className="mx-1 opacity-40">|</span>

@@ -134,7 +134,7 @@ export default function BannerCarousel({ initialBanners = [], isAdmin = false, c
       const w = viewportRef.current?.clientWidth || el.clientWidth;
       startPosRef.current = { x: e.clientX, y: e.clientY, width: w };
       setPaused(true);
-      try { el.setPointerCapture(e.pointerId); } catch {}
+      try { el.setPointerCapture(e.pointerId); } catch { }
     };
     const onMove = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
@@ -150,7 +150,7 @@ export default function BannerCarousel({ initialBanners = [], isAdmin = false, c
     const onUp = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
-      try { el.releasePointerCapture((e as PointerEvent).pointerId); } catch {}
+      try { el.releasePointerCapture((e as PointerEvent).pointerId); } catch { }
       const dx = e.clientX - startPosRef.current.x;
       const width = Math.max(1, startPosRef.current.width);
       const movedEnough = Math.abs(dx) > Math.max(thresholdPx, width * 0.18);

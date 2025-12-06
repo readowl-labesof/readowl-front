@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/ui/navbar/Navbar";
+import ButtonWithIcon from "@/components/ui/button/ButtonWithIcon";
 import { Breadcrumb } from "@/components/ui/navbar/Breadcrumb";
 import prisma from "@/lib/prisma";
 import BannerCarousel from "@/components/book/BannerCarousel";
@@ -16,6 +17,7 @@ import {
     MessageSquare,
     Users,
     Wand2,
+    BookPlus,
 } from "lucide-react";
 
 
@@ -280,14 +282,39 @@ export default async function Home() {
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
                     <BookCarousel title="Mais comentados!" icon={<MessageSquare size={18} />} books={maisComentados} itemsPerView={6} />
                 </div>
+                {/* Search info card with text-left / button-right */}
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
-                    <BookCarousel title="Mais seguidos!" icon={<Users size={18} />} books={maisSeguidos} itemsPerView={6} />
+                    <div className="bg-white border border-readowl-purple/10 shadow-md p-4 rounded-md text-readowl-purple">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div>
+                                <p className="font-ptserif text-lg mb-1">Explore mais histórias com filtros personalizados</p>
+                                <p className="font-ptserif">Use a tela de pesquisa para encontrar obras do seu gosto com mais precisão.</p>
+                            </div>
+                            <a href="/search" className="inline-block">
+                                <ButtonWithIcon variant="secondary" icon={<Users size={18} />}>Ir para pesquisa</ButtonWithIcon>
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 pb-8">
                     <BookCarousel title="Quem sabe você goste!" icon={<Wand2 size={18} />} books={quemSabe} itemsPerView={6} />
                 </div>
                 {/* Latest releases table */}
                 <LatestReleasesTable />
+                {/* Post your story CTA after the chapters table (text-left / button-right) */}
+                <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 mt-4">
+                    <div className="bg-white border border-readowl-purple/10 shadow-md p-4 rounded-md text-readowl-purple">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div>
+                                <p className="font-ptserif text-lg mb-1">Tem uma história para contar?</p>
+                                <p className="font-ptserif">Publique sua obra e compartilhe com a comunidade.</p>
+                            </div>
+                            <a href="/library/create" className="inline-block">
+                                <ButtonWithIcon variant="primary" icon={<BookPlus size={18} />}>Criar minha obra</ButtonWithIcon>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </main>
         </>
     );

@@ -21,7 +21,7 @@ export default async function Library() {
     });
     const myBooks = myBooksRaw.map(b => ({ ...b, slug: b.slug ?? undefined }));
 
-    // Load books followed by current user
+    // Load books followed by current user (restore carousel)
     const followedRaw = await prisma.book.findMany({
         where: { followers: { some: { userId: session.user.id } } },
         orderBy: { updatedAt: 'desc' },
@@ -36,15 +36,25 @@ export default async function Library() {
                 <div className="w-full flex justify-center mt-14 sm:mt-16">
                     <BreadcrumbAuto anchor="static" base="/home" labelMap={{ library: "Biblioteca" }} />
                 </div>
-                <div className="flex justify-center items-start">
-                    <Link href="/library/create">
-                        <ButtonWithIcon
-                            variant="primary"
-                            icon={<BookPlus size={20} />}
-                        >
-                            Criar uma obra
-                        </ButtonWithIcon>
-                    </Link>
+                {/* Create CTA: text left, button right. Card when user has no books; simple primary button otherwise */}
+                <div className="flex justify-center items-start px-4 mb-4">
+                    {myBooks.length === 0 ? (
+                        <div className="w-full max-w-2xl bg-white border border-readowl-purple/10 shadow-md p-4 rounded-md text-readowl-purple">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div>
+                                    <p className="font-ptserif text-lg mb-1">Nenhuma obra ainda?</p>
+                                    <p className="font-ptserif">Comece a escrever sua primeira história!</p>
+                                </div>
+                                <Link href="/library/create" className="inline-block">
+                                    <ButtonWithIcon variant="primary" icon={<BookPlus size={20} />}>Criar Minha Primeira Obra</ButtonWithIcon>
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+                        <Link href="/library/create">
+                            <ButtonWithIcon variant="primary" icon={<BookPlus size={20} />}>Criar uma obra</ButtonWithIcon>
+                        </Link>
+                    )}
                 </div>
                 <div className="pb-6 md:px-10 max-w-7xl mx-auto">
                     <BookCarousel
@@ -53,13 +63,27 @@ export default async function Library() {
                         icon={<BookUser size={20} />}
                         itemsPerView={5}
                     />
+                    {/* Followed carousel */}
                     <BookCarousel
                         books={followed}
-                        title="Seguidos!"
+                        title="Seguindo!"
                         icon={<BookMarked size={20} />}
                         itemsPerView={5}
-                        emptyMessage="Nenhuma obra seguida."
                     />
+                    {/* Search info card below followed: text left, button right */}
+                    <div className="w-full max-w-7xl mx-auto mt-4 px-4">
+                        <div className="bg-white border border-readowl-purple/10 shadow-md p-4 rounded-md text-readowl-purple">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div>
+                                    <p className="font-ptserif text-lg mb-1">Quer encontrar mais histórias do seu gosto?</p>
+                                    <p className="font-ptserif">Use a tela de pesquisa para acessar filtros personalizados e descobrir novas obras.</p>
+                                </div>
+                                <Link href="/search" className="inline-block">
+                                    <ButtonWithIcon variant="secondary" icon={<BookMarked size={20} />}>Ir para pesquisa</ButtonWithIcon>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </>

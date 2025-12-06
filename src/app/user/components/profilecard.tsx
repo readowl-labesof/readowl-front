@@ -11,7 +11,7 @@ export default function ProfileCard({ user }: ProfileCardProps) {
   useEffect(() => { if (user?.image) setImageSrc(`${user.image}?t=${Date.now()}`); }, [user?.image]);
   if (!user) {
     return (
-      <div className="bg-readowl-purple-medium rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
+      <div className="bg-readowl-purple-medium shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
         <h2 className="text-2xl font-bold text-white mb-4">Informações de Usuário</h2>
         <p className="text-white">Carregando informações do usuário...</p>
       </div>
@@ -22,12 +22,12 @@ export default function ProfileCard({ user }: ProfileCardProps) {
   const displayBio = user.description || 'Descrição não disponível';
   const displayCreated = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível';
   return (
-    <div className="bg-readowl-purple-medium rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
+    <div className="bg-readowl-purple-medium shadow-lg p-8 flex flex-col items-center w-full max-w-2xl mx-auto mt-6">
       <h2 className="text-2xl font-bold text-white mb-4">Informações de Usuário</h2>
       <div className="flex flex-row items-center w-full">
-        <div className="bg-white rounded-lg p-4 mr-8 flex items-center justify-center w-40 h-40 flex-shrink-0">
+        <div className="p-4 mr-8 flex items-center justify-center flex-shrink-0">
           {imageSrc ? (
-            <Image src={imageSrc} alt="avatar" width={128} height={128} className="w-32 h-32 object-cover rounded-lg" style={{ aspectRatio: '1/1' }} unoptimized={imageSrc.startsWith('data:')} />
+            <Image src={imageSrc} alt="avatar" width={128} height={128} className="w-40 h-40 object-cover" style={{ aspectRatio: '1/1' }} unoptimized={imageSrc.startsWith('data:')} />
           ) : (<User className="text-gray-400" size={64} />)}
         </div>
         <div className="flex flex-col text-white flex-1">

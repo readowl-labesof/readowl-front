@@ -246,7 +246,7 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
         const el = scrollRef.current; if (!el || snap <= 0) return;
         if (didInitRef.current) return;
         let initial = 0;
-        try { const key = `bookCarousel:${storageKey || title}`; const saved = localStorage.getItem(key); if (saved) initial = Math.max(0, Math.min(books.length - 1, parseInt(saved, 10) || 0)); } catch {}
+        try { const key = `bookCarousel:${storageKey || title}`; const saved = localStorage.getItem(key); if (saved) initial = Math.max(0, Math.min(books.length - 1, parseInt(saved, 10) || 0)); } catch { }
         if (loopEnabled) {
             const base = cloneCount * snap; el.scrollLeft = base + initial * snap - peekPrev;
         } else {
@@ -257,16 +257,16 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
 
     // Persist active index
     useEffect(() => {
-        try { localStorage.setItem(`bookCarousel:${storageKey || title}`, String(activeIndex)); } catch {}
+        try { localStorage.setItem(`bookCarousel:${storageKey || title}`, String(activeIndex)); } catch { }
     }, [activeIndex, storageKey, title]);
 
     const clamp3: React.CSSProperties = { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" };
 
-        // Use a deterministic id for SSR hydration: based on title/storageKey
-        const carouselId = useMemo(() => {
-            const base = (storageKey || title || '').replace(/\W+/g, '');
-            return `carousel-${base}`;
-        }, [storageKey, title]);
+    // Use a deterministic id for SSR hydration: based on title/storageKey
+    const carouselId = useMemo(() => {
+        const base = (storageKey || title || '').replace(/\W+/g, '');
+        return `carousel-${base}`;
+    }, [storageKey, title]);
 
     return (
         <section ref={sectionRef} tabIndex={0} aria-roledescription="carousel" aria-label={title} className="mt-8 w-full">
@@ -369,20 +369,20 @@ export const BookCarousel: React.FC<BookCarouselProps> = ({
                 </div>
             )}
 
-                    {books.length > 0 && (() => {
-                        // Number of distinct windows you can view (first index of each window)
-                        // If you can't scroll (books <= visibleCount), don't render bullets
-                        const pages = Math.max(0, books.length - visibleCount + 1);
-                        if (!isScrollable || pages <= 1) return null;
-                        const page = Math.min(pages - 1, activeIndex);
+            {books.length > 0 && (() => {
+                // Number of distinct windows you can view (first index of each window)
+                // If you can't scroll (books <= visibleCount), don't render bullets
+                const pages = Math.max(0, books.length - visibleCount + 1);
+                if (!isScrollable || pages <= 1) return null;
+                const page = Math.min(pages - 1, activeIndex);
                 return (
                     <div className="mt-4 flex justify-center gap-2 flex-wrap" aria-label="Indicadores de posição">
-                                {Array.from({ length: pages }).map((_, i) => (
+                        {Array.from({ length: pages }).map((_, i) => (
                             <button
                                 key={i}
                                 aria-label={`Ir para posição ${i + 1}`}
                                 aria-current={i === page}
-                                        onClick={() => scrollToIndex(i)}
+                                onClick={() => scrollToIndex(i)}
                                 className={clsx("h-2.5 transition-all", i === page ? "bg-readowl-purple w-5" : "bg-readowl-purple-light/50 w-2 hover:bg-readowl-purple-light/80")}
                             />
                         ))}

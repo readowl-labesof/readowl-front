@@ -7,6 +7,7 @@ import { BookText, MessageSquareText } from 'lucide-react';
 import VolumeSection from './VolumeSection';
 import ChapterCard from './ChapterCard';
 import Modal from '@/components/ui/modal/Modal';
+import ButtonWithIcon from '@/components/ui/button/ButtonWithIcon';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import VolumeCreateInput from '@/components/volume/VolumeCreateInput';
@@ -231,6 +232,21 @@ export default function BookTabs({ canManage: canManageProp }: { canManage?: boo
                   </div>
                 )}
               </div>
+              {canManage && (
+                <div className="mt-4 bg-white rounded-md shadow p-4 text-readowl-purple">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">Deseja publicar um novo capítulo?</p>
+                      <p className="text-sm text-readowl-purple/80">Adicione mais conteúdo à sua obra.</p>
+                    </div>
+                    <ButtonWithIcon
+                      variant="primary"
+                      onClick={() => router.push(`/library/books/${slug}/post-chapter`)}
+                      icon={<BookText size={18} />}
+                    >Postar capítulo</ButtonWithIcon>
+                  </div>
+                </div>
+              )}
             </div>
           )
         ) : (
